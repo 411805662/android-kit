@@ -1,0 +1,74 @@
+web/index.html
+  s_62becc3ae9a79b::t_e340976e5d3cdd 1-364,366-650,652-663,665-668
+  s_62becc3ae9a79b::t_d045f3cd2546a4 365,651,664
+shell.go
+  s_62becc3ae9a79b::t_bc93da14a50ee6 60-62,64-67,92
+  s_62becc3ae9a79b::t_efd3f67bd47b42 1-30,33-45,47-59,68-71,73,75-84,86-91,93-103,105-118,128-154,156-157,159-181,183,185-190,192-251
+  s_62becc3ae9a79b::t_12dd05ed5210b3 63
+  s_62becc3ae9a79b::t_6687117a4d8685 119-127
+  s_62becc3ae9a79b::t_8e3e06edb018cb 31-32,155,158,182,184,191
+  s_62becc3ae9a79b::t_014023e86aef29 46,72,74,85,104
+paths.go
+  s_62becc3ae9a79b::t_90b00766e621f3 1-139
+LICENSE
+  s_62becc3ae9a79b::t_ceaa56d21c8cfa 1-21
+project.go
+  s_62becc3ae9a79b::t_1621d4fe3ce2d5 1-288,290-375,377-380,383-418,425-463,468,474-479,494,505,535,537-557
+  s_62becc3ae9a79b::t_92c6eac285793b 289,464-467,469-473,480-493,495-504,506-534,536
+  s_62becc3ae9a79b::t_6829e474d18e49 376,381-382,419-424
+version.go
+  s_62becc3ae9a79b::t_90b00766e621f3 1-2
+  s_62becc3ae9a79b::t_ceaa56d21c8cfa 3-5
+web.go
+  s_62becc3ae9a79b::t_e2a2be822403fa 1-37,46-155,161-211,213-367
+  s_62becc3ae9a79b::t_c0fc03c265d6fb 38-45,156-160,212
+runtime.go
+  s_62becc3ae9a79b::t_fb16ece4d67592 1-195
+main.go
+  s_62becc3ae9a79b::t_2735c8f28511e7 1-237
+go.mod
+  s_62becc3ae9a79b::t_90b00766e621f3 1-5
+install.ps1
+  s_62becc3ae9a79b::t_ceaa56d21c8cfa 1-42
+README.md
+  s_62becc3ae9a79b::t_ee5f3a0eea0ccf 3,5-12,14,16-18,20,23-51,53-153,157-277,279,283
+commands.go
+  s_62becc3ae9a79b::t_4c86038d27fb0d 107-116,122-126,128,166-173,238-245
+  s_62becc3ae9a79b::t_2f31b5aa2e1e78 118-121
+  s_62becc3ae9a79b::t_c9e4af68494ccd 1-3,5-106,117,127,129-165,174-237,246-393,395-870
+  s_62becc3ae9a79b::t_c0fc03c265d6fb 4,394
+setup.go
+  s_62becc3ae9a79b::t_8e3e06edb018cb 39,56,98-99,102-108,173
+  s_62becc3ae9a79b::t_7ceccffa6ad7e4 1-38,40-55,57-97,100-101,109-172,174-186
+config.go
+  s_62becc3ae9a79b::t_4fa93e9f167c1a 1-209
+import.go
+  s_62becc3ae9a79b::t_dfdc0ea8b864c2 18,65,72-89
+  s_62becc3ae9a79b::t_77d83b4241391e 1-17,19-64,66-71,90-188
+.github/workflows/release.yml
+  s_62becc3ae9a79b::t_ceaa56d21c8cfa 1-27
+project_cmds.go
+  s_62becc3ae9a79b::t_e841465743118b 1-365
+util.go
+  s_62becc3ae9a79b::t_90b00766e621f3 1-4,6-58,63-105,117-143
+  s_62becc3ae9a79b::t_67873eb20c8c1a 5,106-116
+  s_62becc3ae9a79b::t_0008200fe70509 59-62
+go.sum
+  s_62becc3ae9a79b::t_8154b75c898cd4 1-2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cad023a7cc2d98b060bd500a823390b127497a5c",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash-1017"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

@@ -1,0 +1,37 @@
+README.md
+  s_62becc3ae9a79b::t_f1424ae65f1477 142,204-205
+  s_62becc3ae9a79b::t_fb67b87e6217e3 41
+version.go
+  s_62becc3ae9a79b::t_a5292b63d61258 5
+commands.go
+  s_62becc3ae9a79b::t_ea5275b3afb0e1 9-10,400-401,409,413-414,458-470,472-476,479-480,521,525-533,536,544,554,562,565,568-603
+  s_62becc3ae9a79b::t_367b672b6dbcf7 477-478
+paths.go
+  s_62becc3ae9a79b::t_8a3c6673fa3569 26,110
+web.go
+  s_62becc3ae9a79b::t_551b10452e3d48 244-248
+  s_62becc3ae9a79b::t_740333000700c3 195
+web/index.html
+  s_62becc3ae9a79b::t_e7fec50925fda1 731-737
+  s_62becc3ae9a79b::t_3229ad5c169d58 819-842,850,861
+  s_62becc3ae9a79b::t_291cdd2af3807f 136-140
+  s_62becc3ae9a79b::t_6bcc507612e675 851,857
+main.go
+  s_62becc3ae9a79b::t_0cdd1baef01575 225
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e40bc3c570e0b0f484f9b0e7a86dff532d20e7d4",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

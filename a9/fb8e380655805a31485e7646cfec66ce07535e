@@ -1,0 +1,35 @@
+web.go
+  s_62becc3ae9a79b::t_bb48f7e5ad8951 17,19,371-374,376,387-398,402-434
+  s_62becc3ae9a79b::t_66f3d53de73611 27-28
+  s_62becc3ae9a79b::t_1ff9d2f1d06f4c 31,36,39-40,45-49,59,87,92-109,113,133-138,143-151,153-155,157-162,165-194,197-198
+version.go
+  s_62becc3ae9a79b::t_2809b39a5341de 5
+web/index.html
+  s_62becc3ae9a79b::t_9a8638c1cc1580 9-11,14,16-18,20,22-34,36-37,39-40,45,47-55,57,59-84,87-130,137-192,194-198,200-213,215-216,218-220,223-244,252,256-259,273-278,281,284-287,293-320,324-336,341-357,359-417,419-422,424-480,484-505,528,532-537,562,573,580-583,595,597-598,604,609,611-612,614,616-627,632-654,657-662,665-683,686
+  s_62becc3ae9a79b::t_7e9840d6510cc9 56,58,358,628-631
+README.md
+  s_62becc3ae9a79b::t_ac1a6b05a5f365 159-165
+  s_62becc3ae9a79b::t_14d0a4b3f3247a 23
+config.go
+  s_62becc3ae9a79b::t_d8585468b61657 70,130-133,155
+  s_62becc3ae9a79b::t_2e182198425f4c 80-82
+shell.go
+  s_62becc3ae9a79b::t_2e182198425f4c 60,64-68,76-78,81,128-136
+  s_62becc3ae9a79b::t_932c19cb3cdffc 137-138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a9fb8e380655805a31485e7646cfec66ce07535e",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash-1017"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

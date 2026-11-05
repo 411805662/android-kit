@@ -1,0 +1,21 @@
+install.sh
+  s_62becc3ae9a79b::t_7e4fab576729aa 4
+README.md
+  s_62becc3ae9a79b::t_7e4fab576729aa 17,20,23,38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d849182a47ea20a79f56f7f0a71eeb8ce87bcda8",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash-1017"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

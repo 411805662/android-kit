@@ -67,7 +67,7 @@ func classicAliases() map[string]string {
 
 func DefaultConfig() Config {
 	return Config{
-		Version:        1,
+		Version:        2,
 		DefaultProject: "",
 		Prefer:         "auto",
 		Language:       "zh-CN",
@@ -77,8 +77,9 @@ func DefaultConfig() Config {
 			Items:  classicAliases(),
 		},
 		UI: UIConfig{
-			Theme:       "dark",
-			OpenBrowser: true,
+			Theme:           "dark",
+			OpenBrowser:     true,
+			AllowRunFromWeb: true,
 		},
 		Paths: PathsConfig{
 			ArtifactsMode: "project",
@@ -126,6 +127,10 @@ func LoadConfig(p Paths) Config {
 	if cfg.UI.Theme == "" {
 		cfg.UI.Theme = "dark"
 	}
+	// v1 shipped with allow_run_from_web=false; v2 turns it on by default.
+	if raw.Version < 2 {
+		cfg.UI.AllowRunFromWeb = true
+	}
 	cfg.Paths = raw.Paths
 	if cfg.Paths.ArtifactsMode == "" {
 		cfg.Paths.ArtifactsMode = "project"
@@ -147,7 +152,7 @@ func SaveConfig(p Paths, cfg Config) error {
 	var b strings.Builder
 	b.WriteString("# android-kit configuration\n")
 	b.WriteString("# Docs: https://github.com/411805662/android-kit\n\n")
-	fmt.Fprintf(&b, "version = %d\n", 1)
+	fmt.Fprintf(&b, "version = %d\n", 2)
 	fmt.Fprintf(&b, "default_project = %s\n", strconv.Quote(cfg.DefaultProject))
 	fmt.Fprintf(&b, "prefer = %s\n", strconv.Quote(cfg.Prefer))
 	fmt.Fprintf(&b, "language = %s\n\n", strconv.Quote(cfg.Language))

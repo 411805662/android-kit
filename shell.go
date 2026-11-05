@@ -57,10 +57,15 @@ func (a *App) shellScript(full, quiet bool) string {
 			if value == "" || name == "ak" {
 				continue
 			}
+			kind, body := aliasTarget(value)
 			if name == "in" {
 				fmt.Fprintf(&b, "  if [ \"${_AK_ALIAS_in:-}\" = \"1\" ] || [ %t = true ] || ! alias in >/dev/null 2>&1; then\n", a.Config.Aliases.Force)
 				b.WriteString("    unalias in 2>/dev/null || true\n")
-				fmt.Fprintf(&b, "    alias in='ak %s'\n", strings.ReplaceAll(value, "'", `'\''`))
+				if kind == "shell" {
+					fmt.Fprintf(&b, "    alias in='%s'\n", strings.ReplaceAll(body, "'", `'\''`))
+				} else {
+					fmt.Fprintf(&b, "    alias in='ak %s'\n", strings.ReplaceAll(body, "'", `'\''`))
+				}
 				b.WriteString("    _AK_ALIAS_in=1\n")
 				b.WriteString("  fi\n")
 				continue
@@ -68,10 +73,12 @@ func (a *App) shellScript(full, quiet bool) string {
 			guard := fmt.Sprintf("[ \"${_AK_ALIAS_%s:-}\" = \"1\" ] || [ %t = true ] || ! type %s >/dev/null 2>&1", name, a.Config.Aliases.Force, name)
 			fmt.Fprintf(&b, "  if %s; then\n", guard)
 			fmt.Fprintf(&b, "    unalias %s 2>/dev/null || true\n", name)
-			if value == "cd" {
+			if kind == "shell" {
+				fmt.Fprintf(&b, "    function %s { sh -c %s ak \"$@\"; }\n", name, shellQuote(body))
+			} else if body == "cd" {
 				fmt.Fprintf(&b, "    function %s { builtin cd \"$(command \"$_AK_BIN\" where 2>/dev/null)\" || return 1; }\n", name)
 			} else {
-				fmt.Fprintf(&b, "    function %s { command \"$_AK_BIN\" %s \"$@\"; }\n", name, quoteFields(value))
+				fmt.Fprintf(&b, "    function %s { command \"$_AK_BIN\" %s \"$@\"; }\n", name, quoteFields(body))
 			}
 			fmt.Fprintf(&b, "    _AK_ALIAS_%s=1\n", name)
 			b.WriteString("  fi\n")
@@ -116,6 +123,17 @@ fi
 		b.WriteString("# android-kit loaded\n")
 	}
 	return b.String()
+}
+
+func aliasTarget(value string) (kind, body string) {
+	value = strings.TrimSpace(value)
+	if strings.HasPrefix(value, "shell:") {
+		return "shell", strings.TrimSpace(strings.TrimPrefix(value, "shell:"))
+	}
+	if strings.HasPrefix(value, "ak:") {
+		return "ak", strings.TrimSpace(strings.TrimPrefix(value, "ak:"))
+	}
+	return "ak", value
 }
 
 func quoteFields(value string) string {

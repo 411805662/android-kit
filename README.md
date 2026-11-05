@@ -20,7 +20,7 @@ curl -fsSL https://github.com/411805662/android-kit/releases/latest/download/ins
 或走 jsDelivr（国内网络通常更快；新 tag 可能有几分钟缓存）：
 
 ```bash
-curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.1.3/install.sh | sh
+curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.1.4/install.sh | sh
 ```
 
 安装器会：
@@ -156,9 +156,13 @@ ak web
 
 - 只监听 `127.0.0.1`，随机端口。
 - 一次性 token 写入 `~/.local/state/android-kit/web.token`（0600）。
-- 页面可编辑项目、包名、Activity、模块、APK glob、别名、引擎偏好、生成物位置。
-- 保存后 CLI 下一条命令立即生效。
-- 网页执行命令默认关闭；需要时在 Settings 打开 `allow_run_from_web`。
+- 只有一个页面：一张表把「名称 / 快捷键 / ak 命令 / 实际命令」放在一起，按构建、启动、调试、其他分组。
+- 内置命令标「内置」，实际命令由项目配置生成，只读；自定义行可自由编辑命令。
+- 表格底部可加行：从尚未使用的 ak 命令里选，或选「自定义（空白）」。
+- 每行可复制 `ak` 命令、复制实际命令、直接执行；执行结果在底部抽屉里显示。
+- 项目设置、全局设置、存储路径都在同一页的折叠区里。
+- 保存后 CLI 下一条命令立即生效；已打开的终端按一次回车，prompt hook 会自动刷新。
+- 网页执行默认开启；可在「全局设置」里关闭 `allow_run_from_web`。
 
 ## 存储位置
 

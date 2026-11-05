@@ -14,7 +14,9 @@ import (
 	"os/exec"
 	"os/signal"
 	"runtime"
+	"sort"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 )
@@ -22,16 +24,27 @@ import (
 //go:embed web/index.html
 var webFS embed.FS
 
+var webRunMu sync.Mutex
+
 type CommandInfo struct {
 	ID        string   `json:"id"`
+	Target    string   `json:"target"`
 	Group     string   `json:"group"`
 	Title     string   `json:"title"`
 	Desc      string   `json:"desc"`
 	Command   string   `json:"command"`
+	Usage     string   `json:"usage"`
 	Engine    string   `json:"engine"`
 	Available bool     `json:"available"`
+	Runnable  bool     `json:"runnable"`
+	Run       string   `json:"run"`
 	Aliases   []string `json:"aliases"`
 	Examples  []string `json:"examples"`
+}
+
+type CustomAlias struct {
+	Alias   string `json:"alias"`
+	Command string `json:"command"`
 }
 
 type WebState struct {
@@ -43,6 +56,7 @@ type WebState struct {
 	Runtime     Runtime           `json:"runtime"`
 	Devices     []Device          `json:"devices"`
 	Commands    []CommandInfo     `json:"commands"`
+	Custom      []CustomAlias     `json:"custom"`
 	ProjectDirs map[string]string `json:"project_dirs"`
 }
 
@@ -70,18 +84,33 @@ func (a *App) webState() WebState {
 		Runtime:     rt,
 		Devices:     a.Paths.Devices(),
 		Commands:    a.commandCatalog(proj, engine),
+		Custom:      a.customAliases(),
 		ProjectDirs: dirs,
 	}
 }
 
+func (a *App) customAliases() []CustomAlias {
+	out := []CustomAlias{}
+	for name, value := range a.Config.Aliases.Items {
+		if strings.HasPrefix(strings.TrimSpace(value), "shell:") {
+			out = append(out, CustomAlias{Alias: name, Command: strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(value), "shell:"))})
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Alias < out[j].Alias })
+	return out
+}
+
+const (
+	groupDeploy = "构建 · 安装 · 卸载 · 部署"
+	groupApp    = "启动 · 杀进程 · 重启"
+	groupDebug  = "清数据 · 截图 · UI 树 · 文本 · 存储路径"
+	groupOther  = "其他"
+)
+
 func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 	aliasMap := map[string][]string{}
 	for name, value := range a.Config.Aliases.Items {
-		first := strings.Fields(value)
-		if len(first) == 0 {
-			continue
-		}
-		aliasMap[first[0]] = append(aliasMap[first[0]], name)
+		aliasMap[strings.TrimSpace(value)] = append(aliasMap[strings.TrimSpace(value)], name)
 	}
 	root := "<project>"
 	pkg := "<package>"
@@ -101,45 +130,72 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 		}
 		dev = a.device(proj)
 	}
+	if module == "" {
+		module = ":app"
+	}
+	if variant == "" {
+		variant = "debug"
+	}
 	devFlag := ""
 	if dev != "" {
 		devFlag = " --device " + dev
 	}
-	buildCmd := "./gradlew " + gradleTask(module, variant)
+	mod := strings.TrimPrefix(module, ":")
+	if mod == "" {
+		mod = "app"
+	}
+	task := mod + ":assemble" + strings.ToUpper(variant[:1]) + variant[1:]
+	gradleBuild := "./gradlew " + gradleTask(module, variant)
+	gradleClean := "./gradlew clean " + gradleTask(module, variant)
+	buildCmd := gradleBuild
+	cleanCmd := gradleClean
 	installCmd := "adb install -r -t -d " + apk
-	runCmd := buildCmd + " && " + installCmd + " && adb shell am start -n " + pkg + "/" + act
+	runCmd := gradleBuild + " && " + installCmd + " && adb shell am start -n " + pkg + "/" + act
+	layoutCmd := "adb shell uiautomator dump /sdcard/android-kit-ui.xml && adb exec-out cat /sdcard/android-kit-ui.xml"
+	shotCmd := "adb exec-out screencap -p > " + root + "/android-kit/screenshots/<time>.png"
 	if engine == "android" {
-		buildCmd = "android build " + module
-		installCmd = "android install " + module + devFlag
-		runCmd = "android run " + module + " --activity " + act + devFlag
+		buildCmd = "android build ?" + task
+		cleanCmd = "android build ?" + mod + ":clean && android build ?" + task
+		installCmd = "android install " + apk + devFlag
+		runCmd = "android run " + apk + " --activity " + act + devFlag
+		layoutCmd = "android layout -p" + devFlag
+		shotCmd = "android screen capture --output " + root + "/android-kit/screenshots/<time>.png" + devFlag
 	}
 	items := []CommandInfo{
-		{ID: "build", Group: "构建", Title: "构建 Debug", Desc: "官方 android CLI 优先，失败可回退 Gradle", Command: buildCmd, Engine: engine, Available: true, Examples: []string{"ak build", "ak build --clean"}},
-		{ID: "install", Group: "构建", Title: "安装 APK", Desc: "自动找最新 APK；官方 CLI 支持 delta install", Command: installCmd, Engine: engine, Available: true, Examples: []string{"ak install", "ak install --apk app/build/outputs/apk/debug/app-debug.apk"}},
-		{ID: "run", Group: "构建", Title: "构建 + 安装 + 启动", Desc: "一条命令完成日常部署", Command: runCmd, Engine: engine, Available: true, Examples: []string{"ak run", "ak run --engine=legacy"}},
-		{ID: "stop", Group: "应用", Title: "杀进程", Desc: "force-stop 当前包名", Command: "adb shell am force-stop " + pkg, Engine: "adb", Available: true, Examples: []string{"ak stop"}},
-		{ID: "open", Group: "应用", Title: "启动应用", Desc: "有 Activity 用 am start，否则用 monkey", Command: "adb shell am start -n " + pkg + "/" + act, Engine: "adb", Available: true, Examples: []string{"ak open"}},
-		{ID: "restart", Group: "应用", Title: "重启应用", Desc: "杀进程后立即启动", Command: "adb shell am force-stop " + pkg + " && adb shell am start -n " + pkg + "/" + act, Engine: "adb", Available: true, Examples: []string{"ak restart"}},
-		{ID: "clear", Group: "应用", Title: "清除数据", Desc: "pm clear，登录态会丢失", Command: "adb shell pm clear " + pkg, Engine: "adb", Available: true, Examples: []string{"ak clear"}},
-		{ID: "app-uninstall", Group: "应用", Title: "卸载 App", Desc: "卸载手机上的应用，不是本工具", Command: "adb uninstall " + pkg, Engine: "adb", Available: true, Examples: []string{"ak app-uninstall"}},
-		{ID: "logcat", Group: "调试", Title: "应用日志", Desc: "按 pid 过滤；-c 先清空", Command: "adb logcat -v time --pid=$(adb shell pidof " + pkg + ")", Engine: "adb", Available: true, Examples: []string{"ak logcat", "ak logcat -c"}},
-		{ID: "layout", Group: "调试", Title: "UI 树", Desc: "保存 JSON 到 .android-kit/ui，同时打印", Command: "android layout -p" + devFlag, Engine: engine, Available: true, Examples: []string{"ak layout", "ak layout -p --full"}},
-		{ID: "screenshot", Group: "调试", Title: "截图", Desc: "保存到 android-kit/screenshots", Command: "android screen capture --output " + root + "/android-kit/screenshots/<time>.png" + devFlag, Engine: engine, Available: true, Examples: []string{"ak screenshot", "ak screenshot -a"}},
-		{ID: "tap", Group: "调试", Title: "点击", Desc: "坐标或选择器", Command: "adb shell input tap 100 200", Engine: "adb", Available: true, Examples: []string{"ak tap 100 200", "ak tap \"id=btn_login\""}},
-		{ID: "text", Group: "调试", Title: "输入文本", Desc: "空格自动转 %s", Command: "adb shell input text hello%sworld", Engine: "adb", Available: true, Examples: []string{"ak text \"hello world\""}},
-		{ID: "swipe", Group: "调试", Title: "滑动", Desc: "四个坐标 + 可选时长", Command: "adb shell input swipe 500 1500 500 500", Engine: "adb", Available: true, Examples: []string{"ak swipe 500 1500 500 500 300"}},
-		{ID: "preview", Group: "调试", Title: "Compose 预览", Desc: "无设备渲染 @Preview 为 PNG", Command: "android preview render --output " + root + "/android-kit/previews", Engine: "android", Available: engine == "android", Examples: []string{"ak preview list", "ak preview render --fqn=com.example.Preview"}},
-		{ID: "analyze", Group: "调试", Title: "APK 分析", Desc: "DEX / R8 / keep 规则 / native 库", Command: "android analyze " + apk, Engine: "android", Available: engine == "android", Examples: []string{"ak analyze app-debug.apk"}},
-		{ID: "docs", Group: "调试", Title: "官方文档", Desc: "搜索 Android Knowledge Base", Command: "android docs search <query>", Engine: "android", Available: engine == "android", Examples: []string{"ak docs search compose"}},
-		{ID: "devices", Group: "环境", Title: "设备列表", Desc: "adb devices -l", Command: "adb devices -l", Engine: "adb", Available: true, Examples: []string{"ak devices"}},
-		{ID: "status", Group: "环境", Title: "状态", Desc: "项目、设备、引擎、APK", Command: "ak status", Engine: "-", Available: true, Examples: []string{"ak status"}},
-		{ID: "doctor", Group: "环境", Title: "环境诊断", Desc: "逐项检查 adb / CLI / Java / 项目", Command: "ak doctor", Engine: "-", Available: true, Examples: []string{"ak doctor"}},
-		{ID: "web", Group: "环境", Title: "网页配置台", Desc: "本地 127.0.0.1，token 保护", Command: "ak web", Engine: "-", Available: true, Examples: []string{"ak web"}},
-		{ID: "paths", Group: "环境", Title: "存储路径", Desc: "查看所有目录和文件位置", Command: "ak paths", Engine: "-", Available: true, Examples: []string{"ak paths"}},
-		{ID: "clean", Group: "环境", Title: "清理生成物", Desc: "默认清 tmp/logs", Command: "ak clean", Engine: "-", Available: true, Examples: []string{"ak clean --screenshots", "ak clean --all"}},
+		{ID: "build", Target: "build", Group: groupDeploy, Title: "构建 Debug", Desc: "编译当前模块的 debug 变体", Command: buildCmd, Engine: engine, Available: true, Runnable: true, Run: "build"},
+		{ID: "build-clean", Target: "build --clean", Group: groupDeploy, Title: "清理后构建", Desc: "先 clean 再编译，解决缓存问题", Command: cleanCmd, Engine: engine, Available: true, Runnable: true, Run: "build --clean"},
+		{ID: "install", Target: "install", Group: groupDeploy, Title: "安装 APK", Desc: "自动找最新 APK；官方 CLI 支持 delta install", Command: installCmd, Engine: engine, Available: true, Runnable: true, Run: "install"},
+		{ID: "app-uninstall", Target: "app-uninstall", Group: groupDeploy, Title: "卸载 App", Desc: "卸载手机上的应用，不是本工具", Command: "adb uninstall " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "app-uninstall"},
+		{ID: "run", Target: "run", Group: groupDeploy, Title: "构建 + 安装 + 启动", Desc: "一条命令完成日常部署", Command: runCmd, Engine: engine, Available: true, Runnable: true, Run: "run"},
+
+		{ID: "open", Target: "open", Group: groupApp, Title: "启动应用", Desc: "有 Activity 用 am start，否则用 monkey", Command: "adb shell am start -n " + pkg + "/" + act, Engine: "adb", Available: true, Runnable: true, Run: "open"},
+		{ID: "stop", Target: "stop", Group: groupApp, Title: "杀进程", Desc: "force-stop 当前包名", Command: "adb shell am force-stop " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "stop"},
+		{ID: "restart", Target: "restart", Group: groupApp, Title: "重启应用", Desc: "杀进程后立即启动", Command: "adb shell am force-stop " + pkg + " && adb shell am start -n " + pkg + "/" + act, Engine: "adb", Available: true, Runnable: true, Run: "restart"},
+
+		{ID: "clear", Target: "clear", Group: groupDebug, Title: "清除数据", Desc: "pm clear，登录态会丢失", Command: "adb shell pm clear " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "clear"},
+		{ID: "screenshot", Target: "screenshot", Group: groupDebug, Title: "截图", Desc: "保存到 android-kit/screenshots", Command: shotCmd, Engine: engine, Available: true, Runnable: true, Run: "screenshot"},
+		{ID: "layout", Target: "layout -p", Group: groupDebug, Title: "UI 树", Desc: "保存到 .android-kit/ui，同时打印", Command: layoutCmd, Engine: engine, Available: true, Runnable: true, Run: "layout -p"},
+		{ID: "text", Target: "text", Group: groupDebug, Title: "输入文本", Desc: "空格自动转 %s", Command: "adb shell input text <text>", Engine: "adb", Available: true, Runnable: false},
+		{ID: "paths", Target: "paths", Group: groupDebug, Title: "存储路径", Desc: "查看所有目录和文件位置", Command: "ak paths", Engine: "-", Available: true, Runnable: true, Run: "paths"},
+
+		{ID: "logcat", Target: "logcat", Group: groupOther, Title: "应用日志", Desc: "按 pid 过滤，持续输出", Command: "adb logcat -v time --pid=$(adb shell pidof " + pkg + ")", Engine: "adb", Available: true, Runnable: false},
+		{ID: "logcat-clear", Target: "logcat -c", Group: groupOther, Title: "清空日志", Desc: "adb logcat -c", Command: "adb logcat -c", Engine: "adb", Available: true, Runnable: true, Run: "logcat -c"},
+		{ID: "tap", Target: "tap", Group: groupOther, Title: "点击", Desc: "坐标或选择器", Command: "adb shell input tap <x> <y>", Engine: "adb", Available: true, Runnable: false},
+		{ID: "swipe", Target: "swipe", Group: groupOther, Title: "滑动", Desc: "四个坐标 + 可选时长", Command: "adb shell input swipe <x1> <y1> <x2> <y2> [ms]", Engine: "adb", Available: true, Runnable: false},
+		{ID: "key", Target: "key", Group: groupOther, Title: "按键", Desc: "keyevent，如 4=返回 3=Home", Command: "adb shell input keyevent <code>", Engine: "adb", Available: true, Runnable: false},
+		{ID: "preview", Target: "preview", Group: groupOther, Title: "Compose 预览", Desc: "无设备渲染 @Preview 为 PNG", Command: "android preview render --output " + root + "/android-kit/previews", Engine: "android", Available: engine == "android", Runnable: false},
+		{ID: "analyze", Target: "analyze", Group: groupOther, Title: "APK 分析", Desc: "DEX / R8 / keep 规则 / native 库", Command: "android analyze " + apk, Engine: "android", Available: engine == "android", Runnable: false},
+		{ID: "docs", Target: "docs", Group: groupOther, Title: "官方文档", Desc: "搜索 Android Knowledge Base", Command: "android docs search <query>", Engine: "android", Available: engine == "android", Runnable: false},
+		{ID: "devices", Target: "devices", Group: groupOther, Title: "设备列表", Desc: "adb devices -l", Command: "adb devices -l", Engine: "adb", Available: true, Runnable: true, Run: "devices"},
+		{ID: "status", Target: "status", Group: groupOther, Title: "状态", Desc: "项目、设备、引擎、APK", Command: "ak status", Engine: "-", Available: true, Runnable: true, Run: "status"},
+		{ID: "doctor", Target: "doctor", Group: groupOther, Title: "环境诊断", Desc: "逐项检查 adb / CLI / Java / 项目", Command: "ak doctor", Engine: "-", Available: true, Runnable: true, Run: "doctor"},
+		{ID: "web", Target: "web", Group: groupOther, Title: "网页配置台", Desc: "本地 127.0.0.1，token 保护", Command: "ak web", Engine: "-", Available: true, Runnable: false},
+		{ID: "clean", Target: "clean", Group: groupOther, Title: "清理生成物", Desc: "默认清 tmp/logs", Command: "ak clean", Engine: "-", Available: true, Runnable: true, Run: "clean"},
+		{ID: "cd", Target: "cd", Group: groupOther, Title: "进入项目目录", Desc: "shell 函数，直接 cd 到项目根目录", Command: "cd " + root, Engine: "-", Available: true, Runnable: false},
 	}
 	for i := range items {
-		items[i].Aliases = aliasMap[items[i].ID]
+		items[i].Usage = "ak " + items[i].Target
+		items[i].Aliases = aliasMap[items[i].Target]
 	}
 	return items
 }
@@ -312,8 +368,12 @@ func (a *App) cmdWeb(args []string) error {
 		writeHTTPJSON(w, map[string]any{"ok": true, "applied": "immediate"})
 	}))
 	mux.HandleFunc("/api/run", auth(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "POST required", 405)
+			return
+		}
 		if !a.Config.UI.AllowRunFromWeb {
-			http.Error(w, "网页执行已关闭（Settings → allow_run_from_web）", 403)
+			http.Error(w, "网页执行已关闭：在下方「全局设置」里勾选「允许网页执行命令」并保存", 403)
 			return
 		}
 		var body struct {
@@ -324,12 +384,54 @@ func (a *App) cmdWeb(args []string) error {
 			http.Error(w, err.Error(), 400)
 			return
 		}
-		allowed := map[string]bool{"build": true, "install": true, "run": true, "stop": true, "open": true, "restart": true, "clear": true, "screenshot": true, "layout": true, "logcat": false}
-		if !allowed[body.Command] {
+		fields := append(strings.Fields(body.Command), body.Args...)
+		if len(fields) == 0 {
+			http.Error(w, "缺少 command", 400)
+			return
+		}
+		allowed := map[string]bool{
+			"build": true, "install": true, "run": true, "stop": true, "open": true,
+			"restart": true, "clear": true, "screenshot": true, "layout": true,
+			"app-uninstall": true, "logcat": true, "devices": true, "status": true,
+			"doctor": true, "paths": true, "clean": true,
+		}
+		if !allowed[fields[0]] {
 			http.Error(w, "command not allowed", 403)
 			return
 		}
-		writeHTTPJSON(w, map[string]any{"ok": true, "note": "请在终端执行: ak " + body.Command})
+		if !webRunMu.TryLock() {
+			http.Error(w, "已有命令正在执行，请等它结束", 409)
+			return
+		}
+		defer webRunMu.Unlock()
+
+		proj, _ := a.project(false)
+		args := fields
+		if proj != nil {
+			args = append([]string{"-p", proj.ID}, args...)
+		}
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Minute)
+		defer cancel()
+		cmd := exec.CommandContext(ctx, a.Paths.Binary, args...)
+		if proj != nil {
+			cmd.Dir = proj.Root
+		}
+		cmd.Env = append(os.Environ(), "ANDROID_KIT_NO_ALIASES=1", "NO_COLOR=1")
+		started := time.Now()
+		out, err := cmd.CombinedOutput()
+		res := map[string]any{
+			"ok":       err == nil,
+			"command":  "ak " + strings.Join(fields, " "),
+			"output":   string(out),
+			"duration": time.Since(started).Round(time.Millisecond).String(),
+		}
+		if err != nil {
+			res["error"] = err.Error()
+			if ctx.Err() == context.DeadlineExceeded {
+				res["error"] = "执行超时（20 分钟）"
+			}
+		}
+		writeHTTPJSON(w, res)
 	}))
 
 	srv := &http.Server{Handler: mux, ReadHeaderTimeout: 10 * time.Second}

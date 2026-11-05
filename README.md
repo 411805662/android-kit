@@ -38,7 +38,7 @@ curl -fsSL https://github.com/411805662/android-kit/releases/latest/download/ins
 或走 jsDelivr（国内网络通常更快；新 tag 可能有几分钟缓存）：
 
 ```bash
-curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.2.7/install.sh | sh
+curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.2.8/install.sh | sh
 ```
 
 安装器会：
@@ -200,7 +200,7 @@ ak web
 - 表格底部可加行：从尚未使用的 ak 命令里选，或选「自定义（空白）」。
 - 每行可复制 `ak` 命令、复制实际命令、直接执行；执行结果在底部抽屉里显示。
 - 项目设置、全局设置、存储路径都在同一页的折叠区里。
-- 「截图 / UI 产物」是缩略图画廊：截图直接看封面图，UI 树用配对的截图当封面；卡片下面是文件名和时间，不显示路径。
+- 「UI 截图」是缩略图画廊：截图直接看封面图，UI 树用配对的截图当封面；卡片下面是文件名和时间，不显示路径。
 - UI 树封面底部叠两个按钮：左「UI 树」打开 H5 对照，右「JSON」按 jq 风格格式化展示。
 - 缩略图右上角圆形 × 直接删除，不弹确认；「清空所有」会先确认。
 - H5 对照查看器：左边 1:1 截图，右边线框图；可模糊搜索 `id` / `text` / `content-desc` / `class`，匹配元素显示红色蒙层。

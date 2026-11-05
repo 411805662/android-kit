@@ -159,9 +159,10 @@ details .body{padding:0 16px 16px}
 .artifacts{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;padding:12px}
 .artcard{position:relative;border:1px solid var(--line);border-radius:11px;background:#12161f;overflow:hidden}
 .artcard:hover{border-color:#3a465e}
-.artcard .thumbwrap{position:relative;display:block;background:#0c0f16;height:220px}
-.artcard .thumbwrap a.thumbimg{display:block;height:100%}
-.artcard .thumbwrap img{display:block;width:100%;height:100%;object-fit:cover;object-position:top center;background:#0c0f16}
+.artcard .thumbwrap{position:relative;display:block;background:#0c0f16}
+.artcard .thumbwrap a.thumbimg{display:block}
+.artcard .thumbwrap img{display:block;width:100%;height:auto;background:#0c0f16}
+.artcard .thumbwrap.noimg{aspect-ratio:9/19.5}
 .artcard .thumbwrap.noimg::before{content:"无法预览";position:absolute;inset:0;display:grid;place-items:center;color:#4a5468;font-size:11.5px}
 .artcard .thumbbar{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;
   align-items:center;gap:6px;padding:6px 8px;background:linear-gradient(180deg,transparent,#000000d0 55%)}
@@ -208,7 +209,7 @@ details .body{padding:0 16px 16px}
   <div class="tabs">
     <button id="tab-project" onclick="showTab('project')">项目</button>
     <button id="tab-commands" onclick="showTab('commands')">命令</button>
-    <button id="tab-artifacts" onclick="showTab('artifacts')">截图 / UI 产物</button>
+    <button id="tab-artifacts" onclick="showTab('artifacts')">UI 截图</button>
   </div>
 
   <div class="tabpane" id="pane-project">
@@ -806,7 +807,7 @@ function renderArtifacts() {
       <button class="artdel" title="删除" onclick="deleteArtifact(${i})">×</button>
       <div class="thumbwrap">
         <a class="thumbimg" href="${esc(openURL)}" target="_blank" rel="noopener">
-          <img src="${esc(thumbURL)}" loading="lazy" alt="${esc(item.name)}"
+          <img src="${esc(thumbURL)}" alt="${esc(item.name)}"
             onerror="this.closest('.thumbwrap').classList.add('noimg');this.remove()">
         </a>
         ${bar}

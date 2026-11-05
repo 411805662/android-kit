@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -323,7 +325,7 @@ func (a *App) cmdLogcat(args []string) error {
 		}
 	}
 	if *grep != "" {
-		return a.adb(proj, "logcat", "-v", "time")
+		return a.logcatFiltered(proj, *grep)
 	}
 	pid := ""
 	if proj.Package != "" {
@@ -335,6 +337,37 @@ func (a *App) cmdLogcat(args []string) error {
 		return a.adb(proj, "logcat", "-v", "time", "--pid="+pid)
 	}
 	return a.adb(proj, "logcat", "-v", "time")
+}
+
+func (a *App) logcatFiltered(proj *Project, pattern string) error {
+	adb, ok := lookPath("adb")
+	if !ok {
+		return fmt.Errorf("找不到 adb")
+	}
+	args := []string{"logcat", "-v", "time"}
+	if serial := a.device(proj); serial != "" {
+		args = append([]string{"-s", serial}, args...)
+	}
+	cmd := exec.Command(adb, args...)
+	cmd.Dir = proj.Root
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	cmd.Stderr = os.Stderr
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	scanner := bufio.NewScanner(stdout)
+	scanner.Buffer(make([]byte, 64*1024), 1024*1024)
+	needle := strings.ToLower(pattern)
+	for scanner.Scan() {
+		line := scanner.Text()
+		if strings.Contains(strings.ToLower(line), needle) {
+			fmt.Println(line)
+		}
+	}
+	return cmd.Wait()
 }
 
 func (a *App) cmdLayout(args []string) error {

@@ -1,0 +1,668 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>android-kit</title>
+<style>
+:root{
+  --bg:#0b0d12; --panel:#12151d; --panel2:#171b25; --line:#252b38;
+  --text:#e8ecf4; --muted:#8b94a7; --accent:#7c9cff; --accent2:#4ade80;
+  --warn:#fbbf24; --danger:#f87171; --radius:14px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  background:radial-gradient(1200px 700px at 15% -10%,#1b2440 0%,transparent 55%),
+             radial-gradient(900px 600px at 100% 0%,#132a24 0%,transparent 50%),var(--bg);
+  color:var(--text);font:14px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent);text-decoration:none}
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:236px;flex:0 0 236px;border-right:1px solid var(--line);
+  background:rgba(12,15,22,.72);backdrop-filter:blur(14px);
+  padding:22px 14px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px;
+}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 10px 18px}
+.logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#7c9cff,#4ade80);
+  display:grid;place-items:center;font-weight:800;color:#0b0d12;font-size:15px}
+.brand b{font-size:16px;letter-spacing:.2px}
+.brand small{display:block;color:var(--muted);font-size:11px;margin-top:1px}
+.nav{display:flex;flex-direction:column;gap:3px}
+.nav button{
+  display:flex;align-items:center;gap:10px;width:100%;padding:9px 11px;border:0;border-radius:9px;
+  background:transparent;color:var(--muted);text-align:left;font-size:13.5px;
+}
+.nav button:hover{background:#1a1f2b;color:var(--text)}
+.nav button.active{background:#1d2433;color:var(--text);box-shadow:inset 0 0 0 1px #2b3446}
+.nav .ico{width:18px;text-align:center;opacity:.9}
+.side-foot{margin-top:auto;padding:12px 10px;color:var(--muted);font-size:11.5px;border-top:1px solid var(--line)}
+.main{flex:1;min-width:0;padding:22px 30px 60px;max-width:1280px}
+.topbar{display:flex;align-items:center;gap:14px;margin-bottom:22px;flex-wrap:wrap}
+.topbar h1{font-size:20px;margin:0;font-weight:650;letter-spacing:.2px}
+.topbar .sub{color:var(--muted);font-size:12.5px}
+.spacer{flex:1}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;
+  background:#161b26;border:1px solid var(--line);color:var(--muted);font-size:12px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--accent2);box-shadow:0 0 8px #4ade8088}
+.dot.off{background:var(--danger);box-shadow:0 0 8px #f8717188}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:1000px){.g3,.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){.g2,.g3,.g4{grid-template-columns:1fr}.sidebar{display:none}.main{padding:16px}}
+.card{background:linear-gradient(180deg,rgba(23,27,37,.92),rgba(18,21,29,.92));
+  border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+.card h3{margin:0 0 4px;font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.3px;text-transform:uppercase}
+.card .big{font-size:17px;font-weight:650;margin:2px 0 2px;word-break:break-all}
+.card .small{color:var(--muted);font-size:12px;word-break:break-all}
+.hero{display:flex;gap:18px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+.hero .name{font-size:26px;font-weight:700;letter-spacing:.2px}
+.hero .root{color:var(--muted);font-size:12.5px;margin-top:4px;word-break:break-all}
+.kv{display:grid;grid-template-columns:88px 1fr;gap:6px 12px;font-size:13px;margin-top:14px}
+.kv .k{color:var(--muted)}
+.kv .v{word-break:break-all}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{border:1px solid var(--line);background:#1a1f2b;color:var(--text);padding:8px 12px;border-radius:9px;font-size:13px}
+.btn:hover{border-color:#3a465e;background:#202736}
+.btn.primary{background:linear-gradient(135deg,#6f8fff,#5b7cf0);border-color:#6f8fff;color:#fff;font-weight:600}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent}
+.btn.danger{color:#ffb4b4;border-color:#4a2a2e;background:#241619}
+.btn.sm{padding:5px 9px;font-size:12px;border-radius:7px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;
+  background:#0c0f16;border:1px solid #222938;border-radius:8px;padding:9px 10px;color:#c9d4ea;
+  overflow:auto;white-space:pre-wrap;word-break:break-all}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:12px;color:var(--muted)}
+.field input,.field select,.field textarea{
+  background:#0e121a;border:1px solid #283044;border-radius:8px;padding:9px 10px;outline:none;width:100%;
+}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:#4d6bd8;box-shadow:0 0 0 3px #4d6bd822}
+.field .hint{font-size:11px;color:#6f788b}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+@media(max-width:720px){.form-grid{grid-template-columns:1fr}}
+.list{display:flex;flex-direction:column;gap:8px}
+.list-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);
+  border-radius:10px;background:#12161f;cursor:pointer}
+.list-item:hover{border-color:#3a465e}
+.list-item.active{border-color:#5b7cf0;background:#161d2e}
+.list-item .id{font-family:ui-monospace,Menlo,monospace;font-size:12px;color:var(--accent)}
+.list-item .nm{font-weight:600}
+.list-item .rt{color:var(--muted);font-size:11.5px;margin-left:auto;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tag{display:inline-block;padding:2px 7px;border-radius:6px;background:#1b2230;border:1px solid #2a3346;color:#9fb0cc;font-size:11px}
+.tag.green{color:#86efac;border-color:#1f4a33;background:#12251b}
+.tag.blue{color:#a9bcff;border-color:#2b3a66;background:#141b2e}
+.tag.warn{color:#fcd34d;border-color:#4a3a16;background:#241d0f}
+.cmd-card{display:flex;flex-direction:column;gap:8px}
+.cmd-card .head{display:flex;align-items:center;gap:8px}
+.cmd-card .title{font-weight:650}
+.cmd-card .desc{color:var(--muted);font-size:12.5px;min-height:34px}
+.cmd-card .foot{display:flex;align-items:center;gap:8px;margin-top:auto}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.chip{padding:6px 11px;border-radius:999px;border:1px solid var(--line);background:#12161f;color:var(--muted);font-size:12px}
+.chip.active{background:#1d2433;color:var(--text);border-color:#3a465e}
+.table{width:100%;border-collapse:collapse;font-size:12.5px}
+.table th{text-align:left;color:var(--muted);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line)}
+.table td{padding:8px 10px;border-bottom:1px solid #1b202b;vertical-align:top;word-break:break-all}
+.table tr:last-child td{border-bottom:0}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.toast{position:fixed;right:22px;bottom:22px;background:#1b2333;border:1px solid #33405a;color:var(--text);
+  padding:11px 15px;border-radius:10px;box-shadow:0 12px 40px #0008;opacity:0;transform:translateY(8px);
+  transition:.2s;pointer-events:none;max-width:420px;font-size:13px;z-index:50}
+.toast.show{opacity:1;transform:none}
+.toast.err{border-color:#5a2a2e;background:#2a171a}
+.empty{color:var(--muted);padding:26px;text-align:center;border:1px dashed #2a3142;border-radius:12px}
+.section{display:none}
+.section.active{display:block}
+.note{color:var(--muted);font-size:12px;line-height:1.7}
+.note b{color:#c9d4ea}
+.split{display:grid;grid-template-columns:300px 1fr;gap:16px}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+.alias-row{display:grid;grid-template-columns:120px 1fr 34px;gap:8px;margin-bottom:8px}
+.alias-row input{background:#0e121a;border:1px solid #283044;border-radius:8px;padding:8px 9px;width:100%}
+.icon-btn{border:1px solid #3a2a2e;background:#241619;color:#ffb4b4;border-radius:8px;width:34px}
+.switch{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12.5px}
+.switch input{width:auto}
+.footer-note{margin-top:26px;color:#5f687a;font-size:11.5px}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">ak</div>
+      <div><b>android-kit</b><small id="ver">local</small></div>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-view="overview" class="active"><span class="ico">◈</span>概览</button>
+      <button data-view="projects"><span class="ico">▤</span>项目</button>
+      <button data-view="commands"><span class="ico">⌘</span>命令</button>
+      <button data-view="aliases"><span class="ico">⌁</span>快捷别名</button>
+      <button data-view="settings"><span class="ico">⚙</span>设置</button>
+      <button data-view="paths"><span class="ico">▦</span>存储路径</button>
+    </nav>
+    <div class="side-foot">
+      <div>本地服务 · 127.0.0.1</div>
+      <div style="margin-top:4px">配置保存后立即生效</div>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1 id="page-title">概览</h1>
+        <div class="sub" id="page-sub">当前项目、设备与运行环境</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="pill"><span class="dot" id="dev-dot"></span><span id="dev-label">检测设备中…</span></div>
+      <div class="pill" id="engine-pill">engine: -</div>
+    </div>
+
+    <section class="section active" id="view-overview">
+      <div class="card" id="hero-card"></div>
+      <div style="height:14px"></div>
+      <div class="grid g4" id="quick-cards"></div>
+      <div style="height:14px"></div>
+      <div class="grid g2">
+        <div class="card"><h3>运行环境</h3><div id="runtime-box"></div></div>
+        <div class="card"><h3>项目生成物</h3><div id="artifacts-box"></div></div>
+      </div>
+    </section>
+
+    <section class="section" id="view-projects">
+      <div class="split">
+        <div>
+          <div class="row" style="margin-bottom:10px">
+            <button class="btn primary" onclick="newProject()">+ 新项目</button>
+            <button class="btn" onclick="loadState()">刷新</button>
+          </div>
+          <div class="list" id="project-list"></div>
+        </div>
+        <div class="card">
+          <h3 id="project-form-title">项目配置</h3>
+          <div class="form-grid">
+            <div class="field"><label>ID</label><input id="p-id" placeholder="my-app"><div class="hint">用于 -p 和目录名</div></div>
+            <div class="field"><label>名称</label><input id="p-name" placeholder="My App"></div>
+            <div class="field" style="grid-column:1/-1"><label>项目根目录</label><input id="p-root" placeholder="/Users/you/dev/Android/MyApp"></div>
+            <div class="field"><label>包名</label><input id="p-package" placeholder="com.example.app"></div>
+            <div class="field"><label>启动 Activity</label><input id="p-activity" placeholder=".MainActivity"></div>
+            <div class="field"><label>Gradle 模块</label><input id="p-module" placeholder=":app"></div>
+            <div class="field"><label>构建变体</label><input id="p-variant" placeholder="debug"></div>
+            <div class="field" style="grid-column:1/-1"><label>APK glob</label><input id="p-apk" placeholder="app/build/outputs/apk/debug/*.apk"></div>
+            <div class="field"><label>默认设备 serial</label><input id="p-device" placeholder="留空自动选择"></div>
+          </div>
+          <div class="actions">
+            <button class="btn" onclick="detectProject()">自动探测</button>
+            <button class="btn primary" onclick="saveProject()">保存</button>
+            <button class="btn" onclick="setDefaultProject()">设为默认</button>
+            <button class="btn danger" onclick="deleteProject()">删除</button>
+          </div>
+          <div class="note" style="margin-top:12px">保存后 CLI 下一条命令立即使用新配置；网页本身也会刷新。</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="view-commands">
+      <div class="chips" id="cmd-chips"></div>
+      <div class="grid g2" id="command-list"></div>
+      <div class="note" style="margin-top:16px">命令卡片显示的是当前项目解析后的真实命令。复制到终端即可执行；网页执行默认关闭。</div>
+    </section>
+
+    <section class="section" id="view-aliases">
+      <div class="card">
+        <h3>快捷别名</h3>
+        <div class="row" style="margin-bottom:14px">
+          <div class="field" style="margin:0;min-width:180px"><label>预设</label>
+            <select id="a-preset" onchange="presetChanged()">
+              <option value="classic">classic（in / ko / k / b / ba …）</option>
+              <option value="none">none（只用 ak）</option>
+              <option value="custom">custom</option>
+            </select>
+          </div>
+          <label class="switch" style="margin-top:18px"><input type="checkbox" id="a-force"> 覆盖同名 alias/function</label>
+        </div>
+        <div id="alias-rows"></div>
+        <div class="actions">
+          <button class="btn" onclick="addAliasRow()">+ 添加</button>
+          <button class="btn primary" onclick="saveAliases()">保存别名</button>
+          <button class="btn" onclick="resetAliases()">恢复 classic</button>
+        </div>
+        <div class="note" style="margin-top:14px">
+          保存后：新终端立即生效；已打开的终端按一次回车，prompt hook 会自动刷新函数。<br>
+          如果同名 alias 已存在且未勾选“覆盖”，该别名会被跳过，避免破坏你已有的配置。
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="view-settings">
+      <div class="grid g2">
+        <div class="card">
+          <h3>全局设置</h3>
+          <div class="field"><label>默认项目</label><select id="s-default"></select></div>
+          <div class="field"><label>引擎偏好</label>
+            <select id="s-prefer">
+              <option value="auto">auto（官方 CLI 优先，自动回退）</option>
+              <option value="android">android（只用官方 CLI）</option>
+              <option value="legacy">legacy（只用 gradle + adb）</option>
+            </select>
+          </div>
+          <div class="field"><label>android CLI 最低版本</label><input id="s-minver" placeholder="1.1.0"></div>
+          <div class="field"><label>android CLI 路径（留空自动查找）</label><input id="s-clipath" placeholder="/Users/you/.local/bin/android"></div>
+          <div class="row">
+            <label class="switch"><input type="checkbox" id="s-openbrowser"> 打开网页时自动开浏览器</label>
+            <label class="switch"><input type="checkbox" id="s-allowrun"> 允许网页触发命令</label>
+          </div>
+        </div>
+        <div class="card">
+          <h3>生成物位置</h3>
+          <div class="field"><label>模式</label>
+            <select id="s-artifacts">
+              <option value="project">project（跟着项目走，推荐）</option>
+              <option value="xdg">xdg（统一放全局数据目录）</option>
+            </select>
+          </div>
+          <div class="field"><label>隐藏目录（机器读）</label><input id="s-hidden" placeholder=".android-kit"></div>
+          <div class="field"><label>可见目录（人看）</label><input id="s-visible" placeholder="android-kit"></div>
+          <div class="note">
+            <b>.android-kit/</b>：UI dump、trace、heap、日志、临时文件<br>
+            <b>android-kit/</b>：截图、Compose 预览、HTML/Markdown 报告<br>
+            两个目录首次创建时都会写入 <span class="mono">.gitignore</span>（内容 <span class="mono">*</span>），不会污染 git。
+          </div>
+        </div>
+      </div>
+      <div class="actions"><button class="btn primary" onclick="saveSettings()">保存设置</button></div>
+    </section>
+
+    <section class="section" id="view-paths">
+      <div class="card">
+        <h3>全局存储</h3>
+        <table class="table" id="paths-table"></table>
+      </div>
+      <div style="height:14px"></div>
+      <div class="card">
+        <h3>项目内生成物</h3>
+        <table class="table" id="project-paths-table"></table>
+        <div class="note" style="margin-top:12px">可用环境变量覆盖：<span class="mono">ANDROID_KIT_HOME</span>、<span class="mono">ANDROID_KIT_CONFIG_DIR</span>、<span class="mono">ANDROID_KIT_DATA_DIR</span>、<span class="mono">ANDROID_KIT_STATE_DIR</span>、<span class="mono">ANDROID_KIT_CACHE_DIR</span>、<span class="mono">ANDROID_KIT_BIN_DIR</span>。</div>
+      </div>
+    </section>
+
+    <div class="footer-note">android-kit · 本地配置台 · 所有数据只保存在本机</div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const TOKEN = new URLSearchParams(location.search).get('token') || sessionStorage.getItem('ak_token') || '';
+if (TOKEN) sessionStorage.setItem('ak_token', TOKEN);
+let S = null;
+let currentProjectID = null;
+let cmdFilter = '全部';
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+async function api(path, opts = {}) {
+  const headers = Object.assign({'X-AK-Token': TOKEN}, opts.headers || {});
+  if (opts.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+  const res = await fetch(path, Object.assign({}, opts, {headers}));
+  if (!res.ok) throw new Error((await res.text()) || res.statusText);
+  return res.json();
+}
+
+function toast(msg, err = false) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (err ? ' err' : '');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.className = 'toast', 3200);
+}
+
+async function loadState() {
+  try {
+    S = await api('/api/state');
+    if (!currentProjectID && S.current) currentProjectID = S.current.id;
+    renderAll();
+  } catch (e) {
+    toast('加载失败: ' + e.message, true);
+  }
+}
+
+function renderAll() {
+  $('#ver').textContent = 'v' + S.version;
+  const online = (S.devices || []).filter(d => d.state === 'device');
+  $('#dev-dot').className = 'dot' + (online.length ? '' : ' off');
+  $('#dev-label').textContent = online.length ? online[0].serial + (online[0].model ? ' · ' + online[0].model : '') : '无设备';
+  const engine = S.runtime.android_cli ? 'android ' + S.runtime.android_cli_version : 'legacy';
+  $('#engine-pill').textContent = 'engine: ' + engine;
+  renderOverview();
+  renderProjects();
+  renderCommands();
+  renderAliases();
+  renderSettings();
+  renderPaths();
+}
+
+function renderOverview() {
+  const p = S.current;
+  if (!p) {
+    $('#hero-card').innerHTML = `<div class="empty">还没有登记项目<br><br><button class="btn primary" onclick="go('projects');newProject()">+ 添加第一个项目</button></div>`;
+  } else {
+    $('#hero-card').innerHTML = `
+      <div class="hero">
+        <div>
+          <div class="name">${esc(p.name)}</div>
+          <div class="root mono">${esc(p.root)}</div>
+          <div class="kv">
+            <div class="k">包名</div><div class="v mono">${esc(p.package || '-')}</div>
+            <div class="k">Activity</div><div class="v mono">${esc(p.activity || '-')}</div>
+            <div class="k">模块</div><div class="v mono">${esc(p.module || ':app')} · ${esc(p.variant || 'debug')}</div>
+            <div class="k">设备</div><div class="v mono">${esc((S.devices||[]).find(d => d.state === 'device')?.serial || p.device || '-')}</div>
+          </div>
+        </div>
+        <div class="actions" style="margin:0">
+          <button class="btn primary" onclick="copyText('ak run')">复制 ak run</button>
+          <button class="btn" onclick="go('projects')">编辑项目</button>
+        </div>
+      </div>`;
+  }
+  const quick = [
+    ['run','构建 + 安装 + 启动','ak run'],
+    ['build','只构建','ak build'],
+    ['screenshot','截图','ak screenshot'],
+    ['layout','UI 树','ak layout -p'],
+  ];
+  $('#quick-cards').innerHTML = quick.map(([id,label,cmd]) => `
+    <div class="card">
+      <h3>${esc(label)}</h3>
+      <div class="code" style="margin-top:8px">${esc(cmd)}</div>
+      <div class="actions"><button class="btn sm" onclick="copyText('${cmd}')">复制</button></div>
+    </div>`).join('');
+  const rt = S.runtime;
+  $('#runtime-box').innerHTML = `
+    <div class="kv">
+      <div class="k">android CLI</div><div class="v mono">${esc(rt.android_cli_version || '未安装')}</div>
+      <div class="k">adb</div><div class="v mono">${esc(rt.adb || '未找到')}</div>
+      <div class="k">java</div><div class="v mono">${esc(rt.java || '未找到')}</div>
+      <div class="k">设备</div><div class="v">${(S.devices||[]).map(d => `<span class="tag ${d.state==='device'?'green':''}">${esc(d.serial)}</span>`).join(' ') || '<span class="tag warn">无</span>'}</div>
+    </div>`;
+  const dirs = S.project_dirs || {};
+  $('#artifacts-box').innerHTML = p ? `
+    <div class="kv">
+      <div class="k">隐藏</div><div class="v mono">${esc(dirs.hidden || '-')}</div>
+      <div class="k">可见</div><div class="v mono">${esc(dirs.visible || '-')}</div>
+      <div class="k">截图</div><div class="v mono">${esc((dirs.visible || '') + '/screenshots')}</div>
+    </div>` : `<div class="note">选择项目后显示。</div>`;
+}
+
+function renderProjects() {
+  const list = S.projects || [];
+  $('#project-list').innerHTML = list.length ? list.map(p => `
+    <div class="list-item ${p.id === currentProjectID ? 'active' : ''}" onclick="editProject('${esc(p.id)}')">
+      <div>
+        <div class="nm">${esc(p.name)} ${p.id === S.config.default_project ? '<span class="tag green">default</span>' : ''}</div>
+        <div class="id">${esc(p.id)} · ${esc(p.package || 'no package')}</div>
+      </div>
+      <div class="rt mono">${esc(p.root)}</div>
+    </div>`).join('') : `<div class="empty">还没有项目</div>`;
+  if (currentProjectID) {
+    const p = list.find(x => x.id === currentProjectID);
+    if (p) fillProjectForm(p);
+  }
+}
+
+function fillProjectForm(p) {
+  $('#project-form-title').textContent = '项目配置 · ' + p.id;
+  $('#p-id').value = p.id || '';
+  $('#p-name').value = p.name || '';
+  $('#p-root').value = p.root || '';
+  $('#p-package').value = p.package || '';
+  $('#p-activity').value = p.activity || '';
+  $('#p-module').value = p.module || ':app';
+  $('#p-variant').value = p.variant || 'debug';
+  $('#p-apk').value = p.apk_glob || '';
+  $('#p-device').value = p.device || '';
+}
+
+function newProject() {
+  currentProjectID = null;
+  $('#project-form-title').textContent = '新项目';
+  ['p-id','p-name','p-root','p-package','p-activity','p-apk','p-device'].forEach(id => $('#'+id).value = '');
+  $('#p-module').value = ':app';
+  $('#p-variant').value = 'debug';
+  go('projects');
+}
+
+function editProject(id) {
+  currentProjectID = id;
+  const p = (S.projects || []).find(x => x.id === id);
+  if (p) fillProjectForm(p);
+  renderProjects();
+}
+
+function projectFromForm() {
+  return {
+    id: $('#p-id').value.trim(),
+    name: $('#p-name').value.trim(),
+    root: $('#p-root').value.trim(),
+    package: $('#p-package').value.trim(),
+    activity: $('#p-activity').value.trim(),
+    module: $('#p-module').value.trim() || ':app',
+    variant: $('#p-variant').value.trim() || 'debug',
+    apk_glob: $('#p-apk').value.trim(),
+    device: $('#p-device').value.trim(),
+    env: {}
+  };
+}
+
+async function saveProject() {
+  try {
+    const p = projectFromForm();
+    if (!p.root) return toast('请填写项目根目录', true);
+    const r = await api('/api/project', {method:'POST', body: JSON.stringify(p)});
+    currentProjectID = r.project.id;
+    toast('已保存，立即生效');
+    await loadState();
+  } catch (e) { toast('保存失败: ' + e.message, true); }
+}
+
+async function detectProject() {
+  try {
+    const root = $('#p-root').value.trim();
+    if (!root) return toast('先填写项目根目录', true);
+    const p = await api('/api/detect', {method:'POST', body: JSON.stringify({path: root})});
+    $('#p-id').value = p.id || $('#p-id').value;
+    $('#p-name').value = p.name || $('#p-name').value;
+    $('#p-package').value = p.package || '';
+    $('#p-activity').value = p.activity || '';
+    $('#p-module').value = p.module || ':app';
+    $('#p-variant').value = p.variant || 'debug';
+    $('#p-apk').value = p.apk_glob || '';
+    toast('探测完成，确认后保存');
+  } catch (e) { toast('探测失败: ' + e.message, true); }
+}
+
+async function setDefaultProject() {
+  try {
+    const id = $('#p-id').value.trim();
+    if (!id) return toast('先保存项目', true);
+    await api('/api/project/default', {method:'POST', body: JSON.stringify({id})});
+    toast('默认项目已更新');
+    await loadState();
+  } catch (e) { toast('失败: ' + e.message, true); }
+}
+
+async function deleteProject() {
+  const id = $('#p-id').value.trim();
+  if (!id) return;
+  if (!confirm('删除项目配置 ' + id + '？不会删除项目文件。')) return;
+  try {
+    await api('/api/project?id=' + encodeURIComponent(id), {method:'DELETE'});
+    currentProjectID = null;
+    toast('已删除');
+    await loadState();
+  } catch (e) { toast('失败: ' + e.message, true); }
+}
+
+function renderCommands() {
+  const groups = ['全部', ...new Set((S.commands||[]).map(c => c.group))];
+  $('#cmd-chips').innerHTML = groups.map(g => `<button class="chip ${g===cmdFilter?'active':''}" onclick="setCmdFilter('${esc(g)}')">${esc(g)}</button>`).join('');
+  const list = (S.commands||[]).filter(c => cmdFilter === '全部' || c.group === cmdFilter);
+  $('#command-list').innerHTML = list.map(c => `
+    <div class="card cmd-card">
+      <div class="head">
+        <div class="title">${esc(c.title)}</div>
+        <span class="tag ${c.engine==='android'?'blue':''}">${esc(c.engine)}</span>
+        ${c.aliases && c.aliases.length ? `<span class="tag green">${c.aliases.map(esc).join(' / ')}</span>` : ''}
+        ${c.available ? '' : '<span class="tag warn">不可用</span>'}
+      </div>
+      <div class="desc">${esc(c.desc)}</div>
+      <div class="code">${esc(c.command)}</div>
+      <div class="foot">
+        <button class="btn sm" onclick="copyText(${JSON.stringify(c.command)})">复制</button>
+        <button class="btn sm" onclick="copyText(${JSON.stringify('ak ' + c.id)})">复制 ak 命令</button>
+        ${S.config.ui.allow_run_from_web ? `<button class="btn sm primary" onclick="runWeb('${esc(c.id)}')">执行</button>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function setCmdFilter(g) { cmdFilter = g; renderCommands(); }
+
+async function runWeb(id) {
+  try {
+    const r = await api('/api/run', {method:'POST', body: JSON.stringify({command:id})});
+    toast(r.note || '已提交');
+  } catch (e) { toast(e.message, true); }
+}
+
+function renderAliases() {
+  const a = S.config.aliases || {preset:'classic', force:false, items:{}};
+  $('#a-preset').value = a.preset || 'classic';
+  $('#a-force').checked = !!a.force;
+  const items = a.items || {};
+  $('#alias-rows').innerHTML = Object.keys(items).sort().map(name => aliasRow(name, items[name])).join('') || '<div class="empty">没有别名</div>';
+}
+
+function aliasRow(name = '', value = '') {
+  return `<div class="alias-row">
+    <input class="a-name" value="${esc(name)}" placeholder="in">
+    <input class="a-value" value="${esc(value)}" placeholder="install">
+    <button class="icon-btn" onclick="this.parentElement.remove()">×</button>
+  </div>`;
+}
+
+function addAliasRow() {
+  const box = $('#alias-rows');
+  if (box.querySelector('.empty')) box.innerHTML = '';
+  box.insertAdjacentHTML('beforeend', aliasRow());
+}
+
+function presetChanged() {
+  const v = $('#a-preset').value;
+  if (v === 'classic') {
+    const classic = {b:'build',cb:'build --clean',in:'install',ba:'run',bio:'run',k:'stop',o:'open',ko:'restart',c:'clear',un:'app-uninstall',ss:'screenshot',ui:'layout -p',l:'logcat',lc:'logcat -c',dev:'cd'};
+    $('#alias-rows').innerHTML = Object.keys(classic).sort().map(n => aliasRow(n, classic[n])).join('');
+  } else if (v === 'none') {
+    $('#alias-rows').innerHTML = '<div class="empty">只用 ak，不生成短别名</div>';
+  }
+}
+
+async function saveAliases() {
+  try {
+    const items = {};
+    document.querySelectorAll('#alias-rows .alias-row').forEach(row => {
+      const n = row.querySelector('.a-name').value.trim();
+      const v = row.querySelector('.a-value').value.trim();
+      if (n && v) items[n] = v;
+    });
+    const cfg = JSON.parse(JSON.stringify(S.config));
+    cfg.aliases = {preset: $('#a-preset').value, force: $('#a-force').checked, items};
+    await api('/api/config', {method:'POST', body: JSON.stringify(cfg)});
+    toast('别名已保存；新终端或按回车生效');
+    await loadState();
+  } catch (e) { toast('保存失败: ' + e.message, true); }
+}
+
+async function resetAliases() {
+  $('#a-preset').value = 'classic';
+  presetChanged();
+  await saveAliases();
+}
+
+function renderSettings() {
+  const c = S.config;
+  $('#s-default').innerHTML = '<option value="">（无）</option>' + (S.projects||[]).map(p => `<option value="${esc(p.id)}" ${p.id===c.default_project?'selected':''}>${esc(p.name)} (${esc(p.id)})</option>`).join('');
+  $('#s-prefer').value = c.prefer || 'auto';
+  $('#s-minver').value = c.android_cli?.min_version || '1.1.0';
+  $('#s-clipath').value = c.android_cli?.path || '';
+  $('#s-openbrowser').checked = !!c.ui?.open_browser;
+  $('#s-allowrun').checked = !!c.ui?.allow_run_from_web;
+  $('#s-artifacts').value = c.paths?.artifacts_mode || 'project';
+  $('#s-hidden').value = c.paths?.hidden_dir || '.android-kit';
+  $('#s-visible').value = c.paths?.visible_dir || 'android-kit';
+}
+
+async function saveSettings() {
+  try {
+    const cfg = JSON.parse(JSON.stringify(S.config));
+    cfg.default_project = $('#s-default').value;
+    cfg.prefer = $('#s-prefer').value;
+    cfg.android_cli = cfg.android_cli || {};
+    cfg.android_cli.min_version = $('#s-minver').value.trim() || '1.1.0';
+    cfg.android_cli.path = $('#s-clipath').value.trim();
+    cfg.ui = cfg.ui || {};
+    cfg.ui.open_browser = $('#s-openbrowser').checked;
+    cfg.ui.allow_run_from_web = $('#s-allowrun').checked;
+    cfg.paths = cfg.paths || {};
+    cfg.paths.artifacts_mode = $('#s-artifacts').value;
+    cfg.paths.hidden_dir = $('#s-hidden').value.trim() || '.android-kit';
+    cfg.paths.visible_dir = $('#s-visible').value.trim() || 'android-kit';
+    await api('/api/config', {method:'POST', body: JSON.stringify(cfg)});
+    toast('设置已保存，立即生效');
+    await loadState();
+  } catch (e) { toast('保存失败: ' + e.message, true); }
+}
+
+function renderPaths() {
+  const p = S.paths;
+  const rows = [
+    ['二进制', p.binary], ['ak 入口', p.shim], ['配置目录', p.config_dir],
+    ['配置文件', p.config_dir + '/config.toml'], ['项目配置', p.projects_dir],
+    ['数据目录', p.data_dir], ['安装清单', p.manifest], ['备份', p.backup_dir],
+    ['状态目录', p.state_dir], ['Web token', p.web_token], ['日志', p.logs_dir],
+    ['缓存', p.cache_dir], ['全局生成物', p.artifacts],
+  ];
+  $('#paths-table').innerHTML = rows.map(([k,v]) => `<tr><td style="width:150px;color:var(--muted)">${esc(k)}</td><td class="mono">${esc(v)}</td></tr>`).join('');
+  const d = S.project_dirs || {};
+  $('#project-paths-table').innerHTML = S.current ? [
+    ['隐藏目录', d.hidden], ['可见目录', d.visible],
+    ['UI dump', (d.hidden||'') + '/ui'], ['Trace', (d.hidden||'') + '/traces'],
+    ['Heap', (d.hidden||'') + '/heaps'], ['截图', (d.visible||'') + '/screenshots'],
+    ['Compose 预览', (d.visible||'') + '/previews'], ['报告', (d.visible||'') + '/reports'],
+  ].map(([k,v]) => `<tr><td style="width:150px;color:var(--muted)">${esc(k)}</td><td class="mono">${esc(v)}</td></tr>`).join('') : '<tr><td>未选择项目</td></tr>';
+}
+
+function go(view) {
+  if (location.hash !== '#' + view) history.replaceState(null, '', '#' + view);
+  document.querySelectorAll('.nav button').forEach(b => b.classList.toggle('active', b.dataset.view === view));
+  document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === 'view-' + view));
+  const titles = {overview:['概览','当前项目、设备与运行环境'],projects:['项目','多项目路径与包名配置'],commands:['命令','当前项目解析后的真实命令'],aliases:['快捷别名','in / ko / k / b / ba …'],settings:['设置','全局偏好与生成物位置'],paths:['存储路径','所有文件与目录位置']};
+  $('#page-title').textContent = titles[view][0];
+  $('#page-sub').textContent = titles[view][1];
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).then(() => toast('已复制: ' + text)).catch(() => toast('复制失败', true));
+}
+
+document.querySelectorAll('.nav button').forEach(b => b.addEventListener('click', () => go(b.dataset.view)));
+go((location.hash || '#overview').slice(1));
+loadState();
+</script>
+</body>
+</html>

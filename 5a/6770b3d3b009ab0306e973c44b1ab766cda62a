@@ -1,0 +1,46 @@
+commands.go
+  s_62becc3ae9a79b::t_23da6a672f789f 318,328-333,338-340,346,354-361,363-365
+README.md
+  s_62becc3ae9a79b::t_5d2647f21981e3 100,106-108,116,126,150
+  s_62becc3ae9a79b::t_757d5339dc23cd 196-198
+  s_62becc3ae9a79b::t_00232cd0119993 41
+web.go
+  s_62becc3ae9a79b::t_0c975d13f4c89f 428
+  s_62becc3ae9a79b::t_121ba58240383e 109-113,171-182,199
+config.go
+  s_62becc3ae9a79b::t_0fab75d904cddc 104,121-122,139
+  s_62becc3ae9a79b::t_19f7a904204a82 61,136-137
+  s_62becc3ae9a79b::t_93ed36f5636567 68,123-135,140,175
+  s_62becc3ae9a79b::t_ffcfd2a43682fb 138
+main.go
+  s_62becc3ae9a79b::t_75a216b211f894 117,129
+  s_62becc3ae9a79b::t_01b7099ce88fc3 191-193,201,209,227
+web/index.html
+  s_62becc3ae9a79b::t_731fbd9a704f31 386-391
+  s_62becc3ae9a79b::t_61d33fd8fab3e3 239-247
+  s_62becc3ae9a79b::t_7a28efae36f236 248-257
+  s_62becc3ae9a79b::t_ac5c394ae02795 425-431
+  s_62becc3ae9a79b::t_1fbcffb51f65ce 27-33
+  s_62becc3ae9a79b::t_6387c28123dce8 173-175,178-191,193-206,208-214,216-238,258-279,282
+  s_62becc3ae9a79b::t_c7343ec53c7c32 301-303,310,392,402-408,410-412,414,416,419-424
+  s_62becc3ae9a79b::t_08d3a2af91d29e 283
+  s_62becc3ae9a79b::t_965ac2de3ea292 432
+version.go
+  s_62becc3ae9a79b::t_f100f41b7a7dab 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5a6770b3d3b009ab0306e973c44b1ab766cda62a",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "workbuddy/hy4free"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

@@ -60,7 +60,7 @@ func ResolvePaths() Paths {
 		p.ConfigDir = root
 		p.DataDir = root
 		p.StateDir = root
-		p.CacheDir = root
+		p.CacheDir = filepath.Join(root, "cache")
 		p.BinDir = filepath.Join(root, "bin")
 	} else if runtime.GOOS == "windows" {
 		appData := envOr("APPDATA")
@@ -75,13 +75,13 @@ func ResolvePaths() Paths {
 		p.ConfigDir = root
 		p.DataDir = root
 		p.StateDir = root
-		p.CacheDir = root
+		p.CacheDir = filepath.Join(root, "cache")
 		p.BinDir = filepath.Join(local, "Programs", appName)
 	} else {
 		p.ConfigDir = root
 		p.DataDir = root
 		p.StateDir = root
-		p.CacheDir = root
+		p.CacheDir = filepath.Join(root, "cache")
 		p.BinDir = filepath.Join(home, ".local", "bin")
 	}
 

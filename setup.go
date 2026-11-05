@@ -171,13 +171,12 @@ func (a *App) cmdUninstall(args []string) error {
 		remove(m.Binary)
 	}
 	remove(a.Paths.CacheDir)
-	remove(a.Paths.StateDir)
-	remove(a.Paths.DataDir)
-	if a.Paths.Root != a.Paths.ConfigDir && a.Paths.Root != a.Paths.DataDir && a.Paths.Root != a.Paths.StateDir {
-		remove(a.Paths.Root)
-	}
+	remove(a.Paths.LogsDir)
+	remove(a.Paths.WebToken)
+	remove(a.Paths.Stamp)
+	remove(a.Paths.Manifest)
 	if *purge {
-		remove(a.Paths.ConfigDir)
+		remove(a.Paths.Root)
 	}
 	if !*purge {
 		fmt.Printf("kept config: %s\n", a.Paths.ConfigDir)

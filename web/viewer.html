@@ -64,11 +64,12 @@ input[type=search]{background:transparent;border:0;border-radius:8px;padding:6px
 .tip[hidden]{display:none}
 .tip b{display:block;font-weight:600;color:#9bc0ff;font-family:ui-monospace,Menlo,monospace;word-break:break-all}
 .tip span{display:block;color:#c9d4ea;word-break:break-all}
-.tip .tip-cls{display:block;color:#8b94a7;font-size:10.5px;word-break:break-all}
 .zoombar{position:absolute;left:14px;top:14px;background:#151a24f2;border:1px solid var(--line);
   border-radius:8px;padding:6px 8px;display:flex;align-items:center;gap:6px;font-size:11.5px;z-index:20;
   box-shadow:0 6px 22px #0007}
-.zoombar button{width:26px;height:26px;border:1px solid var(--line);background:#1a1f2b;border-radius:6px;cursor:pointer}
+.zoombar button{min-width:26px;height:26px;padding:0 7px;white-space:nowrap;
+  border:1px solid var(--line);background:#1a1f2b;border-radius:6px;cursor:pointer}
+#zoom-label{min-width:34px;text-align:center}
 .side{border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
 .side .head{padding:10px 14px;border-bottom:1px solid var(--line);font-weight:650;font-size:12.5px}
 .side .body{padding:12px 14px;overflow:auto;flex:1}
@@ -116,6 +117,7 @@ input[type=search]{background:transparent;border:0;border-radius:8px;padding:6px
           <div class="overlay" id="overlay"></div>
         </div>
       </div>
+      <div class="tip" id="tip" hidden></div>
     </div>
     <div class="zoombar">
       <button onclick="setZoom(zoom-0.1)">−</button>
@@ -419,7 +421,6 @@ function renderBoxes() {
     const cls = [
       'box',
       bg ? 'window' : '',
-      b.y < 44 ? 'tip-below' : '',
       isMatch ? 'match' : '',
       node.index === selectedIndex ? 'selected' : ''
     ].filter(Boolean).join(' ');
@@ -548,6 +549,42 @@ async function copyText(text) {
 }
 
 window.addEventListener('resize', () => { if (zoom < 1) fitZoom(); });
+
+// 悬停气泡：固定字号，不随缩放变小
+const tipEl = $('#tip');
+function hideTip() { tipEl.hidden = true; }
+
+function showTip(box) {
+  if (!box || box.classList.contains('window')) return hideTip();
+  const node = NODES[+box.dataset.index];
+  if (!node) return hideTip();
+  const idTxt = shortId(node.id);
+  const nameTxt = node.text || node.desc || '';
+  tipEl.innerHTML = (idTxt ? `<b>${esc(idTxt)}</b>` : '')
+    + (nameTxt ? `<span>${esc(nameTxt)}</span>` : '')
+    + (!idTxt && !nameTxt ? `<b>${esc(node.cls || 'window')}</b>` : '');
+  tipEl.hidden = false;
+  const r = box.getBoundingClientRect();
+  const tw = tipEl.offsetWidth;
+  const th = tipEl.offsetHeight;
+  let left = r.left;
+  if (left + tw > window.innerWidth - 8) left = Math.max(8, window.innerWidth - tw - 8);
+  let top = r.top - th - 7;
+  if (top < 8) top = r.bottom + 7;
+  tipEl.style.left = left + 'px';
+  tipEl.style.top = top + 'px';
+}
+
+$('#overlay').addEventListener('mouseover', e => {
+  const box = e.target.closest?.('.box');
+  if (box) showTip(box);
+});
+$('#overlay').addEventListener('mouseout', e => {
+  const box = e.target.closest?.('.box');
+  if (box) hideTip();
+});
+['scroll', 'wheel'].forEach(evt => $('#stage').addEventListener(evt, hideTip, {passive: true}));
+
 initSplitter();
 loadViewer();
 </script>

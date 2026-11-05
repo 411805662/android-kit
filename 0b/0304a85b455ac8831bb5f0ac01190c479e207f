@@ -1,0 +1,16 @@
+.gitignore
+  h_741505e84bb10f 1-8
+README.md
+  h_741505e84bb10f 1-33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0b0304a85b455ac8831bb5f0ac01190c479e207f",
+  "prompts": {},
+  "humans": {
+    "h_741505e84bb10f": {
+      "author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

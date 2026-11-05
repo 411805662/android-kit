@@ -4,33 +4,48 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>UI JSON</title>
+<script>
+(function () {
+  var t = null;
+  try { t = localStorage.getItem('ak_theme'); } catch (e) {}
+  if (t !== 'light' && t !== 'dark') {
+    t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  }
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
 <style>
-:root{--bg:#0e0e0f;--line:#282829;--text:#ececec;--muted:#8f8f92;--accent:#7c9cff}
+:root{--bg:#0e0e0f;--line:#282829;--text:#ececec;--muted:#8f8f92;--accent:#7c9cff;
+  --top:#17171a;--input-bg:#141415;--input-bd:#2c2c2e;--placeholder:#565659;--btn:#1e1e20;
+  --btn-hover:#262628;--btn-bd-hi:#3a3a3c;--mark-bg:#fbbf2455;--mark-tx:#ffe9a8;--hit:#202022}
+:root[data-theme="light"]{--bg:#ffffff;--line:#e4e4e8;--text:#1b1b1e;--muted:#6b6c72;--accent:#3b5bdb;
+  --top:#f4f4f6;--input-bg:#ffffff;--input-bd:#d9d9de;--placeholder:#9a9aa1;--btn:#f2f2f4;
+  --btn-hover:#e7e7eb;--btn-bd-hi:#c9c9d0;--mark-bg:#ffe9a8;--mark-tx:#5a4200;--hit:#f2f2f5}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 body{background:var(--bg);color:var(--text);
   font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   display:flex;flex-direction:column;overflow:hidden}
 .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;
-  background:#17171a;border-bottom:1px solid var(--line);
+  background:var(--top);border-bottom:1px solid var(--line);
   font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;flex:0 0 auto}
 .bar b{font-size:13px}
 .bar .file{color:var(--muted);font-size:11.5px;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .spacer{flex:1}
-input[type=search]{background:#141415;border:1px solid #2c2c2e;border-radius:8px;
+input[type=search]{background:var(--input-bg);border:1px solid var(--input-bd);border-radius:8px;
   padding:7px 11px;min-width:280px;outline:none;color:var(--text);font-size:12.5px}
 input[type=search]:focus{border-color:var(--accent);box-shadow:0 0 0 3px #4d6bd822}
-input[type=search]::placeholder{color:#565659}
+input[type=search]::placeholder{color:var(--placeholder)}
 .st{color:var(--muted);font-size:11.5px;white-space:nowrap}
 .st.err{color:#f87171}
 .chk{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11.5px;white-space:nowrap}
-button{background:#1e1e20;border:1px solid var(--line);color:var(--text);border-radius:7px;
+button{background:var(--btn);border:1px solid var(--line);color:var(--text);border-radius:7px;
   padding:6px 11px;cursor:pointer;font-size:11.5px}
-button:hover{border-color:#3a3a3c;background:#262628}
+button:hover{border-color:var(--btn-bd-hi);background:var(--btn-hover)}
 .content{flex:1;overflow:auto}
 pre{margin:0;padding:16px 20px;white-space:pre;tab-size:2}
-mark{background:#fbbf2455;color:#ffe9a8;border-radius:2px;padding:0 1px}
-.hit{background:#202022}
+mark{background:var(--mark-bg);color:var(--mark-tx);border-radius:2px;padding:0 1px}
+.hit{background:var(--hit)}
 .empty{color:var(--muted);padding:24px 20px}
 </style>
 </head>
@@ -44,9 +59,22 @@ mark{background:#fbbf2455;color:#ffe9a8;border-radius:2px;padding:0 1px}
   <label class="chk"><input type="checkbox" id="only"> 只看匹配行</label>
   <button id="copy">复制</button>
   <a id="raw" class="st" target="_blank" rel="noopener">原始文件</a>
+  <button id="theme-btn" onclick="toggleTheme()" title="切换黑白主题">🌙</button>
 </div>
 <div class="content"><pre id="pre">加载中…</pre></div>
 <script>
+function applyTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  const b = document.getElementById('theme-btn');
+  if (b) b.textContent = t === 'light' ? '☀️' : '🌙';
+}
+function toggleTheme() {
+  const t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  try { localStorage.setItem('ak_theme', t); } catch (e) {}
+  applyTheme(t);
+}
+applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+
 const $ = s => document.querySelector(s);
 const QS = new URLSearchParams(location.search);
 const PATH = QS.get('path') || '';

@@ -38,7 +38,7 @@ curl -fsSL https://github.com/411805662/android-kit/releases/latest/download/ins
 或走 jsDelivr（国内网络通常更快；新 tag 可能有几分钟缓存）：
 
 ```bash
-curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.2.9/install.sh | sh
+curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.2.10/install.sh | sh
 ```
 
 安装器会：
@@ -204,6 +204,7 @@ ak web
 - UI 树封面底部叠两个按钮：左「UI 树」打开 H5 对照，右「JSON」按 jq 风格格式化展示。
 - 缩略图右上角圆形 × 直接删除，不弹确认；「清空所有」会先确认。
 - H5 对照查看器：左边 1:1 截图，右边线框图；可模糊搜索 `id` / `text` / `content-desc` / `class`，匹配元素显示红色蒙层。
+- 缩放控件固定在截图区左上角，切到 1:1 后依然可继续放大缩小。
 - `ak layout` 会自动截一张同时间戳的图，并输出 `# viewer:` H5 链接；`ak web` 没运行时只提示先启动网页配置台。
 - 查看器里背景容器不挡点击，子元素优先选中；选中后按 `Delete`（或点「删除元素」）可把该元素及子元素从当前视图隐藏，顶部可一键恢复。
 - 中间分隔条可左右拖动调整右侧属性区宽度，宽度会记住。

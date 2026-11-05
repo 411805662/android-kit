@@ -1,0 +1,66 @@
+web/index.html
+  s_eb1e2c85f62b50::t_f2abfb8a002483 102,106-107
+  s_eb1e2c85f62b50::t_73819daa447a63 389-404
+  s_eb1e2c85f62b50::t_cf4456e1ad28a4 530
+  s_eb1e2c85f62b50::t_bb5a9e262205c7 95-96,98,100
+  s_eb1e2c85f62b50::t_638367da075ab4 596,606
+  s_eb1e2c85f62b50::t_7434a9c58c902e 544,549,555,562
+  s_eb1e2c85f62b50::t_bf4f01db1d9f38 66,74-76
+  s_eb1e2c85f62b50::t_162d44b2343e76 458
+  s_eb1e2c85f62b50::t_1f3c0d91ef30c9 103-104,108
+  s_eb1e2c85f62b50::t_20195f878dd79e 78
+  s_eb1e2c85f62b50::t_8a7aadd31a9f26 266-270
+  s_eb1e2c85f62b50::t_d6066edf1c65f9 523,527,537
+  s_eb1e2c85f62b50::t_ea876ec7686ef1 316-320
+  s_eb1e2c85f62b50::t_851c941d599c40 428,437,440
+  s_eb1e2c85f62b50::t_b32844fbeb43b3 225-229
+  s_62becc3ae9a79b::t_e12403e5c58de1 9-10,16,25,36,41,43,47-48,61,64,83,86-89,105,111,113-114,119-120,126-127,137,139,142,147-148,151,157,160-161,165-167,169,171,175,178,182,184,494
+web.go
+  s_eb1e2c85f62b50::t_209794e3cea62c 16-17
+  s_eb1e2c85f62b50::t_044beb7c1757b5 428-453
+  s_eb1e2c85f62b50::t_3595b7f05eefeb 329-333
+  s_eb1e2c85f62b50::t_260c285e1017a0 154-165,176-177
+web/viewer.html
+  s_eb1e2c85f62b50::t_c56a33cd645d06 348-361
+  s_eb1e2c85f62b50::t_c932672b2fb198 75-76
+  s_eb1e2c85f62b50::t_6a9d0f42d9cf18 297-299
+  s_eb1e2c85f62b50::t_5a3b62e0049a4e 134
+  s_62becc3ae9a79b::t_870f8de234b4db 8,16,19,27-28,31,34-35,39-40,53,58-59,62,66-67,71,83-84,86,90
+artifacts.go
+  s_eb1e2c85f62b50::t_2f8392b8bba9ec 27,99-102
+  s_eb1e2c85f62b50::t_8d8d27751c8834 221-224
+commands.go
+  s_eb1e2c85f62b50::t_29f278dadf35bb 90-139
+  s_eb1e2c85f62b50::t_9b9cdfcb66e42e 509-512
+  s_eb1e2c85f62b50::t_721a51d4f7ae7c 14
+README.md
+  s_62becc3ae9a79b::t_308af9e0cb90a9 41
+version.go
+  s_62becc3ae9a79b::t_77dbb8509bf4dd 5
+web/json.html
+  s_62becc3ae9a79b::t_07541c36977adf 8,15,20,23,27,29,33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1c54841caecfdadcb68647ae4426bed641e07d19",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    },
+    "s_eb1e2c85f62b50": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1abf3-1a5b-7553-8639-364a6dacd49b",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

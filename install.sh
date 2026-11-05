@@ -6,7 +6,8 @@
 # Environment:
 #   ANDROID_KIT_VERSION   release tag, default: latest
 #   ANDROID_KIT_PREFIX    install prefix, default: $HOME/.local
-#   ANDROID_KIT_ALIASES   classic | none, default: none
+#   ANDROID_KIT_ALIASES   classic | none; default: keep existing config,
+#                         fresh installs get none
 #   ANDROID_KIT_NO_SETUP  set to 1 to skip shell integration
 
 set -eu
@@ -14,7 +15,7 @@ set -eu
 REPO="411805662/android-kit"
 VERSION="${ANDROID_KIT_VERSION:-latest}"
 PREFIX="${ANDROID_KIT_PREFIX:-$HOME/.local}"
-ALIASES="${ANDROID_KIT_ALIASES:-none}"
+ALIASES="${ANDROID_KIT_ALIASES:-}"
 BIN_DIR="$PREFIX/bin"
 
 say() { printf '%s\n' "$*"; }
@@ -114,7 +115,19 @@ esac
 if [ "${ANDROID_KIT_NO_SETUP:-0}" != "1" ]; then
   say ""
   say "→ configuring shell integration"
-  "$BIN_DIR/android-kit" setup --yes --shell auto --aliases "$ALIASES" || {
+  CFG_DIR="${ANDROID_KIT_CONFIG_DIR:-}"
+  if [ -z "$CFG_DIR" ] && [ -n "${ANDROID_KIT_HOME:-}" ]; then
+    CFG_DIR="$ANDROID_KIT_HOME/config"
+  fi
+  [ -n "$CFG_DIR" ] || CFG_DIR="$HOME/.config/android-kit"
+  SETUP_ARGS="--yes --shell auto"
+  if [ -n "$ALIASES" ]; then
+    SETUP_ARGS="$SETUP_ARGS --aliases $ALIASES"
+  elif [ ! -f "$CFG_DIR/config.toml" ]; then
+    SETUP_ARGS="$SETUP_ARGS --aliases none"
+  fi
+  # shellcheck disable=SC2086
+  "$BIN_DIR/android-kit" setup $SETUP_ARGS || {
     say "setup failed; run manually: $BIN_DIR/android-kit setup"
   }
 fi

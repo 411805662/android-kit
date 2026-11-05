@@ -6,7 +6,7 @@ $ErrorActionPreference = "Stop"
 $Repo = "411805662/android-kit"
 $Version = if ($env:ANDROID_KIT_VERSION) { $env:ANDROID_KIT_VERSION } else { "latest" }
 $Prefix = if ($env:ANDROID_KIT_PREFIX) { $env:ANDROID_KIT_PREFIX } else { Join-Path $env:LOCALAPPDATA "Programs\android-kit" }
-$Aliases = if ($env:ANDROID_KIT_ALIASES) { $env:ANDROID_KIT_ALIASES } else { "none" }
+$Aliases = $env:ANDROID_KIT_ALIASES
 
 $Arch = if ([Environment]::Is64BitOperatingSystem) { "amd64" } else { throw "64-bit Windows is required" }
 $Asset = "android-kit_windows_$Arch.zip"
@@ -33,7 +33,13 @@ if ($UserPath -notlike "*$Prefix*") {
   Write-Host "added $Prefix to user PATH (restart terminal)"
 }
 
-& (Join-Path $Prefix "android-kit.exe") setup --yes --shell auto --aliases $Aliases
+$SetupArgs = @("setup", "--yes", "--shell", "auto")
+if ($Aliases) {
+  $SetupArgs += @("--aliases", $Aliases)
+} elseif (-not (Test-Path (Join-Path $env:APPDATA "android-kit\config.toml"))) {
+  $SetupArgs += @("--aliases", "none")
+}
+& (Join-Path $Prefix "android-kit.exe") @SetupArgs
 Remove-Item -Recurse -Force $Tmp
 
 Write-Host ""

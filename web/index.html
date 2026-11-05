@@ -60,6 +60,24 @@ main{max-width:1500px;margin:0 auto;padding:18px 22px}
 .banner.on{display:flex;align-items:center;gap:10px}
 .card{background:linear-gradient(180deg,rgba(23,27,37,.92),rgba(18,21,29,.92));
   border:1px solid var(--line);border-radius:var(--radius)}
+.card-head{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid var(--line);
+  font-weight:650;font-size:13px;color:#c9d4ea}
+.card-head .note{margin:0;font-weight:400}
+.split2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:14px;align-items:start}
+@media(max-width:1100px){.split2{grid-template-columns:1fr}}
+.pane-card .body{padding:14px 16px}
+.split2 .form{grid-template-columns:1fr 1fr}
+.split2 table{font-size:12.5px}
+.split2 table{table-layout:fixed}
+.split2 thead th{padding:8px 10px}
+.split2 tbody td{padding:7px 10px}
+.split2 .c-name{width:22%}
+.split2 .c-alias{width:14%}
+.split2 .c-ak{width:24%;white-space:normal}
+.split2 .c-ak .tag{display:none}
+.split2 .c-actual{width:26%;min-width:0}
+.split2 .c-ops{width:14%}
+.split2 .tablecard{overflow:auto}
 .tablecard{overflow:clip}
 table{width:100%;border-collapse:collapse}
 thead th{background:#151a24;text-align:left;
@@ -138,13 +156,25 @@ details .body{padding:0 16px 16px}
 .drawer pre a.runlink:hover{border-color:#4d6bd8;background:#1b2333}
 .drawer pre a.runlink.primary{border-color:#4d6bd8;background:linear-gradient(135deg,#2a3a6b,#22304f);
   color:#dbe4ff;font-weight:600}
-.artifacts{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:12px}
-.artifact{padding:10px;border:1px solid var(--line);border-radius:9px;background:#12161f}
-.artifact .kind{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
-.artifact .name{font-size:12px;word-break:break-all;margin:4px 0 8px}
-.artifact .links{display:flex;gap:6px;flex-wrap:wrap}
-.artifact a.btn{text-decoration:none;padding:5px 9px;font-size:11.5px}
-.artifact .path{color:#5f687a;font-size:10.5px;word-break:break-all;margin-top:7px}
+.artifacts{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;padding:12px}
+.artcard{position:relative;border:1px solid var(--line);border-radius:11px;background:#12161f;overflow:hidden}
+.artcard:hover{border-color:#3a465e}
+.artcard .thumbwrap{position:relative;display:block;background:#0c0f16;height:220px}
+.artcard .thumbwrap a.thumbimg{display:block;height:100%}
+.artcard .thumbwrap img{display:block;width:100%;height:100%;object-fit:cover;object-position:top center;background:#0c0f16}
+.artcard .thumbwrap.noimg::before{content:"无法预览";position:absolute;inset:0;display:grid;place-items:center;color:#4a5468;font-size:11.5px}
+.artcard .thumbbar{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;
+  align-items:center;gap:6px;padding:6px 8px;background:linear-gradient(180deg,transparent,#000000d0 55%)}
+.artcard .thumbbar .btn{text-decoration:none;padding:4px 10px;font-size:11.5px;border-radius:7px;
+  background:#151a24dd;border:1px solid #3a465e}
+.artcard .thumbbar .btn.primary{background:linear-gradient(135deg,#6f8fff,#5b7cf0);border-color:#6f8fff;color:#fff}
+.artcard .artdel{position:absolute;top:8px;right:8px;z-index:3;width:24px;height:24px;border-radius:50%;
+  border:1px solid #ffffff26;background:#000000a8;color:#e8ecf4;font-size:14px;line-height:1;
+  display:grid;place-items:center;padding:0}
+.artcard .artdel:hover{background:var(--danger);border-color:var(--danger);color:#fff}
+.artcard .artmeta{padding:8px 10px 10px}
+.artcard .artmeta .nm{font-size:11.5px;word-break:break-all;color:#c9d4ea}
+.artcard .artmeta .tm{font-size:10.5px;color:var(--muted);margin-top:3px}
 .toast{position:fixed;right:20px;bottom:20px;background:#1b2333;border:1px solid #33405a;
   padding:10px 14px;border-radius:9px;box-shadow:0 12px 40px #0008;opacity:0;transform:translateY(8px);
   transition:.2s;pointer-events:none;max-width:460px;font-size:12.5px;z-index:60}
@@ -187,8 +217,8 @@ details .body{padding:0 16px 16px}
         <thead>
           <tr>
             <th>名称</th>
-            <th>快捷键</th>
             <th>ak 命令</th>
+            <th>快捷键</th>
             <th>实际命令（点击复制）</th>
             <th style="text-align:right">操作</th>
           </tr>
@@ -197,29 +227,47 @@ details .body{padding:0 16px 16px}
       </table>
     </div>
 
-    <details id="d-project">
-      <summary>项目设置（影响实际命令）</summary>
-      <div class="body">
-        <div class="form">
-          <div class="field"><label>项目 ID</label><input id="p-id" placeholder="my-app"></div>
-          <div class="field"><label>名称</label><input id="p-name" placeholder="My App"></div>
-          <div class="field"><label>项目根目录</label><input id="p-root" placeholder="/Users/you/dev/Android/MyApp"></div>
-          <div class="field"><label>包名</label><input id="p-package" placeholder="com.example.app"></div>
-          <div class="field"><label>启动 Activity</label><input id="p-activity" placeholder=".MainActivity"></div>
-          <div class="field"><label>Gradle 模块</label><input id="p-module" placeholder=":app"></div>
-          <div class="field"><label>构建变体</label><input id="p-variant" placeholder="debug"></div>
-          <div class="field"><label>APK glob</label><input id="p-apk" placeholder="app/build/outputs/apk/debug/*.apk"></div>
-          <div class="field"><label>默认设备 serial</label><input id="p-device" placeholder="留空自动选择"></div>
+    <div class="split2">
+      <section class="card pane-card">
+        <div class="card-head">项目设置 <span class="note">影响实际命令</span></div>
+        <div class="body">
+          <div class="form">
+            <div class="field"><label>项目 ID</label><input id="p-id" placeholder="my-app"></div>
+            <div class="field"><label>名称</label><input id="p-name" placeholder="My App"></div>
+            <div class="field"><label>项目根目录</label><input id="p-root" placeholder="/Users/you/dev/Android/MyApp"></div>
+            <div class="field"><label>包名</label><input id="p-package" placeholder="com.example.app"></div>
+            <div class="field"><label>启动 Activity</label><input id="p-activity" placeholder=".MainActivity"></div>
+            <div class="field"><label>Gradle 模块</label><input id="p-module" placeholder=":app"></div>
+            <div class="field"><label>构建变体</label><input id="p-variant" placeholder="debug"></div>
+            <div class="field"><label>APK glob</label><input id="p-apk" placeholder="app/build/outputs/apk/debug/*.apk"></div>
+            <div class="field"><label>默认设备 serial</label><input id="p-device" placeholder="留空自动选择"></div>
+          </div>
+          <div class="actions">
+            <button class="btn" onclick="detectProject()">自动探测</button>
+            <button class="btn primary" onclick="saveProject()">保存项目</button>
+            <button class="btn" onclick="setDefaultProject()">设为默认</button>
+            <button class="btn danger" onclick="deleteProject()">删除项目</button>
+          </div>
+          <div class="note">包名、Activity、模块、变体都会直接改变「实际命令」。改完保存，表格立即刷新。</div>
         </div>
-        <div class="actions">
-          <button class="btn" onclick="detectProject()">自动探测</button>
-          <button class="btn primary" onclick="saveProject()">保存项目</button>
-          <button class="btn" onclick="setDefaultProject()">设为默认</button>
-          <button class="btn danger" onclick="deleteProject()">删除项目</button>
-        </div>
-        <div class="note">包名、Activity、模块、变体都会直接改变「实际命令」。改完保存，表格立即刷新。</div>
-      </div>
-    </details>
+      </section>
+
+      <section class="card tablecard">
+        <div class="card-head">项目管理</div>
+        <table>
+          <thead>
+            <tr>
+              <th>名称</th>
+              <th>ak 命令</th>
+              <th>快捷键</th>
+              <th>实际命令（点击复制）</th>
+              <th style="text-align:right">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-project-admin"></tbody>
+        </table>
+      </section>
+    </div>
 
     <details id="d-settings">
       <summary>全局设置</summary>
@@ -260,8 +308,8 @@ details .body{padding:0 16px 16px}
         <thead>
           <tr>
             <th>名称</th>
-            <th>快捷键</th>
             <th>ak 命令</th>
+            <th>快捷键</th>
             <th>实际命令（点击复制）</th>
             <th style="text-align:right">操作</th>
           </tr>
@@ -281,8 +329,8 @@ details .body{padding:0 16px 16px}
   <div class="tabpane" id="pane-artifacts">
     <div class="actions" style="margin:0 0 12px">
       <button class="btn" onclick="loadArtifacts()">刷新产物</button>
-      <button class="btn danger" onclick="clearArtifacts()">清空当前项目产物</button>
-      <span class="note" style="margin:0">截图直接打开原图；UI 树打开 H5 对照；原始 JSON 按 jq 风格格式化展示。</span>
+      <button class="btn danger" onclick="clearArtifacts()">清空所有</button>
+      <span class="note" style="margin:0">点缩略图看大图；UI 树缩略图底部可打开 H5 对照或 JSON；右上角 × 直接删除。</span>
     </div>
     <div class="artifacts" id="artifact-list"></div>
   </div>
@@ -305,8 +353,9 @@ const TOKEN = new URLSearchParams(location.search).get('token') || sessionStorag
 if (TOKEN) sessionStorage.setItem('ak_token', TOKEN);
 
 const PROJECT_GROUP = '项目';
+const PROJECT_ADMIN = '项目管理';
 const COMMAND_GROUPS = ['构建 · 安装 · 卸载 · 部署','启动 · 杀进程 · 重启','清数据 · 截图 · UI 树 · 文本 · 存储路径','其他'];
-const GROUPS = [PROJECT_GROUP, ...COMMAND_GROUPS];
+const GROUPS = [PROJECT_GROUP, PROJECT_ADMIN, ...COMMAND_GROUPS];
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -406,18 +455,21 @@ function render() {
 }
 
 function renderTable() {
-  const projectRows = rows.map((r, i) => ({r, i})).filter(x => x.r.group === PROJECT_GROUP);
-  const commandRows = rows.map((r, i) => ({r, i})).filter(x => x.r.group !== PROJECT_GROUP);
+  const all = rows.map((r, i) => ({r, i}));
+  const projectRows = all.filter(x => x.r.group === PROJECT_GROUP);
+  const adminRows = all.filter(x => x.r.group === PROJECT_ADMIN);
+  const commandRows = all.filter(x => x.r.group !== PROJECT_GROUP && x.r.group !== PROJECT_ADMIN);
   $('#tbody-project').innerHTML = renderGroupRows(projectRows, [PROJECT_GROUP]);
+  $('#tbody-project-admin').innerHTML = renderGroupRows(adminRows, [PROJECT_ADMIN], false);
   $('#tbody-commands').innerHTML = renderGroupRows(commandRows, COMMAND_GROUPS);
 }
 
-function renderGroupRows(list, groups) {
+function renderGroupRows(list, groups, showHeader = true) {
   let html = '';
   groups.forEach(g => {
     const current = list.filter(x => x.r.group === g);
     if (!current.length) return;
-    html += `<tr class="grp"><td colspan="5">${esc(g)}</td></tr>`;
+    if (showHeader) html += `<tr class="grp"><td colspan="5">${esc(g)}</td></tr>`;
     current.forEach(({r, i}) => { html += rowHTML(r, i); });
   });
   return html || '<tr><td colspan="5" style="padding:30px;text-align:center;color:#8b94a7">没有命令</td></tr>';
@@ -432,6 +484,7 @@ function showTab(tab) {
   $('#pane-commands').classList.toggle('active', activeTab === 'commands');
   $('#pane-artifacts').classList.toggle('active', activeTab === 'artifacts');
   if (location.hash !== '#' + activeTab) history.replaceState(null, '', '#' + activeTab);
+  if (activeTab === 'artifacts') loadArtifacts();
 }
 
 window.addEventListener('hashchange', () => {
@@ -456,11 +509,11 @@ function rowHTML(r, i) {
     : (r.kind === 'custom' ? `<span class="tag green">自定义</span>` : `<span class="tag warn">未识别</span>`);
   return `<tr class="row">
     <td class="c-name"><div class="nm">${esc(r.title)}</div><div class="ds">${esc(r.desc || '')}</div></td>
+    <td class="c-ak"><code class="ak">${esc(r.usage)}</code>${tag}</td>
     <td class="c-alias"><div class="aliaswrap">
       <input class="alias" value="${esc(aliasVal)}" placeholder="未设置" oninput="onAlias(${i}, this.value)">
       ${clearBtn}
     </div></td>
-    <td class="c-ak"><code class="ak">${esc(r.usage)}</code>${tag}</td>
     <td class="c-actual">${actual}</td>
     <td class="c-ops">${ops}</td>
   </tr>`;
@@ -729,30 +782,57 @@ function artifactURL(url) {
 
 function renderArtifacts() {
   const list = (S && S.artifacts) || [];
-  $('#artifact-list').innerHTML = list.length ? list.map(item => {
-    const shot = item.kind === 'screenshot';
-    const ui = item.kind === 'ui';
-    const viewerHref = item.viewer_url || ('/viewer?ui=' + encodeURIComponent(item.path) + (item.project_id ? '&project=' + encodeURIComponent(item.project_id) : ''));
-    const links = ui && item.name.endsWith('.json')
-      ? [
-          `<a class="btn primary" href="${esc(artifactURL(viewerHref))}" target="_blank" rel="noopener">打开 H5 UI 对照</a>`,
-          `<a class="btn" href="${esc(artifactURL(item.url + '&pretty=1'))}" target="_blank" rel="noopener">打开 JSON</a>`
-        ].join('')
-      : `<a class="btn" href="${esc(artifactURL(item.url))}" target="_blank" rel="noopener">${shot ? '查看原图' : '打开文件'}</a>`;
-    const del = `<button class="btn xs danger" onclick="deleteArtifact('${esc(item.path)}')">删除</button>`;
-    return `<div class="artifact">
-      <div class="kind">${shot ? '截图' : 'UI 树'} · ${esc(item.mod_time || '')}</div>
-      <div class="name mono">${esc(item.name)}</div>
-      <div class="links">${links}${del}</div>
-      <div class="path">${esc(item.path)}</div>
+  if (!list.length) {
+    $('#artifact-list').innerHTML = '<div class="empty" style="grid-column:1/-1">还没有截图或 UI 树</div>';
+    return;
+  }
+  $('#artifact-list').innerHTML = list.map((item, i) => {
+    const isUI = item.kind === 'ui';
+    const isJSON = isUI && /\.json$/i.test(item.name);
+    const isXML = isUI && /\.xml$/i.test(item.name);
+    const thumbURL = artifactURL(item.shot_url || item.url);
+    const openURL = isJSON
+      ? artifactURL(item.viewer_url || ('/viewer?ui=' + encodeURIComponent(item.path) + (item.project_id ? '&project=' + encodeURIComponent(item.project_id) : '')))
+      : artifactURL(item.url);
+    const bar = isJSON
+      ? `<div class="thumbbar">
+          <a class="btn xs primary" href="${esc(openURL)}" target="_blank" rel="noopener">UI 树</a>
+          <a class="btn xs" href="${esc(artifactURL(item.url + '&pretty=1'))}" target="_blank" rel="noopener">JSON</a>
+        </div>`
+      : (isXML
+        ? `<div class="thumbbar"><span class="btn xs">XML</span><a class="btn xs" href="${esc(openURL)}" target="_blank" rel="noopener">打开</a></div>`
+        : '');
+    return `<div class="artcard">
+      <button class="artdel" title="删除" onclick="deleteArtifact(${i})">×</button>
+      <div class="thumbwrap">
+        <a class="thumbimg" href="${esc(openURL)}" target="_blank" rel="noopener">
+          <img src="${esc(thumbURL)}" loading="lazy" alt="${esc(item.name)}"
+            onerror="this.closest('.thumbwrap').classList.add('noimg');this.remove()">
+        </a>
+        ${bar}
+      </div>
+      <div class="artmeta">
+        <div class="nm mono">${esc(item.name)}</div>
+        <div class="tm">${esc(fmtArtTime(item.mod_time))}</div>
+      </div>
     </div>`;
-  }).join('') : '<div class="empty" style="grid-column:1/-1">还没有截图或 UI 树</div>';
+  }).join('');
 }
 
-async function deleteArtifact(path) {
-  if (!confirm('删除这个产物文件？\n\n' + path)) return;
+function fmtArtTime(value) {
+  if (!value) return '';
+  const d = new Date(value);
+  if (isNaN(d.getTime())) return value;
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+
+async function deleteArtifact(i) {
+  const item = (S && S.artifacts) || [];
+  const target = item[i];
+  if (!target) return;
   try {
-    await api('/api/artifact?path=' + encodeURIComponent(path), {method: 'DELETE'});
+    await api('/api/artifact?path=' + encodeURIComponent(target.path), {method: 'DELETE'});
     toast('已删除');
     loadArtifacts();
   } catch (e) { toast('删除失败: ' + e.message, true); }
@@ -760,7 +840,7 @@ async function deleteArtifact(path) {
 
 async function clearArtifacts() {
   const pid = S && S.current ? S.current.id : '';
-  if (!confirm('清空当前项目（' + (pid || '未选择') + '）的全部截图和 UI 树？此操作不可恢复。')) return;
+  if (!confirm('清空全部截图和 UI 树？此操作不可恢复。')) return;
   try {
     const res = await api('/api/artifacts/clear', {method: 'POST', body: JSON.stringify({project: pid})});
     toast('已清理 ' + (res.removed || 0) + ' 个文件');

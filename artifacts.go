@@ -22,6 +22,7 @@ type ArtifactItem struct {
 	Path      string `json:"path"`
 	URL       string `json:"url"`
 	ViewerURL string `json:"viewer_url,omitempty"`
+	ShotURL   string `json:"shot_url,omitempty"`
 	Size      int64  `json:"size"`
 	ModTime   string `json:"mod_time"`
 	ProjectID string `json:"project_id"`
@@ -93,6 +94,7 @@ func (a *App) projectArtifacts(projectID string) []ArtifactItem {
 		viewer := "/viewer?ui=" + url.QueryEscape(items[i].Path) + "&project=" + url.QueryEscape(proj.ID)
 		if bestIndex >= 0 {
 			viewer += "&shot=" + url.QueryEscape(shots[bestIndex].Path)
+			items[i].ShotURL = "/artifact?path=" + url.QueryEscape(shots[bestIndex].Path)
 		}
 		items[i].ViewerURL = viewer
 	}

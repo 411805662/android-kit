@@ -106,11 +106,12 @@ func (a *App) customAliases() []CustomAlias {
 }
 
 const (
-	groupProject = "项目"
-	groupDeploy  = "构建 · 安装 · 卸载 · 部署"
-	groupApp     = "启动 · 杀进程 · 重启"
-	groupDebug   = "清数据 · 截图 · UI 树 · 文本 · 存储路径"
-	groupOther   = "其他"
+	groupProject      = "项目"
+	groupProjectAdmin = "项目管理"
+	groupDeploy       = "构建 · 安装 · 卸载 · 部署"
+	groupApp          = "启动 · 杀进程 · 重启"
+	groupDebug        = "清数据 · 截图 · UI 树 · 文本 · 存储路径"
+	groupOther        = "其他"
 )
 
 func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
@@ -171,14 +172,15 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 		{ID: "web", Target: "web", Group: groupProject, Title: "网页配置台", Desc: "本地 127.0.0.1，token 保护", Command: "ak web", Engine: "-", Available: true, Runnable: false},
 		{ID: "cd", Target: "cd", Group: groupProject, Title: "进入项目目录", Desc: "shell 函数，直接 cd 到项目根目录", Command: "cd " + root, Engine: "-", Available: true, Runnable: false},
 		{ID: "devices", Target: "devices", Group: groupProject, Title: "设备列表", Desc: "adb devices -l", Command: "adb devices -l", Engine: "adb", Available: true, Runnable: true, Run: "devices"},
-		{ID: "project-add", Target: "project add", Group: groupProject, Title: "登记项目", Desc: "自动探测包名、Activity、模块、APK", Command: "ak project add <path>", Engine: "-", Available: true, Runnable: false},
-		{ID: "project-list", Target: "project list", Group: groupProject, Title: "项目列表", Desc: "列出已登记项目", Command: "ak project list", Engine: "-", Available: true, Runnable: true, Run: "project list"},
-		{ID: "project-show", Target: "project show", Group: groupProject, Title: "查看项目", Desc: "显示项目配置", Command: "ak project show <id>", Engine: "-", Available: true, Runnable: false},
-		{ID: "project-use", Target: "project use", Group: groupProject, Title: "切换项目", Desc: "设为默认项目", Command: "ak project use <id>", Engine: "-", Available: true, Runnable: false},
-		{ID: "project-remove", Target: "project remove", Group: groupProject, Title: "删除项目", Desc: "删除项目配置，不删文件", Command: "ak project remove <id>", Engine: "-", Available: true, Runnable: false},
-		{ID: "use", Target: "use", Group: groupProject, Title: "切换项目", Desc: "同 ak project use", Command: "ak use <id>", Engine: "-", Available: true, Runnable: false},
 		{ID: "status", Target: "status", Group: groupProject, Title: "状态", Desc: "项目、设备、引擎、APK", Command: "ak status", Engine: "-", Available: true, Runnable: true, Run: "status"},
 		{ID: "doctor", Target: "doctor", Group: groupProject, Title: "环境诊断", Desc: "逐项检查 adb / CLI / Java / 项目", Command: "ak doctor", Engine: "-", Available: true, Runnable: true, Run: "doctor"},
+
+		{ID: "project-add", Target: "project add", Group: groupProjectAdmin, Title: "登记项目", Desc: "自动探测包名、Activity、模块、APK", Command: "ak project add <path>", Engine: "-", Available: true, Runnable: false},
+		{ID: "project-list", Target: "project list", Group: groupProjectAdmin, Title: "项目列表", Desc: "列出已登记项目", Command: "ak project list", Engine: "-", Available: true, Runnable: true, Run: "project list"},
+		{ID: "project-show", Target: "project show", Group: groupProjectAdmin, Title: "查看项目", Desc: "显示项目配置", Command: "ak project show <id>", Engine: "-", Available: true, Runnable: false},
+		{ID: "project-use", Target: "project use", Group: groupProjectAdmin, Title: "切换项目", Desc: "设为默认项目", Command: "ak project use <id>", Engine: "-", Available: true, Runnable: false},
+		{ID: "project-remove", Target: "project remove", Group: groupProjectAdmin, Title: "删除项目", Desc: "删除项目配置，不删文件", Command: "ak project remove <id>", Engine: "-", Available: true, Runnable: false},
+		{ID: "use", Target: "use", Group: groupProjectAdmin, Title: "切换项目（简写）", Desc: "同 ak project use", Command: "ak use <id>", Engine: "-", Available: true, Runnable: false},
 
 		{ID: "build", Target: "build", Group: groupDeploy, Title: "构建 Debug", Desc: "编译当前模块的 debug 变体", Command: buildCmd, Engine: engine, Available: true, Runnable: true, Run: "build"},
 		{ID: "build-clean", Target: "build --clean", Group: groupDeploy, Title: "清理后构建", Desc: "先 clean 再编译，解决缓存问题", Command: cleanCmd, Engine: engine, Available: true, Runnable: true, Run: "build --clean"},

@@ -165,7 +165,7 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 		{ID: "build", Target: "build", Group: groupDeploy, Title: "构建 Debug", Desc: "编译当前模块的 debug 变体", Command: buildCmd, Engine: engine, Available: true, Runnable: true, Run: "build"},
 		{ID: "build-clean", Target: "build --clean", Group: groupDeploy, Title: "清理后构建", Desc: "先 clean 再编译，解决缓存问题", Command: cleanCmd, Engine: engine, Available: true, Runnable: true, Run: "build --clean"},
 		{ID: "install", Target: "install", Group: groupDeploy, Title: "安装 APK", Desc: "自动找最新 APK；官方 CLI 支持 delta install", Command: installCmd, Engine: engine, Available: true, Runnable: true, Run: "install"},
-		{ID: "app-uninstall", Target: "app-uninstall", Group: groupDeploy, Title: "卸载 App", Desc: "卸载手机上的应用，不是本工具", Command: "adb uninstall " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "app-uninstall"},
+		{ID: "uninstall", Target: "uninstall", Group: groupDeploy, Title: "卸载 App", Desc: "卸载手机上的应用；卸载本工具用 ak unset", Command: "adb uninstall " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "uninstall"},
 		{ID: "run", Target: "run", Group: groupDeploy, Title: "构建 + 安装 + 启动", Desc: "一条命令完成日常部署", Command: runCmd, Engine: engine, Available: true, Runnable: true, Run: "run"},
 
 		{ID: "open", Target: "open", Group: groupApp, Title: "启动应用", Desc: "有 Activity 用 am start，否则用 monkey", Command: "adb shell am start -n " + pkg + "/" + act, Engine: "adb", Available: true, Runnable: true, Run: "open"},
@@ -392,7 +392,7 @@ func (a *App) cmdWeb(args []string) error {
 		allowed := map[string]bool{
 			"build": true, "install": true, "run": true, "stop": true, "open": true,
 			"restart": true, "clear": true, "screenshot": true, "layout": true,
-			"app-uninstall": true, "logcat": true, "devices": true, "status": true,
+			"uninstall": true, "logcat": true, "devices": true, "status": true,
 			"doctor": true, "paths": true, "clean": true,
 		}
 		if !allowed[fields[0]] {

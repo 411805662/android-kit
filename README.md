@@ -3,9 +3,10 @@
 终端里的 Android 开发命令中心。一个 `ak` 命令，把 Gradle、adb 和官方 Android CLI 串起来；项目在哪个目录、包名是什么，都从配置里解析，不需要改命令本身。
 
 ```bash
-ak run          # 构建 + 安装 + 启动
-ak screenshot   # 截图到 <project>/android-kit/screenshots
-ak layout -p    # UI 树 JSON
+b               # = ak build
+ba              # = ak run，构建 + 安装 + 启动
+ss              # = ak screenshot，截图到 <project>/android-kit/screenshots
+ui              # = ak layout -p，UI 树 JSON
 ak web          # 本地网页配置台
 ```
 
@@ -20,7 +21,7 @@ curl -fsSL https://github.com/411805662/android-kit/releases/latest/download/ins
 或走 jsDelivr（国内网络通常更快；新 tag 可能有几分钟缓存）：
 
 ```bash
-curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.1.5/install.sh | sh
+curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.1.6/install.sh | sh
 ```
 
 安装器会：
@@ -79,34 +80,69 @@ ak project add ~/new/path/AppA --id appa
 
 ## 命令
 
-| 命令 | 作用 |
-|---|---|
-| `ak build [--clean]` | 构建 Debug；官方 CLI 优先，失败可回退 Gradle |
-| `ak install [--apk path]` | 安装 APK；官方 CLI 使用 delta install |
-| `ak run` | 构建 + 安装 + 启动 |
-| `ak stop` / `ak open` / `ak restart` | 杀进程 / 启动 / 重启 |
-| `ak clear` | 清除应用数据 |
-| `ak app-uninstall` | 卸载手机上的 App（不是本工具） |
-| `ak logcat [-c]` | 按 pid 过滤日志 |
-| `ak devices` | 设备列表 |
-| `ak layout [-p] [--full]` | UI 树，保存到 `.android-kit/ui/` |
-| `ak screenshot [-a]` | 截图，保存到 `android-kit/screenshots/` |
-| `ak tap 100 200` | 坐标点击 |
-| `ak tap "id=btn_login"` | 选择器点击（官方 CLI） |
-| `ak text "hello world"` | 输入文本 |
-| `ak swipe 500 1500 500 500` | 滑动 |
-| `ak key 4` | 按键 |
-| `ak preview list\|render` | Compose 预览 |
-| `ak analyze <apk>` | APK / AAB / AAR 分析 |
-| `ak docs search <query>` | 官方文档检索 |
-| `ak status` | 当前项目 / 设备 / 引擎 / APK |
-| `ak doctor` | 环境逐项诊断 |
-| `ak web` | 本地网页配置台 |
-| `ak paths` | 所有存储路径 |
-| `ak clean [--all]` | 清理生成物 |
-| `ak import <file\|dir>` | 从旧 `.bash_profile` / `android-toolkit` 导入 |
-| `ak setup` | 安装 / 修复 shell 集成 |
-| `ak uninstall [--purge]` | 卸载本工具 |
+快捷键是核心：装好之后 `b`、`in`、`ba`、`k`、`o`、`ko`、`ss`、`ui` 直接就是一条命令，不用敲 `ak`。
+
+### 项目
+
+| 快捷键 | 命令 | 作用 |
+|---|---|---|
+| `dev` | `cd` | 进入当前项目根目录 |
+| | `ak project add [路径]` | 登记项目（自动探测包名、Activity、模块） |
+| | `ak project list` | 列出项目 |
+| | `ak project show [id]` | 查看项目配置 |
+| | `ak project use <id>` | 设为默认项目 |
+| | `ak project remove <id>` | 删除项目配置 |
+| | `ak use <id>` | 同 `project use` |
+| | `ak status` | 当前项目 / 设备 / 引擎 / APK |
+
+### 构建 · 安装 · 卸载 · 部署
+
+| 快捷键 | 命令 | 作用 |
+|---|---|---|
+| `b` | `ak build` | 构建 Debug；官方 CLI 优先，失败可回退 Gradle |
+| `cb` | `ak build --clean` | 清理后构建 |
+| `in` | `ak install [--apk path]` | 安装 APK；官方 CLI 使用 delta install |
+| `un` | `ak uninstall` | 卸载手机上的 App |
+| `ba` / `bio` | `ak run` | 构建 + 安装 + 启动 |
+
+### 启动 · 杀进程 · 重启
+
+| 快捷键 | 命令 | 作用 |
+|---|---|---|
+| `o` | `ak open` | 启动应用 |
+| `k` | `ak stop` | 杀进程 |
+| `ko` | `ak restart` | 重启应用 |
+
+### 清数据 · 截图 · UI 树 · 文本 · 存储路径
+
+| 快捷键 | 命令 | 作用 |
+|---|---|---|
+| `c` | `ak clear` | 清除应用数据 |
+| `ss` | `ak screenshot [-a]` | 截图，保存到 `android-kit/screenshots/` |
+| `ui` | `ak layout [-p] [--full]` | UI 树，保存到 `.android-kit/ui/` |
+| | `ak text "hello world"` | 输入文本 |
+| | `ak paths` | 所有存储路径 |
+
+### 其他
+
+| 快捷键 | 命令 | 作用 |
+|---|---|---|
+| `l` | `ak logcat [-c]` | 按 pid 过滤日志 |
+| `lc` | `ak logcat -c` | 清空日志 |
+| | `ak tap 100 200` | 坐标点击 |
+| | `ak tap "id=btn_login"` | 选择器点击（官方 CLI） |
+| | `ak swipe 500 1500 500 500` | 滑动 |
+| | `ak key 4` | 按键 |
+| | `ak preview list\|render` | Compose 预览 |
+| | `ak analyze <apk>` | APK / AAB / AAR 分析 |
+| | `ak docs search <query>` | 官方文档检索 |
+| | `ak devices` | 设备列表 |
+| | `ak doctor` | 环境逐项诊断 |
+| | `ak clean [--all]` | 清理生成物 |
+| | `ak web` | 本地网页配置台 |
+| | `ak import <file\|dir>` | 从旧 `.bash_profile` / `android-toolkit` 导入 |
+| | `ak setup` | 安装 / 修复 shell 集成 |
+| | `ak unset [--purge]` | 卸载本工具 |
 
 全局参数：
 
@@ -119,33 +155,18 @@ ak --json ...                 # 机器可读输出
 
 ## 快捷别名
 
-安装时默认不覆盖你已有的短别名。需要经典组合：
+快捷键可以在网页里改，也可以命令行改：
 
 ```bash
-ak setup --aliases classic --force-aliases
+ak alias list
+ak alias set bb "build --clean"
+ak alias rm bb
 ```
-
-| 别名 | 等价 |
-|---|---|
-| `b` | `ak build` |
-| `cb` | `ak build --clean` |
-| `in` | `ak install` |
-| `ba` / `bio` | `ak run` |
-| `k` | `ak stop` |
-| `o` | `ak open` |
-| `ko` | `ak restart` |
-| `c` | `ak clear` |
-| `un` | `ak app-uninstall` |
-| `ss` | `ak screenshot` |
-| `ui` | `ak layout -p` |
-| `l` | `ak logcat` |
-| `lc` | `ak logcat -c` |
-| `dev` | `cd` 到当前项目根目录 |
 
 说明：
 
+- 安装时默认不覆盖你已有的同名 alias/function；`ak setup --aliases classic --force-aliases` 强制覆盖。
 - `in` 在 bash 里是保留字，无法作为命令使用；bash 用户请用 `ak install` 或自定义 `ins`。
-- 同名 alias/function 默认跳过；`--force-aliases` 才会覆盖。
 - 网页保存别名后，新终端立即生效；已打开的终端按一次回车，prompt hook 会自动刷新。
 
 ## 网页配置台
@@ -236,9 +257,9 @@ ak build --engine=android
 ## 卸载
 
 ```bash
-ak uninstall --dry-run     # 只预览
-ak uninstall               # 删除 shell 块、二进制、缓存、状态；保留配置
-ak uninstall --purge       # 连配置和项目列表一起删除
+ak unset --dry-run     # 只预览
+ak unset               # 删除 shell 块、二进制、缓存、状态；保留配置
+ak unset --purge       # 连配置和项目列表一起删除
 ```
 
 卸载按 `install-manifest.json` 执行，只删除自己写入的标记块，不会用 `grep -v` 模糊删除整段 rc。

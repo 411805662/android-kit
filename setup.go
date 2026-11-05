@@ -125,7 +125,7 @@ func (a *App) cmdSetup(args []string) error {
 }
 
 func (a *App) cmdUninstall(args []string) error {
-	fs := flag.NewFlagSet("uninstall", flag.ContinueOnError)
+	fs := flag.NewFlagSet("unset", flag.ContinueOnError)
 	purge := fs.Bool("purge", false, "同时删除配置和项目列表")
 	dryRun := fs.Bool("dry-run", false, "只打印，不执行")
 	yes := fs.Bool("yes", false, "不询问")

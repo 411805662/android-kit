@@ -96,7 +96,7 @@ func main() {
 		fmt.Printf("%s %s\n", appName, appVersion)
 	case "setup", "init":
 		err = app.cmdSetup(rest)
-	case "uninstall":
+	case "unset":
 		err = app.cmdUninstall(rest)
 	case "paths", "path":
 		err = app.cmdPaths(rest)
@@ -124,7 +124,7 @@ func main() {
 		err = app.cmdRestart(rest)
 	case "clear", "c":
 		err = app.cmdClear(rest)
-	case "app-uninstall", "un":
+	case "uninstall", "app-uninstall", "un":
 		err = app.cmdAppUninstall(rest)
 	case "logcat", "l", "lc":
 		if cmd == "lc" {
@@ -178,47 +178,58 @@ func printHelp() {
 用法:
   ak [全局参数] <命令> [命令参数]
 
-项目:
-  ak project add [路径]       登记项目（自动探测包名、Activity、模块）
-  ak project list             列出项目
-  ak project show [id]        查看项目配置
-  ak project use <id>         设为默认项目
-  ak project remove <id>      删除项目配置
-  ak use <id>                 同 project use
-  ak status                   当前项目 / 设备 / 引擎状态
-  ak where                    打印当前项目根目录
+项目
+  快捷键  命令                        说明
+  dev     cd                          进入当前项目目录
+  -       ak project add [路径]       登记项目（自动探测包名、Activity、模块）
+  -       ak project list             列出项目
+  -       ak project show [id]        查看项目配置
+  -       ak project use <id>         设为默认项目
+  -       ak project remove <id>      删除项目配置
+  -       ak use <id>                 同 project use
+  -       ak status                   当前项目 / 设备 / 引擎状态
 
-构建与运行:
-  ak build                    构建 Debug（官方 android CLI 优先，可回退 gradle）
-  ak install                  安装 APK
-  ak run                      构建 + 安装 + 启动
-  ak stop | open | restart    杀进程 / 启动 / 重启
-  ak clear                    清除应用数据
-  ak app-uninstall            卸载手机上的 App（不是卸载本工具）
-  ak logcat [-c]              查看应用日志
+构建 · 安装 · 卸载 · 部署
+  快捷键  命令                        说明
+  b       ak build                    构建 Debug（官方 CLI 优先，可回退 gradle）
+  cb      ak build --clean            清理后构建
+  in      ak install                  安装 APK
+  un      ak uninstall                卸载手机上的 App
+  ba/bio  ak run                      构建 + 安装 + 启动
 
-设备与 UI:
-  ak devices                  列出设备
-  ak layout [-p]              导出 UI 树（JSON）
-  ak screenshot [-a]          截图，保存到 <project>/android-kit/screenshots
-  ak tap 100 200              点击坐标
-  ak tap "id=btn_login"       用选择器点击（需官方 android CLI）
-  ak text "hello world"       输入文本
-  ak swipe 500 1500 500 500   滑动
-  ak key 4                    发送按键
-  ak preview list|render      Compose 预览
-  ak analyze <apk>            APK 分析
-  ak docs search <关键字>     官方文档检索
+启动 · 杀进程 · 重启
+  快捷键  命令                        说明
+  o       ak open                     启动应用
+  k       ak stop                     杀进程
+  ko      ak restart                  重启应用
 
-配置:
-  ak web                      打开本地网页配置台
-  ak alias list|set|rm        管理快捷命令
-  ak paths                    查看所有存储路径
-  ak doctor                   环境诊断
-  ak clean [--all]            清理生成物
-  ak import <文件|目录>        从旧 .bash_profile / android-toolkit 导入
-  ak setup                    安装 Shell 集成
-  ak uninstall [--purge]      卸载本工具
+清数据 · 截图 · UI 树 · 文本 · 存储路径
+  快捷键  命令                        说明
+  c       ak clear                    清除应用数据
+  ss      ak screenshot [-a]          截图到 android-kit/screenshots
+  ui      ak layout -p                导出 UI 树（JSON）
+  -       ak text "hello world"       输入文本
+  -       ak paths                    查看所有存储路径
+
+其他
+  快捷键  命令                        说明
+  l       ak logcat [-c]              查看应用日志
+  lc      ak logcat -c                清空日志
+  -       ak tap 100 200              点击坐标
+  -       ak tap "id=btn_login"       用选择器点击（需官方 android CLI）
+  -       ak swipe 500 1500 500 500   滑动
+  -       ak key 4                    发送按键
+  -       ak preview list|render      Compose 预览
+  -       ak analyze <apk>            APK 分析
+  -       ak docs search <关键字>     官方文档检索
+  -       ak devices                  列出设备
+  -       ak doctor                   环境诊断
+  -       ak clean [--all]            清理生成物
+  -       ak web                      打开本地网页配置台
+  -       ak alias list|set|rm        管理快捷命令
+  -       ak import <文件|目录>        从旧 .bash_profile / android-toolkit 导入
+  -       ak setup                    安装 Shell 集成
+  -       ak unset [--purge]          卸载本工具
 
 全局参数:
   -p, --project <id>          指定项目（也可用 AK_PROJECT）

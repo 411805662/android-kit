@@ -56,7 +56,7 @@ func classicAliases() map[string]string {
 		"o":   "open",
 		"ko":  "restart",
 		"c":   "clear",
-		"un":  "app-uninstall",
+		"un":  "uninstall",
 		"ss":  "screenshot",
 		"ui":  "layout -p",
 		"l":   "logcat",
@@ -119,6 +119,12 @@ func LoadConfig(p Paths) Config {
 	cfg.Aliases.Force = raw.Aliases.Force
 	if raw.Aliases.Items != nil {
 		cfg.Aliases.Items = raw.Aliases.Items
+	}
+	// v2 renamed app-uninstall to uninstall; keep old configs working.
+	for name, value := range cfg.Aliases.Items {
+		if strings.TrimSpace(value) == "app-uninstall" {
+			cfg.Aliases.Items[name] = "uninstall"
+		}
 	}
 	if cfg.Aliases.Preset == "classic" && len(cfg.Aliases.Items) == 0 {
 		cfg.Aliases.Items = classicAliases()

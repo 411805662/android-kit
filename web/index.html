@@ -24,6 +24,13 @@ code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 22px;
   border-bottom:1px solid var(--line);background:rgba(12,15,22,.85);backdrop-filter:blur(12px);
   position:sticky;top:0;z-index:20}
+.tabs{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--line);padding:0 2px}
+.tabs button{border:0;background:transparent;color:var(--muted);padding:9px 16px;
+  border-bottom:2px solid transparent;font-size:13px;font-weight:600}
+.tabs button:hover{color:var(--text)}
+.tabs button.active{color:var(--text);border-bottom-color:var(--accent)}
+.tabpane{display:none}
+.tabpane.active{display:block}
 .brand{display:flex;align-items:center;gap:10px}
 .logo{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#7c9cff,#4ade80);
   display:grid;place-items:center;font-weight:800;color:#0b0d12;font-size:14px}
@@ -163,92 +170,117 @@ details .body{padding:0 16px 16px}
     <button class="btn xs" onclick="enableRun()">开启网页执行</button>
   </div>
 
-  <div class="card tablecard">
-    <table>
-      <thead>
-        <tr>
-          <th>名称</th>
-          <th>快捷键</th>
-          <th>ak 命令</th>
-          <th>实际命令（点击复制）</th>
-          <th style="text-align:right">操作</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-    <div class="addbar">
-      <span class="lbl">添加一行</span>
-      <select id="add-target" onchange="onAddTarget()"></select>
-      <input id="add-alias" placeholder="快捷键，如 bb" onkeydown="if(event.key==='Enter')addRow()">
-      <input id="add-cmd" placeholder="自定义命令，如 adb shell input keyevent 4" disabled>
-      <button class="btn primary" onclick="addRow()">+ 添加</button>
+  <div class="tabs">
+    <button id="tab-project" onclick="showTab('project')">项目</button>
+    <button id="tab-commands" onclick="showTab('commands')">命令</button>
+  </div>
+
+  <div class="tabpane" id="pane-project">
+    <div class="card tablecard">
+      <table>
+        <thead>
+          <tr>
+            <th>名称</th>
+            <th>快捷键</th>
+            <th>ak 命令</th>
+            <th>实际命令（点击复制）</th>
+            <th style="text-align:right">操作</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-project"></tbody>
+      </table>
+    </div>
+
+    <details id="d-project">
+      <summary>项目设置（影响实际命令）</summary>
+      <div class="body">
+        <div class="form">
+          <div class="field"><label>项目 ID</label><input id="p-id" placeholder="my-app"></div>
+          <div class="field"><label>名称</label><input id="p-name" placeholder="My App"></div>
+          <div class="field"><label>项目根目录</label><input id="p-root" placeholder="/Users/you/dev/Android/MyApp"></div>
+          <div class="field"><label>包名</label><input id="p-package" placeholder="com.example.app"></div>
+          <div class="field"><label>启动 Activity</label><input id="p-activity" placeholder=".MainActivity"></div>
+          <div class="field"><label>Gradle 模块</label><input id="p-module" placeholder=":app"></div>
+          <div class="field"><label>构建变体</label><input id="p-variant" placeholder="debug"></div>
+          <div class="field"><label>APK glob</label><input id="p-apk" placeholder="app/build/outputs/apk/debug/*.apk"></div>
+          <div class="field"><label>默认设备 serial</label><input id="p-device" placeholder="留空自动选择"></div>
+        </div>
+        <div class="actions">
+          <button class="btn" onclick="detectProject()">自动探测</button>
+          <button class="btn primary" onclick="saveProject()">保存项目</button>
+          <button class="btn" onclick="setDefaultProject()">设为默认</button>
+          <button class="btn danger" onclick="deleteProject()">删除项目</button>
+        </div>
+        <div class="note">包名、Activity、模块、变体都会直接改变「实际命令」。改完保存，表格立即刷新。</div>
+      </div>
+    </details>
+
+    <details id="d-settings">
+      <summary>全局设置</summary>
+      <div class="body">
+        <div class="form">
+          <div class="field"><label>引擎偏好</label>
+            <select id="s-prefer">
+              <option value="auto">auto（官方 CLI 优先，自动回退）</option>
+              <option value="android">android（只用官方 CLI）</option>
+              <option value="legacy">legacy（只用 gradle + adb）</option>
+            </select>
+          </div>
+          <div class="field"><label>android CLI 最低版本</label><input id="s-minver" placeholder="1.1.0"></div>
+          <div class="field"><label>android CLI 路径（留空自动查找）</label><input id="s-clipath" placeholder="/Users/you/.local/bin/android"></div>
+        </div>
+        <div class="actions">
+          <label class="lbl"><input type="checkbox" id="s-allowrun"> 允许网页执行命令</label>
+          <label class="lbl"><input type="checkbox" id="s-openbrowser"> 打开网页时自动开浏览器</label>
+        </div>
+        <div class="actions"><button class="btn primary" onclick="saveSettings()">保存设置</button></div>
+      </div>
+    </details>
+
+    <details id="d-artifacts">
+      <summary>截图 / UI 产物（点击在新页面打开）</summary>
+      <div class="artifacts" id="artifact-list"></div>
+      <div class="body" style="padding:0 16px 16px">
+        <div class="note">截图链接会直接打开原图；<span class="mono">.json</span> UI 树会打开对照查看器：左边截图 1:1，右边线框与元素属性。执行 <span class="mono">ak screenshot</span> / <span class="mono">ak layout -p</span> 后点「刷新产物」即可。</div>
+        <div class="actions"><button class="btn" onclick="loadArtifacts()">刷新产物</button></div>
+      </div>
+    </details>
+
+    <details id="d-paths">
+      <summary>存储路径</summary>
+      <div class="body">
+        <div class="kv" id="paths-global"></div>
+        <div class="note" style="margin:14px 0 6px"><b>项目内生成物</b></div>
+        <div class="kv" id="paths-project"></div>
+        <div class="note">可用环境变量覆盖：<span class="mono">ANDROID_KIT_HOME</span>、<span class="mono">ANDROID_KIT_CONFIG_DIR</span>、<span class="mono">ANDROID_KIT_DATA_DIR</span>、<span class="mono">ANDROID_KIT_STATE_DIR</span>、<span class="mono">ANDROID_KIT_CACHE_DIR</span>、<span class="mono">ANDROID_KIT_BIN_DIR</span>。</div>
+      </div>
+    </details>
+  </div>
+
+  <div class="tabpane" id="pane-commands">
+    <div class="card tablecard">
+      <table>
+        <thead>
+          <tr>
+            <th>名称</th>
+            <th>快捷键</th>
+            <th>ak 命令</th>
+            <th>实际命令（点击复制）</th>
+            <th style="text-align:right">操作</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-commands"></tbody>
+      </table>
+      <div class="addbar">
+        <span class="lbl">添加一行</span>
+        <select id="add-target" onchange="onAddTarget()"></select>
+        <input id="add-alias" placeholder="快捷键，如 bb" onkeydown="if(event.key==='Enter')addRow()">
+        <input id="add-cmd" placeholder="自定义命令，如 adb shell input keyevent 4" disabled>
+        <button class="btn primary" onclick="addRow()">+ 添加</button>
+      </div>
     </div>
   </div>
 
-  <details id="d-project">
-    <summary>项目设置（影响上面的实际命令）</summary>
-    <div class="body">
-      <div class="form">
-        <div class="field"><label>项目 ID</label><input id="p-id" placeholder="my-app"></div>
-        <div class="field"><label>名称</label><input id="p-name" placeholder="My App"></div>
-        <div class="field"><label>项目根目录</label><input id="p-root" placeholder="/Users/you/dev/Android/MyApp"></div>
-        <div class="field"><label>包名</label><input id="p-package" placeholder="com.example.app"></div>
-        <div class="field"><label>启动 Activity</label><input id="p-activity" placeholder=".MainActivity"></div>
-        <div class="field"><label>Gradle 模块</label><input id="p-module" placeholder=":app"></div>
-        <div class="field"><label>构建变体</label><input id="p-variant" placeholder="debug"></div>
-        <div class="field"><label>APK glob</label><input id="p-apk" placeholder="app/build/outputs/apk/debug/*.apk"></div>
-        <div class="field"><label>默认设备 serial</label><input id="p-device" placeholder="留空自动选择"></div>
-      </div>
-      <div class="actions">
-        <button class="btn" onclick="detectProject()">自动探测</button>
-        <button class="btn primary" onclick="saveProject()">保存项目</button>
-        <button class="btn" onclick="setDefaultProject()">设为默认</button>
-        <button class="btn danger" onclick="deleteProject()">删除项目</button>
-      </div>
-      <div class="note">包名、Activity、模块、变体都会直接改变上表的「实际命令」。改完保存，表格立即刷新。</div>
-    </div>
-  </details>
-
-  <details id="d-settings">
-    <summary>全局设置</summary>
-    <div class="body">
-      <div class="form">
-        <div class="field"><label>引擎偏好</label>
-          <select id="s-prefer">
-            <option value="auto">auto（官方 CLI 优先，自动回退）</option>
-            <option value="android">android（只用官方 CLI）</option>
-            <option value="legacy">legacy（只用 gradle + adb）</option>
-          </select>
-        </div>
-        <div class="field"><label>android CLI 最低版本</label><input id="s-minver" placeholder="1.1.0"></div>
-        <div class="field"><label>android CLI 路径（留空自动查找）</label><input id="s-clipath" placeholder="/Users/you/.local/bin/android"></div>
-      </div>
-      <div class="actions">
-        <label class="lbl"><input type="checkbox" id="s-allowrun"> 允许网页执行命令</label>
-        <label class="lbl"><input type="checkbox" id="s-openbrowser"> 打开网页时自动开浏览器</label>
-      </div>
-      <div class="actions"><button class="btn primary" onclick="saveSettings()">保存设置</button></div>
-    </div>
-  </details>
-
-  <details id="d-paths">
-    <summary>存储路径</summary>
-    <div class="body">
-      <div class="kv" id="paths-global"></div>
-      <div class="note" style="margin:14px 0 6px"><b>项目内生成物</b></div>
-      <div class="kv" id="paths-project"></div>
-      <div class="note">可用环境变量覆盖：<span class="mono">ANDROID_KIT_HOME</span>、<span class="mono">ANDROID_KIT_CONFIG_DIR</span>、<span class="mono">ANDROID_KIT_DATA_DIR</span>、<span class="mono">ANDROID_KIT_STATE_DIR</span>、<span class="mono">ANDROID_KIT_CACHE_DIR</span>、<span class="mono">ANDROID_KIT_BIN_DIR</span>。</div>
-    </div>
-  </details>
-
-  <details id="d-artifacts">
-    <summary>截图 / UI 产物（点击在新页面打开）</summary>
-    <div class="artifacts" id="artifact-list"></div>
-    <div class="body" style="padding:0 16px 16px">
-      <div class="note">截图链接会直接打开原图；<span class="mono">.json</span> UI 树会打开对照查看器：左边截图 1:1，右边线框与元素属性。执行 <span class="mono">ak screenshot</span> / <span class="mono">ak layout -p</span> 后点「刷新产物」即可。</div>
-      <div class="actions"><button class="btn" onclick="loadArtifacts()">刷新产物</button></div>
-    </div>
-  </details>
 </main>
 
 <div class="drawer" id="drawer">
@@ -266,13 +298,16 @@ details .body{padding:0 16px 16px}
 const TOKEN = new URLSearchParams(location.search).get('token') || sessionStorage.getItem('ak_token') || '';
 if (TOKEN) sessionStorage.setItem('ak_token', TOKEN);
 
-const GROUPS = ['构建 · 安装 · 卸载 · 部署','启动 · 杀进程 · 重启','清数据 · 截图 · UI 树 · 文本 · 存储路径','其他'];
+const PROJECT_GROUP = '项目';
+const COMMAND_GROUPS = ['构建 · 安装 · 卸载 · 部署','启动 · 杀进程 · 重启','清数据 · 截图 · UI 树 · 文本 · 存储路径','其他'];
+const GROUPS = [PROJECT_GROUP, ...COMMAND_GROUPS];
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
 let S = null;
 let rows = [];
 let dirty = false;
+let activeTab = '';
 
 async function api(path, opts = {}) {
   const headers = Object.assign({'X-AK-Token': TOKEN}, opts.headers || {});
@@ -348,6 +383,13 @@ function render() {
     `<option value="${esc(p.id)}" ${S.current && p.id === S.current.id ? 'selected' : ''}>${esc(p.name)} (${esc(p.id)})</option>`
   ).join('') || '<option value="">（无项目）</option>';
 
+  if (!activeTab) {
+    const hashTab = location.hash.slice(1);
+    activeTab = (hashTab === 'project' || hashTab === 'commands')
+      ? hashTab
+      : (S.current && (S.projects || []).length ? 'commands' : 'project');
+  }
+  showTab(activeTab);
   renderTable();
   renderAddOptions();
   renderProject();
@@ -357,15 +399,36 @@ function render() {
 }
 
 function renderTable() {
-  let html = '';
-  GROUPS.forEach(g => {
-    const list = rows.map((r, i) => ({r, i})).filter(x => x.r.group === g);
-    if (!list.length) return;
-    html += `<tr class="grp"><td colspan="5">${esc(g)}</td></tr>`;
-    list.forEach(({r, i}) => { html += rowHTML(r, i); });
-  });
-  $('#tbody').innerHTML = html || '<tr><td colspan="5" style="padding:30px;text-align:center;color:#8b94a7">没有命令</td></tr>';
+  const projectRows = rows.map((r, i) => ({r, i})).filter(x => x.r.group === PROJECT_GROUP);
+  const commandRows = rows.map((r, i) => ({r, i})).filter(x => x.r.group !== PROJECT_GROUP);
+  $('#tbody-project').innerHTML = renderGroupRows(projectRows, [PROJECT_GROUP]);
+  $('#tbody-commands').innerHTML = renderGroupRows(commandRows, COMMAND_GROUPS);
 }
+
+function renderGroupRows(list, groups) {
+  let html = '';
+  groups.forEach(g => {
+    const current = list.filter(x => x.r.group === g);
+    if (!current.length) return;
+    html += `<tr class="grp"><td colspan="5">${esc(g)}</td></tr>`;
+    current.forEach(({r, i}) => { html += rowHTML(r, i); });
+  });
+  return html || '<tr><td colspan="5" style="padding:30px;text-align:center;color:#8b94a7">没有命令</td></tr>';
+}
+
+function showTab(tab) {
+  activeTab = tab === 'commands' ? 'commands' : 'project';
+  $('#tab-project').classList.toggle('active', activeTab === 'project');
+  $('#tab-commands').classList.toggle('active', activeTab === 'commands');
+  $('#pane-project').classList.toggle('active', activeTab === 'project');
+  $('#pane-commands').classList.toggle('active', activeTab === 'commands');
+  if (location.hash !== '#' + activeTab) history.replaceState(null, '', '#' + activeTab);
+}
+
+window.addEventListener('hashchange', () => {
+  const tab = location.hash.slice(1);
+  if (tab === 'project' || tab === 'commands') showTab(tab);
+});
 
 function rowHTML(r, i) {
   const aliasVal = r.aliases.join(', ');

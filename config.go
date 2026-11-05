@@ -50,7 +50,6 @@ func classicAliases() map[string]string {
 		"b":   "build",
 		"cb":  "build --clean",
 		"in":  "install",
-		"ba":  "run",
 		"bio": "run",
 		"k":   "stop",
 		"o":   "open",
@@ -59,15 +58,14 @@ func classicAliases() map[string]string {
 		"un":  "uninstall",
 		"ss":  "screenshot",
 		"ui":  "layout -p",
-		"l":   "logcat",
-		"lc":  "logcat -c",
+		"lgc": "logcat",
 		"dev": "cd",
 	}
 }
 
 func DefaultConfig() Config {
 	return Config{
-		Version:        2,
+		Version:        3,
 		DefaultProject: "",
 		Prefer:         "auto",
 		Language:       "zh-CN",
@@ -103,7 +101,7 @@ func LoadConfig(p Paths) Config {
 		fmt.Fprintf(os.Stderr, "warning: cannot parse %s: %v\n", path, err)
 		return cfg
 	}
-	if raw.Version != 0 {
+	if raw.Version > cfg.Version {
 		cfg.Version = raw.Version
 	}
 	cfg.DefaultProject = raw.DefaultProject
@@ -120,10 +118,26 @@ func LoadConfig(p Paths) Config {
 	if raw.Aliases.Items != nil {
 		cfg.Aliases.Items = raw.Aliases.Items
 	}
-	// v2 renamed app-uninstall to uninstall; keep old configs working.
-	for name, value := range cfg.Aliases.Items {
-		if strings.TrimSpace(value) == "app-uninstall" {
-			cfg.Aliases.Items[name] = "uninstall"
+	if raw.Version < 3 {
+		for name, value := range cfg.Aliases.Items {
+			switch strings.TrimSpace(value) {
+			case "app-uninstall":
+				cfg.Aliases.Items[name] = "uninstall"
+			case "run":
+				if name == "ba" {
+					delete(cfg.Aliases.Items, name)
+				}
+			case "logcat":
+				if name == "l" {
+					delete(cfg.Aliases.Items, name)
+					cfg.Aliases.Items["lgc"] = "logcat"
+				}
+			case "logcat -c":
+				delete(cfg.Aliases.Items, name)
+			}
+		}
+		if _, ok := cfg.Aliases.Items["lgc"]; !ok {
+			cfg.Aliases.Items["lgc"] = "logcat"
 		}
 	}
 	if cfg.Aliases.Preset == "classic" && len(cfg.Aliases.Items) == 0 {
@@ -158,7 +172,7 @@ func SaveConfig(p Paths, cfg Config) error {
 	var b strings.Builder
 	b.WriteString("# android-kit configuration\n")
 	b.WriteString("# Docs: https://github.com/411805662/android-kit\n\n")
-	fmt.Fprintf(&b, "version = %d\n", 2)
+	fmt.Fprintf(&b, "version = %d\n", cfg.Version)
 	fmt.Fprintf(&b, "default_project = %s\n", strconv.Quote(cfg.DefaultProject))
 	fmt.Fprintf(&b, "prefer = %s\n", strconv.Quote(cfg.Prefer))
 	fmt.Fprintf(&b, "language = %s\n\n", strconv.Quote(cfg.Language))

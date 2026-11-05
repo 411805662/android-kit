@@ -114,7 +114,7 @@ func main() {
 		err = app.cmdBuild(rest)
 	case "install", "in":
 		err = app.cmdInstall(rest)
-	case "run", "ba", "bio":
+	case "run", "bio":
 		err = app.cmdRun(rest)
 	case "stop", "k":
 		err = app.cmdStop(rest)
@@ -126,10 +126,7 @@ func main() {
 		err = app.cmdClear(rest)
 	case "uninstall", "app-uninstall", "un":
 		err = app.cmdAppUninstall(rest)
-	case "logcat", "l", "lc":
-		if cmd == "lc" {
-			rest = append([]string{"-c"}, rest...)
-		}
+	case "logcat", "lgc":
 		err = app.cmdLogcat(rest)
 	case "layout", "ui-dump":
 		err = app.cmdLayout(rest)
@@ -191,7 +188,9 @@ func printHelp() {
 
 项目
   快捷键  命令                        说明
-  dev     cd                          进入当前项目目录
+  -       ak web                      打开本地网页配置台
+  dev     ak cd                       进入当前项目目录
+  -       ak devices                  设备列表
   -       ak project add [路径]       登记项目（自动探测包名、Activity、模块）
   -       ak project list             列出项目
   -       ak project show [id]        查看项目配置
@@ -199,6 +198,7 @@ func printHelp() {
   -       ak project remove <id>      删除项目配置
   -       ak use <id>                 同 project use
   -       ak status                   当前项目 / 设备 / 引擎状态
+  -       ak doctor                   环境诊断
 
 构建 · 安装 · 卸载 · 部署
   快捷键  命令                        说明
@@ -206,7 +206,7 @@ func printHelp() {
   cb      ak build --clean            清理后构建
   in      ak install                  安装 APK
   un      ak uninstall                卸载手机上的 App
-  ba/bio  ak run                      构建 + 安装 + 启动
+  bio     ak run                      构建 + 安装 + 启动
 
 启动 · 杀进程 · 重启
   快捷键  命令                        说明
@@ -224,8 +224,7 @@ func printHelp() {
 
 其他
   快捷键  命令                        说明
-  l       ak logcat [-c]              查看应用日志
-  lc      ak logcat -c                清空日志
+  lgc     ak logcat [关键词]          当前应用日志；关键词模糊匹配 tag / message
   -       ak tap 100 200              点击坐标
   -       ak tap "id=btn_login"       用选择器点击（需官方 android CLI）
   -       ak swipe 500 1500 500 500   滑动
@@ -233,10 +232,7 @@ func printHelp() {
   -       ak preview list|render      Compose 预览
   -       ak analyze <apk>            APK 分析
   -       ak docs search <关键字>     官方文档检索
-  -       ak devices                  列出设备
-  -       ak doctor                   环境诊断
   -       ak clean [--all]            清理生成物
-  -       ak web                      打开本地网页配置台
   -       ak alias list|set|rm        管理快捷命令
   -       ak import <文件|目录>        从旧 .bash_profile / android-toolkit 导入
   -       ak setup                    安装 Shell 集成

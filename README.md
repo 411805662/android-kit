@@ -38,7 +38,7 @@ curl -fsSL https://github.com/411805662/android-kit/releases/latest/download/ins
 或走 jsDelivr（国内网络通常更快；新 tag 可能有几分钟缓存）：
 
 ```bash
-curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.1.9/install.sh | sh
+curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.2.0/install.sh | sh
 ```
 
 安装器会：
@@ -97,13 +97,15 @@ ak project add ~/new/path/AppA --id appa
 
 ## 命令
 
-快捷键是核心：装好之后 `b`、`in`、`ba`、`k`、`o`、`ko`、`ss`、`ui` 直接就是一条命令，不用敲 `ak`。
+快捷键是核心：装好之后 `b`、`in`、`bio`、`k`、`o`、`ko`、`ss`、`ui` 直接就是一条命令，不用敲 `ak`。
 
 ### 项目
 
 | 快捷键 | 命令 | 作用 |
 |---|---|---|
-| `dev` | `cd` | 进入当前项目根目录 |
+| | `ak web` | 打开本地网页配置台 |
+| `dev` | `ak cd` | 进入当前项目根目录 |
+| | `ak devices` | 设备列表 |
 | | `ak project add [路径]` | 登记项目（自动探测包名、Activity、模块） |
 | | `ak project list` | 列出项目 |
 | | `ak project show [id]` | 查看项目配置 |
@@ -111,6 +113,7 @@ ak project add ~/new/path/AppA --id appa
 | | `ak project remove <id>` | 删除项目配置 |
 | | `ak use <id>` | 同 `project use` |
 | | `ak status` | 当前项目 / 设备 / 引擎 / APK |
+| | `ak doctor` | 环境逐项诊断 |
 
 ### 构建 · 安装 · 卸载 · 部署
 
@@ -120,7 +123,7 @@ ak project add ~/new/path/AppA --id appa
 | `cb` | `ak build --clean` | 清理后构建 |
 | `in` | `ak install [--apk path]` | 安装 APK；官方 CLI 使用 delta install |
 | `un` | `ak uninstall` | 卸载手机上的 App |
-| `ba` / `bio` | `ak run` | 构建 + 安装 + 启动 |
+| `bio` | `ak run` | 构建 + 安装 + 启动 |
 
 ### 启动 · 杀进程 · 重启
 
@@ -144,8 +147,7 @@ ak project add ~/new/path/AppA --id appa
 
 | 快捷键 | 命令 | 作用 |
 |---|---|---|
-| `l` | `ak logcat [-c]` | 按 pid 过滤日志 |
-| `lc` | `ak logcat -c` | 清空日志 |
+| `lgc` | `ak logcat [关键词]` | 当前应用日志；关键词模糊匹配 tag / message |
 | | `ak tap 100 200` | 坐标点击 |
 | | `ak tap "id=btn_login"` | 选择器点击（官方 CLI） |
 | | `ak swipe 500 1500 500 500` | 滑动 |
@@ -153,10 +155,7 @@ ak project add ~/new/path/AppA --id appa
 | | `ak preview list\|render` | Compose 预览 |
 | | `ak analyze <apk>` | APK / AAB / AAR 分析 |
 | | `ak docs search <query>` | 官方文档检索 |
-| | `ak devices` | 设备列表 |
-| | `ak doctor` | 环境逐项诊断 |
 | | `ak clean [--all]` | 清理生成物 |
-| | `ak web` | 本地网页配置台 |
 | | `ak import <file\|dir>` | 从旧 `.bash_profile` / `android-toolkit` 导入 |
 | | `ak setup` | 安装 / 修复 shell 集成 |
 | | `ak unset [--purge]` | 卸载本工具 |
@@ -194,7 +193,9 @@ ak web
 
 - 只监听 `127.0.0.1`，随机端口。
 - 一次性 token 写入 `~/.local/state/android-kit/web.token`（0600）。
-- 只有一个页面：一张表把「名称 / 快捷键 / ak 命令 / 实际命令」放在一起，按构建、启动、调试、其他分组。
+- 两个 tab：「项目」展示项目命令、项目设置、全局设置和产物；「命令」展示构建、启动、清数据、其他分组。
+- 已登记项目时默认打开「命令」tab；没有项目时默认打开「项目」tab。
+- 两张表都把「名称 / 快捷键 / ak 命令 / 实际命令」放在一起。
 - 内置命令标「内置」，实际命令由项目配置生成，只读；自定义行可自由编辑命令。
 - 表格底部可加行：从尚未使用的 ak 命令里选，或选「自定义（空白）」。
 - 每行可复制 `ak` 命令、复制实际命令、直接执行；执行结果在底部抽屉里显示。

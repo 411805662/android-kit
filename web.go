@@ -106,10 +106,11 @@ func (a *App) customAliases() []CustomAlias {
 }
 
 const (
-	groupDeploy = "构建 · 安装 · 卸载 · 部署"
-	groupApp    = "启动 · 杀进程 · 重启"
-	groupDebug  = "清数据 · 截图 · UI 树 · 文本 · 存储路径"
-	groupOther  = "其他"
+	groupProject = "项目"
+	groupDeploy  = "构建 · 安装 · 卸载 · 部署"
+	groupApp     = "启动 · 杀进程 · 重启"
+	groupDebug   = "清数据 · 截图 · UI 树 · 文本 · 存储路径"
+	groupOther   = "其他"
 )
 
 func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
@@ -167,6 +168,18 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 		shotCmd = "android screen capture --output " + root + "/android-kit/screenshots/<time>.png" + devFlag
 	}
 	items := []CommandInfo{
+		{ID: "web", Target: "web", Group: groupProject, Title: "网页配置台", Desc: "本地 127.0.0.1，token 保护", Command: "ak web", Engine: "-", Available: true, Runnable: false},
+		{ID: "cd", Target: "cd", Group: groupProject, Title: "进入项目目录", Desc: "shell 函数，直接 cd 到项目根目录", Command: "cd " + root, Engine: "-", Available: true, Runnable: false},
+		{ID: "devices", Target: "devices", Group: groupProject, Title: "设备列表", Desc: "adb devices -l", Command: "adb devices -l", Engine: "adb", Available: true, Runnable: true, Run: "devices"},
+		{ID: "project-add", Target: "project add", Group: groupProject, Title: "登记项目", Desc: "自动探测包名、Activity、模块、APK", Command: "ak project add <path>", Engine: "-", Available: true, Runnable: false},
+		{ID: "project-list", Target: "project list", Group: groupProject, Title: "项目列表", Desc: "列出已登记项目", Command: "ak project list", Engine: "-", Available: true, Runnable: true, Run: "project list"},
+		{ID: "project-show", Target: "project show", Group: groupProject, Title: "查看项目", Desc: "显示项目配置", Command: "ak project show <id>", Engine: "-", Available: true, Runnable: false},
+		{ID: "project-use", Target: "project use", Group: groupProject, Title: "切换项目", Desc: "设为默认项目", Command: "ak project use <id>", Engine: "-", Available: true, Runnable: false},
+		{ID: "project-remove", Target: "project remove", Group: groupProject, Title: "删除项目", Desc: "删除项目配置，不删文件", Command: "ak project remove <id>", Engine: "-", Available: true, Runnable: false},
+		{ID: "use", Target: "use", Group: groupProject, Title: "切换项目", Desc: "同 ak project use", Command: "ak use <id>", Engine: "-", Available: true, Runnable: false},
+		{ID: "status", Target: "status", Group: groupProject, Title: "状态", Desc: "项目、设备、引擎、APK", Command: "ak status", Engine: "-", Available: true, Runnable: true, Run: "status"},
+		{ID: "doctor", Target: "doctor", Group: groupProject, Title: "环境诊断", Desc: "逐项检查 adb / CLI / Java / 项目", Command: "ak doctor", Engine: "-", Available: true, Runnable: true, Run: "doctor"},
+
 		{ID: "build", Target: "build", Group: groupDeploy, Title: "构建 Debug", Desc: "编译当前模块的 debug 变体", Command: buildCmd, Engine: engine, Available: true, Runnable: true, Run: "build"},
 		{ID: "build-clean", Target: "build --clean", Group: groupDeploy, Title: "清理后构建", Desc: "先 clean 再编译，解决缓存问题", Command: cleanCmd, Engine: engine, Available: true, Runnable: true, Run: "build --clean"},
 		{ID: "install", Target: "install", Group: groupDeploy, Title: "安装 APK", Desc: "自动找最新 APK；官方 CLI 支持 delta install", Command: installCmd, Engine: engine, Available: true, Runnable: true, Run: "install"},
@@ -183,20 +196,14 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 		{ID: "text", Target: "text", Group: groupDebug, Title: "输入文本", Desc: "空格自动转 %s", Command: "adb shell input text <text>", Engine: "adb", Available: true, Runnable: false},
 		{ID: "paths", Target: "paths", Group: groupDebug, Title: "存储路径", Desc: "查看所有目录和文件位置", Command: "ak paths", Engine: "-", Available: true, Runnable: true, Run: "paths"},
 
-		{ID: "logcat", Target: "logcat", Group: groupOther, Title: "应用日志", Desc: "按 pid 过滤，持续输出", Command: "adb logcat -v time --pid=$(adb shell pidof " + pkg + ")", Engine: "adb", Available: true, Runnable: false},
-		{ID: "logcat-clear", Target: "logcat -c", Group: groupOther, Title: "清空日志", Desc: "adb logcat -c", Command: "adb logcat -c", Engine: "adb", Available: true, Runnable: true, Run: "logcat -c"},
+		{ID: "logcat", Target: "logcat", Group: groupOther, Title: "应用日志", Desc: "默认只看当前应用；后接字符串模糊匹配 tag 或 message", Command: "adb logcat -v time --pid=$(adb shell pidof " + pkg + ") | grep -i <pattern>", Engine: "adb", Available: true, Runnable: false},
 		{ID: "tap", Target: "tap", Group: groupOther, Title: "点击", Desc: "坐标或选择器", Command: "adb shell input tap <x> <y>", Engine: "adb", Available: true, Runnable: false},
 		{ID: "swipe", Target: "swipe", Group: groupOther, Title: "滑动", Desc: "四个坐标 + 可选时长", Command: "adb shell input swipe <x1> <y1> <x2> <y2> [ms]", Engine: "adb", Available: true, Runnable: false},
 		{ID: "key", Target: "key", Group: groupOther, Title: "按键", Desc: "keyevent，如 4=返回 3=Home", Command: "adb shell input keyevent <code>", Engine: "adb", Available: true, Runnable: false},
 		{ID: "preview", Target: "preview", Group: groupOther, Title: "Compose 预览", Desc: "无设备渲染 @Preview 为 PNG", Command: "android preview render --output " + root + "/android-kit/previews", Engine: "android", Available: engine == "android", Runnable: false},
 		{ID: "analyze", Target: "analyze", Group: groupOther, Title: "APK 分析", Desc: "DEX / R8 / keep 规则 / native 库", Command: "android analyze " + apk, Engine: "android", Available: engine == "android", Runnable: false},
 		{ID: "docs", Target: "docs", Group: groupOther, Title: "官方文档", Desc: "搜索 Android Knowledge Base", Command: "android docs search <query>", Engine: "android", Available: engine == "android", Runnable: false},
-		{ID: "devices", Target: "devices", Group: groupOther, Title: "设备列表", Desc: "adb devices -l", Command: "adb devices -l", Engine: "adb", Available: true, Runnable: true, Run: "devices"},
-		{ID: "status", Target: "status", Group: groupOther, Title: "状态", Desc: "项目、设备、引擎、APK", Command: "ak status", Engine: "-", Available: true, Runnable: true, Run: "status"},
-		{ID: "doctor", Target: "doctor", Group: groupOther, Title: "环境诊断", Desc: "逐项检查 adb / CLI / Java / 项目", Command: "ak doctor", Engine: "-", Available: true, Runnable: true, Run: "doctor"},
-		{ID: "web", Target: "web", Group: groupOther, Title: "网页配置台", Desc: "本地 127.0.0.1，token 保护", Command: "ak web", Engine: "-", Available: true, Runnable: false},
 		{ID: "clean", Target: "clean", Group: groupOther, Title: "清理生成物", Desc: "默认清 tmp/logs", Command: "ak clean", Engine: "-", Available: true, Runnable: true, Run: "clean"},
-		{ID: "cd", Target: "cd", Group: groupOther, Title: "进入项目目录", Desc: "shell 函数，直接 cd 到项目根目录", Command: "cd " + root, Engine: "-", Available: true, Runnable: false},
 	}
 	for i := range items {
 		items[i].Usage = "ak " + items[i].Target
@@ -418,7 +425,7 @@ func (a *App) cmdWeb(args []string) error {
 			"build": true, "install": true, "run": true, "stop": true, "open": true,
 			"restart": true, "clear": true, "screenshot": true, "layout": true,
 			"uninstall": true, "logcat": true, "devices": true, "status": true,
-			"doctor": true, "paths": true, "clean": true,
+			"doctor": true, "paths": true, "clean": true, "project": true,
 		}
 		if !allowed[fields[0]] {
 			http.Error(w, "command not allowed", 403)

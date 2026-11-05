@@ -315,6 +315,7 @@ func (a *App) cmdLogcat(args []string) error {
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
+	positional := fs.Args()
 	proj, err := a.mustProject()
 	if err != nil {
 		return err
@@ -324,19 +325,25 @@ func (a *App) cmdLogcat(args []string) error {
 			return err
 		}
 	}
-	if *grep != "" {
-		return a.logcatFiltered(proj, *grep)
+	pattern := strings.TrimSpace(*grep)
+	if pattern == "" && len(positional) > 0 {
+		pattern = strings.TrimSpace(strings.Join(positional, " "))
+	}
+	if pattern != "" {
+		return a.logcatFiltered(proj, pattern)
 	}
 	pid := ""
 	if proj.Package != "" {
 		if out, err := a.adbCapture(proj, "shell", "pidof", proj.Package); err == nil {
-			pid = strings.Fields(out)[0]
+			if fields := strings.Fields(out); len(fields) > 0 {
+				pid = fields[0]
+			}
 		}
 	}
 	if pid != "" {
 		return a.adb(proj, "logcat", "-v", "time", "--pid="+pid)
 	}
-	return a.adb(proj, "logcat", "-v", "time")
+	return a.logcatFiltered(proj, proj.Package)
 }
 
 func (a *App) logcatFiltered(proj *Project, pattern string) error {
@@ -344,7 +351,18 @@ func (a *App) logcatFiltered(proj *Project, pattern string) error {
 	if !ok {
 		return fmt.Errorf("找不到 adb")
 	}
+	pid := ""
+	if proj != nil && proj.Package != "" {
+		if out, err := a.adbCapture(proj, "shell", "pidof", proj.Package); err == nil {
+			if fields := strings.Fields(out); len(fields) > 0 {
+				pid = fields[0]
+			}
+		}
+	}
 	args := []string{"logcat", "-v", "time"}
+	if pid != "" {
+		args = append(args, "--pid="+pid)
+	}
 	if serial := a.device(proj); serial != "" {
 		args = append([]string{"-s", serial}, args...)
 	}

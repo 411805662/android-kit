@@ -1,0 +1,25 @@
+version.go
+  s_62becc3ae9a79b::t_a95092c60f2892 5
+commands.go
+  s_62becc3ae9a79b::t_a95092c60f2892 453
+README.md
+  s_62becc3ae9a79b::t_a95092c60f2892 41
+web/index.html
+  s_62becc3ae9a79b::t_a95092c60f2892 811-815,819-820,824-831
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "448838a03cb7f7df7963e2b4b24641b880ac955e",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "workbuddy/hy4free"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

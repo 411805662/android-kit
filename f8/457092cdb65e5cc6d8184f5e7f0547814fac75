@@ -1,0 +1,29 @@
+web/index.html
+  s_62becc3ae9a79b::t_6b61bd32f29ff1 789,801
+web.go
+  s_62becc3ae9a79b::t_6b61bd32f29ff1 428,431-436,440
+version.go
+  s_62becc3ae9a79b::t_6b61bd32f29ff1 5
+README.md
+  s_62becc3ae9a79b::t_6b61bd32f29ff1 41
+shell.go
+  s_62becc3ae9a79b::t_6b61bd32f29ff1 113,118
+config.go
+  s_62becc3ae9a79b::t_6b61bd32f29ff1 121-130,133-134,136-137
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f8457092cdb65e5cc6d8184f5e7f0547814fac75",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "workbuddy/hy4free"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

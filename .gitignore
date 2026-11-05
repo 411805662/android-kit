@@ -1,0 +1,8 @@
+.DS_Store
+bin/
+dist/
+*.local.toml
+config.toml
+projects/
+screenshots/
+logs/

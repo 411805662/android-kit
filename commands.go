@@ -450,9 +450,7 @@ func (a *App) cmdLayout(args []string) error {
 	if err := os.WriteFile(outPath, []byte(content), 0o644); err != nil {
 		return err
 	}
-	if !a.Opts.Quiet {
-		fmt.Fprintf(os.Stderr, "# saved: %s\n", outPath)
-	}
+	fmt.Fprintln(os.Stderr, "# saved: "+outPath)
 	if !*saveOnly {
 		fmt.Println(content)
 	}

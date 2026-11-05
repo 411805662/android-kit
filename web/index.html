@@ -808,17 +808,27 @@ function renderRunOutput(text) {
   const lines = String(text || '').split(/\r?\n/);
   lines.forEach((line, idx) => {
     const trimmed = line.trim();
-    const isImage = /\.(png|jpe?g|webp)$/i.test(trimmed) && !trimmed.includes(' ') && !trimmed.includes('→');
-    const isJSON = /\.json$/i.test(trimmed) && !trimmed.includes(' ') && !trimmed.includes('→');
+    const saved = trimmed.match(/^# saved:\s*(.+)$/i);
+    const path = saved ? saved[1].trim() : trimmed;
+    const isImage = /\.(png|jpe?g|webp)$/i.test(path) && !path.includes(' ') && !path.includes('→');
+    const isJSON = /\.json$/i.test(path) && !path.includes(' ') && !path.includes('→');
+    const isXML = /\.xml$/i.test(path) && !path.includes(' ') && !path.includes('→');
     if (isImage || isJSON) {
       const link = document.createElement('a');
       const target = isJSON
-        ? '/viewer?ui=' + encodeURIComponent(trimmed) + (S && S.current ? '&project=' + encodeURIComponent(S.current.id) : '')
-        : '/artifact?path=' + encodeURIComponent(trimmed);
+        ? '/viewer?ui=' + encodeURIComponent(path) + (S && S.current ? '&project=' + encodeURIComponent(S.current.id) : '')
+        : '/artifact?path=' + encodeURIComponent(path);
       link.href = artifactURL(target);
       link.target = '_blank';
       link.rel = 'noopener';
-      link.textContent = trimmed + (isImage ? '  ↗ 打开图片' : '  ↗ 打开 UI 对照');
+      link.textContent = path + (isImage ? '  ↗ 打开图片' : '  ↗ 打开 UI 对照');
+      fragment.appendChild(link);
+    } else if (isXML) {
+      const link = document.createElement('a');
+      link.href = artifactURL('/artifact?path=' + encodeURIComponent(path));
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.textContent = path + '  ↗ 打开 UI XML';
       fragment.appendChild(link);
     } else {
       fragment.appendChild(document.createTextNode(line));

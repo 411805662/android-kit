@@ -24,9 +24,9 @@ type UIConfig struct {
 }
 
 type PathsConfig struct {
-	ArtifactsMode string `toml:"artifacts_mode" json:"artifacts_mode"`
-	HiddenDir     string `toml:"hidden_dir" json:"hidden_dir"`
 	VisibleDir    string `toml:"visible_dir" json:"visible_dir"`
+	ArtifactsMode string `toml:"artifacts_mode,omitempty" json:"artifacts_mode,omitempty"`
+	HiddenDir     string `toml:"hidden_dir,omitempty" json:"hidden_dir,omitempty"`
 }
 
 type AndroidCLIConfig struct {
@@ -80,9 +80,9 @@ func DefaultConfig() Config {
 			AllowRunFromWeb: true,
 		},
 		Paths: PathsConfig{
-			ArtifactsMode: "project",
-			HiddenDir:     ".android-kit",
 			VisibleDir:    "android-kit",
+			ArtifactsMode: "",
+			HiddenDir:     "",
 		},
 		AndroidCLI: AndroidCLIConfig{MinVersion: "1.1.0"},
 	}
@@ -151,15 +151,11 @@ func LoadConfig(p Paths) Config {
 		cfg.UI.AllowRunFromWeb = true
 	}
 	cfg.Paths = raw.Paths
-	if cfg.Paths.ArtifactsMode == "" {
-		cfg.Paths.ArtifactsMode = "project"
-	}
-	if cfg.Paths.HiddenDir == "" {
-		cfg.Paths.HiddenDir = ".android-kit"
-	}
 	if cfg.Paths.VisibleDir == "" {
 		cfg.Paths.VisibleDir = "android-kit"
 	}
+	cfg.Paths.ArtifactsMode = ""
+	cfg.Paths.HiddenDir = ""
 	cfg.AndroidCLI = raw.AndroidCLI
 	if cfg.AndroidCLI.MinVersion == "" {
 		cfg.AndroidCLI.MinVersion = "1.1.0"
@@ -195,8 +191,6 @@ func SaveConfig(p Paths, cfg Config) error {
 	fmt.Fprintf(&b, "allow_run_from_web = %t\n\n", cfg.UI.AllowRunFromWeb)
 
 	b.WriteString("[paths]\n")
-	fmt.Fprintf(&b, "artifacts_mode = %s\n", strconv.Quote(cfg.Paths.ArtifactsMode))
-	fmt.Fprintf(&b, "hidden_dir = %s\n", strconv.Quote(cfg.Paths.HiddenDir))
 	fmt.Fprintf(&b, "visible_dir = %s\n\n", strconv.Quote(cfg.Paths.VisibleDir))
 
 	b.WriteString("[android_cli]\n")

@@ -38,7 +38,7 @@ curl -fsSL https://github.com/411805662/android-kit/releases/latest/download/ins
 或走 jsDelivr（国内网络通常更快；新 tag 可能有几分钟缓存）：
 
 ```bash
-curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.2.2/install.sh | sh
+curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.2.3/install.sh | sh
 ```
 
 安装器会：
@@ -139,7 +139,7 @@ ak project add ~/new/path/AppA --id appa
 |---|---|---|
 | `c` | `ak clear` | 清除应用数据 |
 | `ss` | `ak screenshot [-a]` | 截图，保存到 `android-kit/screenshots/` |
-| `ui` | `ak layout [-p] [--full]` | UI 树，保存到 `.android-kit/ui/` |
+| `ui` | `ak layout [-p] [--full]` | UI 树，保存到 `~/.android-kit/artifacts/ui/` |
 | | `ak text "hello world"` | 输入文本 |
 | | `ak paths` | 所有存储路径 |
 
@@ -192,7 +192,7 @@ ak web
 ```
 
 - 只监听 `127.0.0.1`，随机端口。
-- 一次性 token 写入 `~/.local/state/android-kit/web.token`（0600）。
+- 一次性 token 写入 `~/.android-kit/web.token`（0600）。
 - 两个 tab：「项目」展示项目命令、项目设置、全局设置和产物；「命令」展示构建、启动、清数据、其他分组。
 - 已登记项目时默认打开「命令」tab；没有项目时默认打开「项目」tab。
 - 两张表都把「名称 / 快捷键 / ak 命令 / 实际命令」放在一起。
@@ -214,34 +214,37 @@ ak web
 |---|---|
 | 二进制 | `~/.local/bin/android-kit` |
 | `ak` 入口 | `~/.local/bin/ak` |
-| 全局配置 | `~/.config/android-kit/config.toml` |
-| 项目配置 | `~/.config/android-kit/projects/*.toml` |
-| 数据目录 | `~/.local/share/android-kit/` |
-| 安装清单 | `~/.local/share/android-kit/install-manifest.json` |
-| 备份 | `~/.local/share/android-kit/backups/` |
-| 状态 | `~/.local/state/android-kit/` |
-| Web token | `~/.local/state/android-kit/web.token` |
-| 日志 | `~/.local/state/android-kit/logs/` |
-| 缓存 | `~/.cache/android-kit/` |
+| 根目录 | `~/.android-kit/` |
+| 全局配置 | `~/.android-kit/config.toml` |
+| 项目配置 | `~/.android-kit/projects/*.toml` |
+| 安装清单 | `~/.android-kit/install-manifest.json` |
+| 备份 | `~/.android-kit/backups/` |
+| Web token | `~/.android-kit/web.token` |
+| 状态 / 日志 | `~/.android-kit/` |
+| 缓存 | `~/.android-kit/cache/` |
+| 全局产物 | `~/.android-kit/artifacts/` |
+| UI 树 | `~/.android-kit/artifacts/ui/` |
 
-项目内生成物默认跟着项目走：
+只有需要人工查看的截图、预览和报告放在项目目录；其余历史数据集中在用户目录，不跟单个项目绑定：
 
 ```text
-<project>/
-  .android-kit/                 # 机器读：UI dump / trace / heap / 日志 / tmp
+~/.android-kit/
+  artifacts/
     ui/
     traces/
     heaps/
     reports/
     logs/
     tmp/
+
+<project>/
   android-kit/                  # 人看：截图 / Compose 预览 / 报告
     screenshots/
     previews/
     reports/
 ```
 
-两个目录首次创建时都会写入 `.gitignore`（内容 `*`），不会污染 git。需要提交某张截图时用 `git add -f`。
+项目内目录首次创建时会写入 `.gitignore`（内容 `*`），不会污染 git。需要提交某张截图时用 `git add -f`。
 
 环境变量覆盖：
 
@@ -285,7 +288,7 @@ ak unset --purge       # 连配置和项目列表一起删除
 
 卸载按 `install-manifest.json` 执行，只删除自己写入的标记块，不会用 `grep -v` 模糊删除整段 rc。
 
-项目里的 `.android-kit/` 和 `android-kit/` 属于用户数据，卸载默认保留；需要时：
+项目里的 `android-kit/` 属于用户数据，卸载默认保留；需要时：
 
 ```bash
 ak clean --all
@@ -305,7 +308,7 @@ PROJECT_ROOT / APP_NAME / MAIN_ACTIVITY / DEBUG_APK_PATH
 alias in=... / b=... / k=... / o=...
 ```
 
-导入前不会修改原文件；只写 `~/.config/android-kit/projects/`。
+导入前不会修改原文件；只写 `~/.android-kit/projects/`。
 
 ## 开发
 

@@ -154,13 +154,8 @@ func (p Paths) EnsureProjectDirs(proj *Project) (hidden, visible string, err err
 	if proj == nil {
 		return "", "", errNoProject
 	}
-	cfg := LoadConfig(p)
-	hidden = filepath.Join(proj.Root, cfg.Paths.HiddenDir)
-	visible = filepath.Join(proj.Root, cfg.Paths.VisibleDir)
-	if cfg.Paths.ArtifactsMode == "xdg" {
-		hidden = filepath.Join(p.Artifacts, proj.ID, "hidden")
-		visible = filepath.Join(p.Artifacts, proj.ID, "visible")
-	}
+	hidden = p.Artifacts
+	visible = filepath.Join(proj.Root, "android-kit")
 	for _, dir := range []string{
 		hidden, visible,
 		filepath.Join(hidden, "ui"),
@@ -178,11 +173,9 @@ func (p Paths) EnsureProjectDirs(proj *Project) (hidden, visible string, err err
 			return "", "", err
 		}
 	}
-	for _, dir := range []string{hidden, visible} {
-		ignore := filepath.Join(dir, ".gitignore")
-		if !exists(ignore) {
-			_ = os.WriteFile(ignore, []byte("*\n"), 0o644)
-		}
+	ignore := filepath.Join(visible, ".gitignore")
+	if !exists(ignore) {
+		_ = os.WriteFile(ignore, []byte("*\n"), 0o644)
 	}
 	return hidden, visible, nil
 }

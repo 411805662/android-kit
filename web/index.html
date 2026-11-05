@@ -683,17 +683,17 @@ async function saveSettings() {
 function renderPaths() {
   const p = S.paths;
   const rowsG = [
-    ['二进制', p.binary], ['ak 入口', p.shim], ['配置目录', p.config_dir],
+    ['二进制', p.binary], ['ak 入口', p.shim], ['根目录', p.root], ['配置目录', p.config_dir],
     ['配置文件', p.config_dir + '/config.toml'], ['项目配置', p.projects_dir],
     ['数据目录', p.data_dir], ['安装清单', p.manifest], ['备份', p.backup_dir],
     ['状态目录', p.state_dir], ['Web token', p.web_token], ['日志', p.logs_dir],
-    ['缓存', p.cache_dir], ['全局生成物', p.artifacts]
+    ['缓存', p.cache_dir], ['全局产物', p.artifacts]
   ];
   $('#paths-global').innerHTML = rowsG.map(([k, v]) =>
     `<div class="k">${esc(k)}</div><div class="v mono">${esc(v)}</div>`).join('');
   const d = S.project_dirs || {};
   const rowsP = S.current ? [
-    ['隐藏目录', d.hidden], ['可见目录', d.visible],
+    ['全局产物', d.hidden], ['可见目录', d.visible],
     ['UI dump', (d.hidden || '') + '/ui'], ['Trace', (d.hidden || '') + '/traces'],
     ['Heap', (d.hidden || '') + '/heaps'], ['截图', (d.visible || '') + '/screenshots'],
     ['Compose 预览', (d.visible || '') + '/previews'], ['报告', (d.visible || '') + '/reports']

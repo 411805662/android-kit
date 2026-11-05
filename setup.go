@@ -173,6 +173,9 @@ func (a *App) cmdUninstall(args []string) error {
 	remove(a.Paths.CacheDir)
 	remove(a.Paths.StateDir)
 	remove(a.Paths.DataDir)
+	if a.Paths.Root != a.Paths.ConfigDir && a.Paths.Root != a.Paths.DataDir && a.Paths.Root != a.Paths.StateDir {
+		remove(a.Paths.Root)
+	}
 	if *purge {
 		remove(a.Paths.ConfigDir)
 	}

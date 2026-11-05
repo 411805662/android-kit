@@ -28,12 +28,8 @@ func (a *App) artifactDirs(proj *Project) (hidden, visible string) {
 	if proj == nil {
 		return "", ""
 	}
-	hidden = filepath.Join(proj.Root, a.Config.Paths.HiddenDir)
-	visible = filepath.Join(proj.Root, a.Config.Paths.VisibleDir)
-	if a.Config.Paths.ArtifactsMode == "xdg" {
-		hidden = filepath.Join(a.Paths.Artifacts, proj.ID, "hidden")
-		visible = filepath.Join(a.Paths.Artifacts, proj.ID, "visible")
-	}
+	hidden = a.Paths.Artifacts
+	visible = filepath.Join(proj.Root, "android-kit")
 	return hidden, visible
 }
 
@@ -128,11 +124,10 @@ func listArtifactFiles(dir, kind string, accept func(string) bool) []ArtifactIte
 }
 
 func (a *App) allowedArtifactRoots() []string {
-	roots := []string{a.Paths.Artifacts}
+	roots := []string{a.Paths.Root}
 	for _, proj := range a.Store.List() {
-		hidden, visible := a.artifactDirs(proj)
+		_, visible := a.artifactDirs(proj)
 		roots = append(roots,
-			filepath.Join(hidden, "ui"),
 			filepath.Join(visible, "screenshots"),
 			filepath.Join(visible, "previews"),
 			filepath.Join(visible, "reports"),

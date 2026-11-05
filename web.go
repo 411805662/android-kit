@@ -192,7 +192,7 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 
 		{ID: "clear", Target: "clear", Group: groupDebug, Title: "清除数据", Desc: "pm clear，登录态会丢失", Command: "adb shell pm clear " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "clear"},
 		{ID: "screenshot", Target: "screenshot", Group: groupDebug, Title: "截图", Desc: "保存到 android-kit/screenshots", Command: shotCmd, Engine: engine, Available: true, Runnable: true, Run: "screenshot"},
-		{ID: "layout", Target: "layout -p", Group: groupDebug, Title: "UI 树", Desc: "保存到 .android-kit/ui，同时打印", Command: layoutCmd, Engine: engine, Available: true, Runnable: true, Run: "layout -p"},
+		{ID: "layout", Target: "layout -p", Group: groupDebug, Title: "UI 树", Desc: "保存到 ~/.android-kit/artifacts/ui，同时打印", Command: layoutCmd, Engine: engine, Available: true, Runnable: true, Run: "layout -p"},
 		{ID: "text", Target: "text", Group: groupDebug, Title: "输入文本", Desc: "空格自动转 %s", Command: "adb shell input text <text>", Engine: "adb", Available: true, Runnable: false},
 		{ID: "paths", Target: "paths", Group: groupDebug, Title: "存储路径", Desc: "查看所有目录和文件位置", Command: "ak paths", Engine: "-", Available: true, Runnable: true, Run: "paths"},
 

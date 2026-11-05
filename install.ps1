@@ -36,7 +36,7 @@ if ($UserPath -notlike "*$Prefix*") {
 $SetupArgs = @("setup", "--yes", "--shell", "auto")
 if ($Aliases) {
   $SetupArgs += @("--aliases", $Aliases)
-} elseif (-not (Test-Path (Join-Path $env:APPDATA "android-kit\config.toml"))) {
+} elseif (-not (Test-Path (Join-Path $env:APPDATA ".android-kit\config.toml"))) {
   $SetupArgs += @("--aliases", "none")
 }
 & (Join-Path $Prefix "android-kit.exe") @SetupArgs

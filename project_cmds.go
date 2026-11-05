@@ -339,6 +339,7 @@ func (a *App) cmdPaths(args []string) error {
 	rows := [][2]string{
 		{"binary", a.Paths.Binary},
 		{"shim (ak)", a.Paths.Shim},
+		{"root", a.Paths.Root},
 		{"config", a.Paths.ConfigDir},
 		{"config file", a.Paths.ConfigFile()},
 		{"projects", a.Paths.ProjectsDir},
@@ -350,15 +351,15 @@ func (a *App) cmdPaths(args []string) error {
 		{"reload stamp", a.Paths.Stamp},
 		{"logs", a.Paths.LogsDir},
 		{"cache", a.Paths.CacheDir},
-		{"artifacts (xdg mode)", a.Paths.Artifacts},
+		{"artifacts", a.Paths.Artifacts},
 	}
 	fmt.Printf("%-22s %s\n", "ITEM", "PATH")
 	for _, row := range rows {
 		fmt.Printf("%-22s %s\n", row[0], row[1])
 	}
-	fmt.Println("\n项目内生成物:")
-	fmt.Println("  <project>/.android-kit/      UI dump / trace / heap / 日志 / 临时文件")
-	fmt.Println("  <project>/android-kit/       截图 / Compose 预览 / 可读报告")
+	fmt.Println("\n生成物:")
+	fmt.Println("  ~/.android-kit/artifacts/     UI dump / trace / heap / 日志 / 临时文件")
+	fmt.Println("  <project>/android-kit/        截图 / Compose 预览 / 可读报告")
 	fmt.Println("\n环境变量覆盖: ANDROID_KIT_HOME, ANDROID_KIT_CONFIG_DIR, ANDROID_KIT_DATA_DIR,")
 	fmt.Println("              ANDROID_KIT_STATE_DIR, ANDROID_KIT_CACHE_DIR, ANDROID_KIT_BIN_DIR")
 	return nil

@@ -780,7 +780,7 @@ func (a *App) cmdDoctor(args []string) error {
 	if proj != nil {
 		add("项目目录", isDir(proj.Root), proj.Root, "ak project add <path> 重新登记")
 		add("gradlew", a.Paths.GradleWrapper(proj) != "", printable(a.Paths.GradleWrapper(proj)), "项目需要 Gradle Wrapper")
-		add("package", proj.Package != "", orDash(proj.Package), "编辑 ~/.config/android-kit/projects/"+proj.ID+".toml")
+		add("package", proj.Package != "", orDash(proj.Package), "编辑 "+a.Paths.ProjectsDir+"/"+proj.ID+".toml")
 		add("activity", proj.Activity != "", orDash(proj.Activity), "可留空，启动时自动用 monkey")
 		if _, err := a.Store.APK(proj); err == nil {
 			add("APK", true, "found", "")

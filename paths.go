@@ -14,6 +14,7 @@ type Paths struct {
 	Binary      string `json:"binary"`
 	Shim        string `json:"shim"`
 	BinDir      string `json:"bin_dir"`
+	Root        string `json:"root"`
 	ConfigDir   string `json:"config_dir"`
 	DataDir     string `json:"data_dir"`
 	StateDir    string `json:"state_dir"`
@@ -52,12 +53,14 @@ func expandHome(p string) string {
 func ResolvePaths() Paths {
 	home, _ := os.UserHomeDir()
 	p := Paths{Home: home}
+	root := filepath.Join(home, ".android-kit")
 
-	if root := envOr("ANDROID_KIT_HOME", "AK_HOME"); root != "" {
-		p.ConfigDir = filepath.Join(root, "config")
-		p.DataDir = filepath.Join(root, "share")
-		p.StateDir = filepath.Join(root, "state")
-		p.CacheDir = filepath.Join(root, "cache")
+	if customRoot := envOr("ANDROID_KIT_HOME", "AK_HOME"); customRoot != "" {
+		root = customRoot
+		p.ConfigDir = root
+		p.DataDir = root
+		p.StateDir = root
+		p.CacheDir = root
 		p.BinDir = filepath.Join(root, "bin")
 	} else if runtime.GOOS == "windows" {
 		appData := envOr("APPDATA")
@@ -68,19 +71,21 @@ func ResolvePaths() Paths {
 		if local == "" {
 			local = filepath.Join(home, "AppData", "Local")
 		}
-		p.ConfigDir = filepath.Join(appData, appName)
-		p.DataDir = filepath.Join(local, appName)
-		p.StateDir = filepath.Join(local, appName, "state")
-		p.CacheDir = filepath.Join(local, appName, "cache")
+		root = filepath.Join(appData, "."+appName)
+		p.ConfigDir = root
+		p.DataDir = root
+		p.StateDir = root
+		p.CacheDir = root
 		p.BinDir = filepath.Join(local, "Programs", appName)
 	} else {
-		p.ConfigDir = filepath.Join(home, ".config", appName)
-		p.DataDir = filepath.Join(home, ".local", "share", appName)
-		p.StateDir = filepath.Join(home, ".local", "state", appName)
-		p.CacheDir = filepath.Join(home, ".cache", appName)
+		p.ConfigDir = root
+		p.DataDir = root
+		p.StateDir = root
+		p.CacheDir = root
 		p.BinDir = filepath.Join(home, ".local", "bin")
 	}
 
+	p.Root = root
 	if v := envOr("ANDROID_KIT_CONFIG_DIR", "AK_CONFIG_DIR"); v != "" {
 		p.ConfigDir = v
 	}
@@ -122,7 +127,7 @@ func ResolvePaths() Paths {
 }
 
 func (p Paths) Ensure() error {
-	for _, dir := range []string{p.ConfigDir, p.DataDir, p.StateDir, p.CacheDir, p.BackupDir, p.ProjectsDir, p.LogsDir} {
+	for _, dir := range []string{p.Root, p.ConfigDir, p.DataDir, p.StateDir, p.CacheDir, p.BackupDir, p.ProjectsDir, p.LogsDir, p.Artifacts, filepath.Join(p.Artifacts, "ui")} {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
 			return err
 		}

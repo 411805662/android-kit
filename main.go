@@ -49,6 +49,10 @@ func parseGlobal(args []string) (Options, []string) {
 	var rest []string
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
+		if len(rest) > 0 {
+			rest = append(rest, arg)
+			continue
+		}
 		take := func() string {
 			if i+1 < len(args) {
 				i++
@@ -217,8 +221,8 @@ func printHelp() {
 清数据 · 截图 · UI 树 · 文本 · 存储路径
   快捷键  命令                        说明
   c       ak clear                    清除应用数据
-  ss      ak screenshot [-a]          截图到 android-kit/screenshots
-  ui      ak layout -p                导出 UI 树（JSON）
+  ss      ak screenshot [-a]          截图到 <project>/android-kit/screenshots
+  ui      ak layout -p                导出 UI 树到 ~/.android-kit/artifacts/ui
   -       ak text "hello world"       输入文本
   -       ak paths                    查看所有存储路径
 

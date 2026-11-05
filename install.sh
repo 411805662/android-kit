@@ -119,7 +119,7 @@ if [ "${ANDROID_KIT_NO_SETUP:-0}" != "1" ]; then
   if [ -z "$CFG_DIR" ] && [ -n "${ANDROID_KIT_HOME:-}" ]; then
     CFG_DIR="$ANDROID_KIT_HOME/config"
   fi
-  [ -n "$CFG_DIR" ] || CFG_DIR="$HOME/.config/android-kit"
+  [ -n "$CFG_DIR" ] || CFG_DIR="$HOME/.android-kit"
   SETUP_ARGS="--yes --shell auto"
   if [ -n "$ALIASES" ]; then
     SETUP_ARGS="$SETUP_ARGS --aliases $ALIASES"

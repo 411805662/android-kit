@@ -1,0 +1,50 @@
+web/viewer.html
+  s_62becc3ae9a79b::t_557caafc5c3656 110-113,214-215,225,250,257-263,301,316-323,331,357
+  s_62becc3ae9a79b::t_63027783955a04 103,202,239
+  s_62becc3ae9a79b::t_3c2c1e459f85ed 119-122,205,209-210,219
+  s_62becc3ae9a79b::t_1a5f549369ecba 1-102,104-109,114-118,123-201,203-204,206-208,211-213,216-218,220-224,226-238,240-249,264-300,302-315,324-330,332-356,358-361,363-383
+  s_62becc3ae9a79b::t_677989d0819239 362
+  s_62becc3ae9a79b::t_6004cacd399bfd 251-256
+web.go
+  s_62becc3ae9a79b::t_7acb297e82a77d 25,62-63
+  s_62becc3ae9a79b::t_ebfcb2e4337292 281-296,299-300
+  s_62becc3ae9a79b::t_ab5c030bf49adf 92-93,297-298
+web/index.html
+  s_62becc3ae9a79b::t_55b84fbfaf42f0 752,754-755
+  s_62becc3ae9a79b::t_562863d0125f55 665,753
+  s_62becc3ae9a79b::t_b408aa906b75d9 128-135
+  s_62becc3ae9a79b::t_71f59c60bf3087 726-729,732-734,743-751,756-765
+  s_62becc3ae9a79b::t_0231dc0a7c38fe 243-251
+  s_62becc3ae9a79b::t_902ef21d6f6e71 356,643-664,666-674,766
+  s_62becc3ae9a79b::t_33ab452b0186ee 738
+  s_62becc3ae9a79b::t_a62786c55ce87f 675
+  s_62becc3ae9a79b::t_b3a518fdea5a5c 767
+artifacts.go
+  s_62becc3ae9a79b::t_2466df475a12dd 6,67
+  s_62becc3ae9a79b::t_c5d1d7421b0046 27-39,54,75-78,80-85,87,91-92,95-98,133
+  s_62becc3ae9a79b::t_b3f4d86f05be17 9,11,187-196,198,200-220
+  s_62becc3ae9a79b::t_55dd01bef940b7 1-5,7-8,10,12-23,25-26,51-53,55-66,69-74,79,86,88-90,93,99-132,134-186,221
+  s_62becc3ae9a79b::t_67880cee6b563b 40-50,94,197,199
+  s_62becc3ae9a79b::t_6c1745a252008f 24,68
+README.md
+  s_62becc3ae9a79b::t_cc37bd1187fea5 202-204
+  s_62becc3ae9a79b::t_ea13a21c6ef690 41
+version.go
+  s_62becc3ae9a79b::t_b25425a898e150 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "218a1465c84ecfa7fa85449a27c1765a3738b970",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "workbuddy/hy4free"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

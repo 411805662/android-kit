@@ -118,24 +118,23 @@ func LoadConfig(p Paths) Config {
 	if raw.Aliases.Items != nil {
 		cfg.Aliases.Items = raw.Aliases.Items
 	}
-	if raw.Version < 3 {
-		for name, value := range cfg.Aliases.Items {
-			switch strings.TrimSpace(value) {
-			case "app-uninstall":
-				cfg.Aliases.Items[name] = "uninstall"
-			case "run":
-				if name == "ba" {
-					delete(cfg.Aliases.Items, name)
-				}
-			case "logcat":
-				if name == "l" {
-					delete(cfg.Aliases.Items, name)
-					cfg.Aliases.Items["lgc"] = "logcat"
-				}
-			case "logcat -c":
+	for name, value := range cfg.Aliases.Items {
+		switch strings.TrimSpace(value) {
+		case "app-uninstall":
+			cfg.Aliases.Items[name] = "uninstall"
+		case "run":
+			if name == "ba" {
 				delete(cfg.Aliases.Items, name)
 			}
+		case "logcat":
+			if name == "l" || name == "lc" {
+				delete(cfg.Aliases.Items, name)
+			}
+		case "logcat -c":
+			delete(cfg.Aliases.Items, name)
 		}
+	}
+	if raw.Version < 3 {
 		if _, ok := cfg.Aliases.Items["lgc"]; !ok {
 			cfg.Aliases.Items["lgc"] = "logcat"
 		}

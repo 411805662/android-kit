@@ -786,7 +786,7 @@ async function runRow(i) {
     const res = await api('/api/run', {method:'POST', body: JSON.stringify({command: cmd})});
     $('#drawer-status').textContent = (res.ok ? '成功' : '失败') + ' · ' + (res.duration || '');
     $('#drawer-status').className = 'st ' + (res.ok ? 'ok' : 'err');
-    $('#drawer-out').innerHTML = renderRunOutput(res.output || '');
+    $('#drawer-out').replaceChildren(renderRunOutput(res.output || ''));
     if (res.error) {
       $('#drawer-out').appendChild(document.createTextNode('\n[error] ' + res.error));
     }
@@ -798,7 +798,7 @@ async function runRow(i) {
   } catch (e) {
     $('#drawer-status').textContent = '失败';
     $('#drawer-status').className = 'st err';
-    $('#drawer-out').innerHTML = renderRunOutput(String(e.message || e));
+    $('#drawer-out').replaceChildren(renderRunOutput(String(e.message || e)));
     toast('执行失败: ' + e.message, true);
   }
 }

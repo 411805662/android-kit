@@ -425,12 +425,19 @@ func (a *App) cmdWeb(args []string) error {
 			"build": true, "install": true, "run": true, "stop": true, "open": true,
 			"restart": true, "clear": true, "screenshot": true, "layout": true,
 			"uninstall": true, "logcat": true, "devices": true, "status": true,
-			"doctor": true, "paths": true, "clean": true, "project": true,
+			"doctor": true, "paths": true, "clean": true,
 		}
 		if !allowed[fields[0]] {
+			if fields[0] == "project" && len(fields) > 1 {
+				switch fields[1] {
+				case "list", "show":
+					goto allowedProjectCommand
+				}
+			}
 			http.Error(w, "command not allowed", 403)
 			return
 		}
+	allowedProjectCommand:
 		if !webRunMu.TryLock() {
 			http.Error(w, "已有命令正在执行，请等它结束", 409)
 			return

@@ -1,0 +1,25 @@
+install.sh
+  s_62becc3ae9a79b::t_5a33c5ed78af0f 9-10,18,118-130
+install.ps1
+  s_62becc3ae9a79b::t_8f806845cea33a 9,36-42
+README.md
+  s_62becc3ae9a79b::t_ca5e3803e3c5df 23
+version.go
+  s_62becc3ae9a79b::t_875a0d2644c404 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1d79b41e8132292936affc7aff2e9f88bc4efd18",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash-1017"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

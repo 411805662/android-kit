@@ -1,0 +1,34 @@
+web/viewer.html
+  s_eb1e2c85f62b50::t_fa84aede989b1a 120
+  s_eb1e2c85f62b50::t_0284e4c02899c5 565
+  s_62becc3ae9a79b::t_ff9ab514e9e83f 70-72
+  s_eb1e2c85f62b50::t_6164236ead555b 552-564,566-587
+README.md
+  s_62becc3ae9a79b::t_6a4367a13e075d 41
+version.go
+  s_62becc3ae9a79b::t_b269faf1c1b393 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5fc26494e9ece0b7d0530b6ccfc9ea877521af24",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    },
+    "s_eb1e2c85f62b50": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1abf3-1a5b-7553-8639-364a6dacd49b",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

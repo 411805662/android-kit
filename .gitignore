@@ -6,3 +6,5 @@ config.toml
 projects/
 screenshots/
 logs/
+!install.sh
+!scripts/build-release.sh

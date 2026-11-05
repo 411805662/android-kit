@@ -44,6 +44,17 @@ esac
 
 ASSET="android-kit_${OS}_${ARCH}.tar.gz"
 if [ "$VERSION" = "latest" ]; then
+  # Resolve the tag through the API. The /releases/latest/download redirect is
+  # cached by GitHub's CDN and can briefly point at the previous release.
+  RESOLVED="$(curl -fsSL --connect-timeout 10 "https://api.github.com/repos/$REPO/releases/latest" 2>/dev/null \
+    | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' | head -1)"
+  if [ -n "$RESOLVED" ]; then
+    VERSION="$RESOLVED"
+  else
+    VERSION="latest"
+  fi
+fi
+if [ "$VERSION" = "latest" ]; then
   BASE="https://github.com/$REPO/releases/latest/download"
 else
   BASE="https://github.com/$REPO/releases/download/$VERSION"

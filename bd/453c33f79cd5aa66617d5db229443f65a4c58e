@@ -1,0 +1,40 @@
+README.md
+  s_62becc3ae9a79b::t_daf7ae123cd4ff 160,204
+  s_eb1e2c85f62b50::t_7996911e7f016a 3,18,21-22,25-27,37,40,49-50,54-56,63-64,90,92,109-112,118,121,123-124,126-127,134-137,140,142-145,153-159,161,167,169,172-174,176,178,180,183,188,198,207
+web/json.html
+  s_62becc3ae9a79b::t_202c23874374dd 7-16,18-23,30,35,38,42,44,47-48
+  s_62becc3ae9a79b::t_04bd38df98e105 62,66-77
+web/viewer.html
+  s_62becc3ae9a79b::t_6ceb55bc8bacf6 25,34,75
+  s_62becc3ae9a79b::t_96cbab96413768 138
+  s_62becc3ae9a79b::t_42bb71f3d655e7 168-179
+  s_62becc3ae9a79b::t_83ac576867b232 7-16,19-24,26-33,35,42,45,53-54,57,60-61,65-66,70,73-74,79-81,83-85,88-89,91-93,95,97,101,109-110,112,116
+version.go
+  s_62becc3ae9a79b::t_daf7ae123cd4ff 5
+web/index.html
+  s_62becc3ae9a79b::t_c1c207c43cfc23 7-16,22-43,45-47,60,76,78,82-83,86,94,96,99,118,121-124,133,138-141,144-151,154-155,161-162,172,174,177,182-183,186,192-193,195-196,200-202,204,206,210,213,217,219-220,223,240-241,397-408,542
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "bd453c33f79cd5aa66617d5db229443f65a4c58e",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    },
+    "s_eb1e2c85f62b50": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1abf3-1a5b-7553-8639-364a6dacd49b",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

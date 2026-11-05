@@ -1,7 +1,7 @@
 #!/bin/sh
 # android-kit installer
 #
-#   curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@main/install.sh | sh
+#   curl -fsSL https://github.com/411805662/android-kit/releases/latest/download/install.sh | sh
 #
 # Environment:
 #   ANDROID_KIT_VERSION   release tag, default: latest

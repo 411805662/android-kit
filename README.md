@@ -14,13 +14,13 @@ ak web          # 本地网页配置台
 macOS / Linux：
 
 ```bash
-curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@main/install.sh | sh
+curl -fsSL https://github.com/411805662/android-kit/releases/latest/download/install.sh | sh
 ```
 
-或直接从 GitHub Release 安装：
+或走 jsDelivr（国内网络通常更快；新 tag 可能有几分钟缓存）：
 
 ```bash
-curl -fsSL https://github.com/411805662/android-kit/releases/latest/download/install.sh | sh
+curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.1.2/install.sh | sh
 ```
 
 安装器会：
@@ -35,7 +35,7 @@ curl -fsSL https://github.com/411805662/android-kit/releases/latest/download/ins
 ```bash
 ANDROID_KIT_PREFIX="$HOME/tools" \
 ANDROID_KIT_ALIASES=classic \
-curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@main/install.sh | sh
+curl -fsSL https://github.com/411805662/android-kit/releases/latest/download/install.sh | sh
 ```
 
 Windows（PowerShell）：

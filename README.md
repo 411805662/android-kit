@@ -1,14 +1,31 @@
 # android-kit
 
-终端里的 Android 开发命令中心。一个 `ak` 命令，把 Gradle、adb 和官方 Android CLI 串起来；项目在哪个目录、包名是什么，都从配置里解析，不需要改命令本身。
+**一键执行 Android 开发日常操作。** 不用记 Gradle 任务、adb 命令、包名和 Activity，装好之后一个短命令就能跑：
+
+| 快捷键 | 作用 |
+|---|---|
+| `b` | 构建应用 |
+| `in` | 安装应用 |
+| `bio` | 构建 + 安装 + 启动 |
+| `k` | 杀应用 |
+| `o` | 启动应用 |
+| `ko` | 重启应用 |
+| `un` | 卸载应用 |
+| `ss` | 截图 |
+| `ui` | UI 树 |
+
+项目在哪个目录、包名是什么、Activity 叫什么，全部从配置里解析；换项目只改配置，命令本身不用动。底层优先走官方 Android CLI，找不到再回退 Gradle + adb。
 
 ```bash
-b               # = ak build
-ba              # = ak run，构建 + 安装 + 启动
-ss              # = ak screenshot，截图到 <project>/android-kit/screenshots
-ui              # = ak layout -p，UI 树 JSON
-ak web          # 本地网页配置台
+b        # 构建
+bio      # 构建 + 安装 + 启动
+k        # 杀进程
+o        # 启动
+ko       # 重启
+un       # 卸载
 ```
+
+`ak` 是完整命令入口；`ak web` 打开本地网页配置台，可以改快捷键、项目路径、包名，点一下就能执行。
 
 ## 安装
 
@@ -21,7 +38,7 @@ curl -fsSL https://github.com/411805662/android-kit/releases/latest/download/ins
 或走 jsDelivr（国内网络通常更快；新 tag 可能有几分钟缓存）：
 
 ```bash
-curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.1.6/install.sh | sh
+curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.1.7/install.sh | sh
 ```
 
 安装器会：

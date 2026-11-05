@@ -2,4 +2,4 @@ package main
 
 const appName = "android-kit"
 
-var appVersion = "0.1.6"
+var appVersion = "0.1.7"

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>android-kit UI 查看器</title>
 <style>
-:root{--bg:#0b0d12;--panel:#12151d;--line:#252b38;--text:#e8ecf4;--muted:#8b94a7;
+:root{--bg:#0e0e0f;--panel:#151516;--line:#282829;--text:#ececec;--muted:#8f8f92;
   --accent:#7c9cff;--green:#4ade80;--danger:#f87171;--warn:#fbbf24}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
@@ -13,10 +13,10 @@ body{background:var(--bg);color:var(--text);font:13px/1.5 -apple-system,BlinkMac
   display:flex;flex-direction:column;overflow:hidden}
 button,input,select{font:inherit;color:inherit}
 .top{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);
-  background:#10141c;flex-wrap:wrap}
+  background:#17171a;flex-wrap:wrap}
 .top h1{font-size:14px;margin:0;font-weight:650}
 .top .meta{color:var(--muted);font-size:11.5px}
-.searchwrap{display:flex;align-items:center;gap:8px;background:#0e121a;border:1px solid #3a4a6b;
+.searchwrap{display:flex;align-items:center;gap:8px;background:#141415;border:1px solid #343436;
   border-radius:10px;padding:4px 10px;box-shadow:0 0 0 3px #4d6bd81f}
 .searchwrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px #4d6bd840}
 .searchwrap .ico{font-size:14px;opacity:.85}
@@ -24,20 +24,20 @@ button,input,select{font:inherit;color:inherit}
 input[type=search]{background:transparent;border:0;border-radius:8px;padding:6px 2px;min-width:300px;outline:none}
 .hiddenbar{display:none;align-items:center;gap:8px;font-size:11.5px;color:var(--warn)}
 .hiddenbar.on{display:flex}
-.btn{border:1px solid var(--line);background:#1a1f2b;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px}
-.btn:hover{border-color:#3a465e}
+.btn{border:1px solid var(--line);background:#1e1e20;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px}
+.btn:hover{border-color:#3a3a3c}
 .spacer{flex:1}
 .workspace{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 6px 360px;min-height:0}
-.splitter{cursor:col-resize;background:#151a24;border-left:1px solid var(--line);border-right:1px solid var(--line);
+.splitter{cursor:col-resize;background:#17171a;border-left:1px solid var(--line);border-right:1px solid var(--line);
   position:relative;touch-action:none}
 .splitter::after{content:"";position:absolute;left:2px;top:50%;transform:translateY(-50%);width:2px;height:36px;
-  border-radius:2px;background:#3a465e}
-.splitter:hover,.splitter.drag{background:#1d2534}
+  border-radius:2px;background:#3a3a3c}
+.splitter:hover,.splitter.drag{background:#232325}
 .splitter:hover::after,.splitter.drag::after{background:var(--accent)}
 .stageWrap{position:relative;overflow:hidden;display:flex;min-width:0;min-height:0}
 .stage{flex:1;min-width:0;position:relative;overflow:auto;background:
-  linear-gradient(45deg,#10141c 25%,transparent 25%),linear-gradient(-45deg,#10141c 25%,transparent 25%),
-  linear-gradient(45deg,transparent 75%,#10141c 75%),linear-gradient(-45deg,transparent 75%,#10141c 75%) #0d1017;
+  linear-gradient(45deg,#17171a 25%,transparent 25%),linear-gradient(-45deg,#17171a 25%,transparent 25%),
+  linear-gradient(45deg,transparent 75%,#17171a 75%),linear-gradient(-45deg,transparent 75%,#17171a 75%) #101012;
   background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0;
   padding:24px;display:flex;gap:24px;align-items:flex-start}
 .canvas-hold{position:relative;flex:0 0 auto}
@@ -50,42 +50,44 @@ input[type=search]{background:transparent;border:0;border-radius:8px;padding:6px
 .box.match{border:2px solid var(--danger);background:#f8717144;box-shadow:0 0 0 1px #f8717188 inset;z-index:20}
 .box.selected{border:2px solid var(--green);background:#4ade8044;box-shadow:0 0 0 2px #4ade8088 inset,0 0 12px #4ade80aa;z-index:30}
 .box.match.selected{border-color:var(--warn);background:#fbbf2433}
-.label{position:absolute;left:0;bottom:100%;margin-bottom:5px;background:#111827f2;border:1px solid #3a465e;
+.label{position:absolute;left:0;bottom:100%;margin-bottom:5px;background:#1a1a1cf2;border:1px solid #3a3a3c;
   border-radius:7px;color:#dbe4ff;font-size:10.5px;line-height:1.45;padding:4px 7px;white-space:normal;
   display:none;max-width:280px;pointer-events:none;z-index:60;box-shadow:0 8px 20px #000a}
 .label span{display:block;word-break:break-all}
 .label .lbl-id{color:#9bc0ff;font-family:ui-monospace,Menlo,monospace}
-.label .lbl-name{color:#c9d4ea}
-.label::after{content:"";position:absolute;left:9px;top:100%;border:5px solid transparent;border-top-color:#3a465e}
+.label .lbl-name{color:#d6d6d9}
+.label::after{content:"";position:absolute;left:9px;top:100%;border:5px solid transparent;border-top-color:#3a3a3c}
 .box.selected .label,.box.match .label{display:block}
 /* 悬停气泡：固定尺寸，不随缩放变小 */
-.tip{position:fixed;z-index:80;pointer-events:none;background:#111827f7;border:1px solid #3a465e;border-radius:7px;
+.tip{position:fixed;z-index:80;pointer-events:none;background:#1a1a1cf7;border:1px solid #3a3a3c;border-radius:7px;
   padding:5px 8px;font-size:11.5px;line-height:1.45;color:#dbe4ff;max-width:340px;box-shadow:0 10px 24px #000b}
 .tip[hidden]{display:none}
 .tip b{display:block;font-weight:600;color:#9bc0ff;font-family:ui-monospace,Menlo,monospace;word-break:break-all}
-.tip span{display:block;color:#c9d4ea;word-break:break-all}
-.zoombar{position:absolute;left:14px;top:14px;background:#151a24f2;border:1px solid var(--line);
+.tip span{display:block;color:#d6d6d9;word-break:break-all}
+.zoombar{position:absolute;left:14px;top:14px;background:#17171af2;border:1px solid var(--line);
   border-radius:8px;padding:6px 8px;display:flex;align-items:center;gap:6px;font-size:11.5px;z-index:20;
   box-shadow:0 6px 22px #0007}
 .zoombar button{min-width:26px;height:26px;padding:0 7px;white-space:nowrap;
-  border:1px solid var(--line);background:#1a1f2b;border-radius:6px;cursor:pointer}
+  border:1px solid var(--line);background:#1e1e20;border-radius:6px;cursor:pointer}
 #zoom-label{min-width:34px;text-align:center}
 .side{border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
 .side .head{padding:10px 14px;border-bottom:1px solid var(--line);font-weight:650;font-size:12.5px}
+.side .head .act{display:block;margin-top:3px;font-weight:500;font-size:11px;color:#9bc0ff;
+  font-family:ui-monospace,Menlo,monospace;word-break:break-all;user-select:text}
 .side .body{padding:12px 14px;overflow:auto;flex:1}
 .section{margin-bottom:16px}
 .section h3{margin:0 0 8px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
 .kv{display:grid;grid-template-columns:90px 1fr;gap:4px 10px;font-size:12px}
 .kv .k{color:var(--muted)}
 .kv .v{word-break:break-all;font-family:ui-monospace,Menlo,monospace;font-size:11.5px}
-.raw{background:#0c0f16;border:1px solid #222938;border-radius:8px;padding:9px;font-size:11px;
-  white-space:pre-wrap;word-break:break-all;max-height:320px;overflow:auto;color:#c9d4ea}
+.raw{background:#121213;border:1px solid #262628;border-radius:8px;padding:9px;font-size:11px;
+  white-space:pre-wrap;word-break:break-all;max-height:320px;overflow:auto;color:#d6d6d9}
 .chips{display:flex;flex-wrap:wrap;gap:5px}
-.chip{font-size:10.5px;padding:2px 7px;border-radius:999px;background:#1b2230;border:1px solid #2a3346;color:#9fb0cc}
+.chip{font-size:10.5px;padding:2px 7px;border-radius:999px;background:#202022;border:1px solid #2c2c2e;color:#a8a8ac}
 .empty{color:var(--muted);padding:30px 14px;text-align:center}
 .status{font-size:11.5px;color:var(--muted)}
 .status.err{color:var(--danger)}
-.toast{position:fixed;right:18px;bottom:18px;background:#1b2333;border:1px solid #33405a;padding:9px 13px;
+.toast{position:fixed;right:18px;bottom:18px;background:#202022;border:1px solid #343436;padding:9px 13px;
   border-radius:8px;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;z-index:50;font-size:12px}
 .toast.show{opacity:1;transform:none}
 </style>
@@ -129,7 +131,7 @@ input[type=search]{background:transparent;border:0;border-radius:8px;padding:6px
   </div>
   <div class="splitter" id="splitter" title="拖动调整宽度"></div>
   <aside class="side" id="side">
-    <div class="head">元素信息</div>
+    <div class="head">元素信息<span class="act" id="head-act" hidden></span></div>
     <div class="body" id="info"><div class="empty">点击左侧线框或截图上的元素</div></div>
   </aside>
 </div>
@@ -292,6 +294,9 @@ async function loadViewer() {
   try {
     const state = await api('/api/artifacts' + (PROJECT_ID ? '?project=' + encodeURIComponent(PROJECT_ID) : ''));
     DISPLAY = state.display || DISPLAY;
+    const self = (state.artifacts || []).find(x => x.path === UI_PATH);
+    if (self && self.activity) setActivity(self.activity);
+    else loadActivity();
     if (UI_PATH && SHOT_PATH) {
       const uiRes = await fetch(resourceURL(artifactURL(UI_PATH)), {headers:{'X-AK-Token':TOKEN}});
       if (!uiRes.ok) throw new Error('读取 UI JSON 失败: ' + (await uiRes.text()));
@@ -338,6 +343,20 @@ async function loadViewer() {
     $('#match-status').textContent = '加载失败: ' + e.message;
     $('#match-status').className = 'status err';
   }
+}
+
+function setActivity(value) {
+  const el = $('#head-act');
+  if (!el || !value) return;
+  el.textContent = value;
+  el.hidden = false;
+}
+
+async function loadActivity() {
+  try {
+    const r = await api('/api/activity' + (PROJECT_ID ? '?project=' + encodeURIComponent(PROJECT_ID) : ''));
+    if (r && r.activity) setActivity(r.activity);
+  } catch (e) { /* 设备离线时静默 */ }
 }
 
 function calibrate() {

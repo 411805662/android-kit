@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -84,6 +85,56 @@ func (a *App) adbCapture(proj *Project, args ...string) (string, error) {
 		dir = proj.Root
 	}
 	return runCapture(dir, nil, adb, args...)
+}
+
+var reActivityRef = regexp.MustCompile(`([A-Za-z_][A-Za-z0-9_.]*)/([A-Za-z0-9_.$]+)`)
+
+// resumedActivity 读取设备当前前台 Activity，返回 com.pkg/.Act 形式；失败返回空串。
+func (a *App) resumedActivity(proj *Project) string {
+	if out, err := a.adbCapture(proj, "shell", "dumpsys", "activity", "activities"); err == nil {
+		if act := pickActivity(out, "ResumedActivity"); act != "" {
+			return act
+		}
+	}
+	if out, err := a.adbCapture(proj, "shell", "dumpsys", "window", "displays"); err == nil {
+		if act := pickActivity(out, "mCurrentFocus"); act != "" {
+			return act
+		}
+	}
+	return ""
+}
+
+func pickActivity(out, marker string) string {
+	for _, line := range strings.Split(out, "\n") {
+		if !strings.Contains(line, marker) {
+			continue
+		}
+		if m := reActivityRef.FindStringSubmatch(line); m != nil {
+			return normalizeActivityRef(m[1], m[2])
+		}
+	}
+	return ""
+}
+
+func normalizeActivityRef(pkg, act string) string {
+	if strings.HasPrefix(act, pkg+".") {
+		act = "." + strings.TrimPrefix(act, pkg+".")
+	}
+	return pkg + "/" + act
+}
+
+// currentActivity 优先用设备实时前台 Activity，取不到时退回项目配置里的启动 Activity。
+func (a *App) currentActivity(proj *Project) string {
+	if proj == nil {
+		return ""
+	}
+	if act := a.resumedActivity(proj); act != "" {
+		return act
+	}
+	if proj.Package == "" || proj.Activity == "" {
+		return ""
+	}
+	return normalizeActivityRef(proj.Package, proj.Activity)
 }
 
 func gradleTask(module, variant string) string {
@@ -454,6 +505,10 @@ func (a *App) cmdLayout(args []string) error {
 	}
 	if err := os.WriteFile(outPath, []byte(content), 0o644); err != nil {
 		return err
+	}
+	if act := a.currentActivity(proj); act != "" {
+		side := strings.TrimSuffix(outPath, filepath.Ext(outPath)) + ".activity"
+		_ = os.WriteFile(side, []byte(act+"\n"), 0o644)
 	}
 	shotPath := ""
 	if !*noShot {

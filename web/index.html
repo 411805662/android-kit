@@ -6,14 +6,14 @@
 <title>android-kit</title>
 <style>
 :root{
-  --bg:#0b0d12;--panel:#12151d;--panel2:#171b25;--line:#252b38;
-  --text:#e8ecf4;--muted:#8b94a7;--accent:#7c9cff;--green:#4ade80;
+  --bg:#0e0e0f;--panel:#151516;--panel2:#1a1a1c;--line:#282829;
+  --text:#ececec;--muted:#8f8f92;--accent:#7c9cff;--green:#4ade80;
   --warn:#fbbf24;--danger:#f87171;--radius:12px;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
 body{
-  background:radial-gradient(1100px 600px at 10% -10%,#1b2440 0%,transparent 55%),var(--bg);
+  background:var(--bg);
   color:var(--text);font:13.5px/1.55 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;
   padding-bottom:80px;
 }
@@ -22,7 +22,7 @@ button{cursor:pointer}
 code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 
 .top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 22px;
-  border-bottom:1px solid var(--line);background:rgba(12,15,22,.85);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);background:rgba(14,14,15,.88);backdrop-filter:blur(12px);
   position:sticky;top:0;z-index:20}
 .tabs{display:flex;gap:6px;margin-bottom:14px;border-bottom:1px solid var(--line);padding:0 2px}
 .tabs button{border:0;background:transparent;color:var(--muted);padding:9px 16px;
@@ -33,19 +33,19 @@ code,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .tabpane.active{display:block}
 .brand{display:flex;align-items:center;gap:10px}
 .logo{width:32px;height:32px;border-radius:9px;background:linear-gradient(135deg,#7c9cff,#4ade80);
-  display:grid;place-items:center;font-weight:800;color:#0b0d12;font-size:14px}
+  display:grid;place-items:center;font-weight:800;color:#0e0e0f;font-size:14px}
 .brand b{font-size:15px}
 .brand small{display:block;color:var(--muted);font-size:11px;line-height:1.2}
 .meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .meta label{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:12px}
-.meta select{background:#0e121a;border:1px solid #283044;border-radius:8px;padding:6px 8px;font-size:12.5px}
+.meta select{background:#141415;border:1px solid #2c2c2e;border-radius:8px;padding:6px 8px;font-size:12.5px}
 .pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;
-  background:#161b26;border:1px solid var(--line);color:var(--muted);font-size:12px;white-space:nowrap}
+  background:#1a1a1c;border:1px solid var(--line);color:var(--muted);font-size:12px;white-space:nowrap}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px #4ade8088}
 .dot.off{background:var(--danger);box-shadow:0 0 8px #f8717188}
 .spacer{flex:1}
-.btn{border:1px solid var(--line);background:#1a1f2b;color:var(--text);padding:7px 12px;border-radius:8px;font-size:12.5px}
-.btn:hover{border-color:#3a465e;background:#202736}
+.btn{border:1px solid var(--line);background:#1e1e20;color:var(--text);padding:7px 12px;border-radius:8px;font-size:12.5px}
+.btn:hover{border-color:#3a3a3c;background:#262628}
 .btn.primary{background:linear-gradient(135deg,#6f8fff,#5b7cf0);border-color:#6f8fff;color:#fff;font-weight:600}
 .btn.primary:hover{filter:brightness(1.08)}
 .btn.danger{color:#ffb4b4;border-color:#4a2a2e;background:#241619}
@@ -58,12 +58,12 @@ main{max-width:1500px;margin:0 auto;padding:18px 22px}
 .banner{display:none;margin-bottom:12px;padding:10px 14px;border-radius:10px;
   border:1px solid #4a3a16;background:#241d0f;color:#fcd34d;font-size:12.5px}
 .banner.on{display:flex;align-items:center;gap:10px}
-.card{background:linear-gradient(180deg,rgba(23,27,37,.92),rgba(18,21,29,.92));
+.card{background:linear-gradient(180deg,rgba(23,23,25,.94),rgba(19,19,20,.94));
   border:1px solid var(--line);border-radius:var(--radius)}
 .card-head{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid var(--line);
-  font-weight:650;font-size:13px;color:#c9d4ea}
+  font-weight:650;font-size:13px;color:#d6d6d9}
 .card-head .note{margin:0;font-weight:400}
-.split2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-top:14px;align-items:start}
+.split2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:14px;margin-top:14px;align-items:start}
 @media(max-width:1100px){.split2{grid-template-columns:1fr}}
 .pane-card .body{padding:14px 16px}
 .split2 .form{grid-template-columns:1fr 1fr}
@@ -71,55 +71,60 @@ main{max-width:1500px;margin:0 auto;padding:18px 22px}
 .split2 table{table-layout:fixed}
 .split2 thead th{padding:8px 10px}
 .split2 tbody td{padding:7px 10px}
-.split2 .c-name{width:22%}
-.split2 .c-alias{width:14%}
-.split2 .c-ak{width:24%;white-space:normal}
+.split2 .c-name{width:17%}
+.split2 .c-alias{width:12%}
+.split2 .c-ak{width:19%;white-space:normal}
 .split2 .c-ak .tag{display:none}
-.split2 .c-actual{width:26%;min-width:0}
+.split2 .c-actual{width:38%;min-width:0}
 .split2 .c-ops{width:14%}
 .split2 .tablecard{overflow:auto}
 .tablecard{overflow:clip}
 table{width:100%;border-collapse:collapse}
-thead th{background:#151a24;text-align:left;
+thead th{background:#17171a;text-align:left;
   color:var(--muted);font-weight:600;font-size:11.5px;letter-spacing:.4px;
   padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
-tbody td{padding:8px 12px;border-bottom:1px solid #1b202b;vertical-align:middle}
-tr.grp td{background:#10141c;color:#9fb0cc;font-size:11.5px;font-weight:700;
-  letter-spacing:.6px;padding:7px 12px;border-bottom:1px solid #232a38}
-tr.row:hover td{background:#141924}
+tbody td{padding:8px 12px;border-bottom:1px solid #202022;vertical-align:middle}
+tr.grp td{background:#17171a;color:#a8a8ac;font-size:11.5px;font-weight:700;
+  letter-spacing:.6px;padding:7px 12px;border-bottom:1px solid #262628}
+tr.row:hover td{background:#191919}
 .c-name{width:210px}
 .c-name .nm{font-weight:600}
-.c-name .ds{color:var(--muted);font-size:11.5px;margin-top:1px}
 .c-alias{width:170px}
 .c-ak{width:190px;white-space:nowrap}
 .c-actual{min-width:320px}
-.c-ops{width:190px;text-align:right;white-space:nowrap}
-.c-ops .btn{margin-left:4px}
+.c-ops{width:170px;white-space:nowrap}
+.c-ops .btn{margin-right:4px}
 .aliaswrap{display:flex;align-items:center;gap:4px}
-input.alias,input.cmd{background:#0e121a;border:1px solid #283044;border-radius:7px;
+input.alias,input.cmd{background:#141415;border:1px solid #2c2c2e;border-radius:7px;
   padding:5px 8px;width:100%;outline:none;font-family:ui-monospace,Menlo,monospace;font-size:12px}
+input.alias{font-weight:700}
 input.alias:focus,input.cmd:focus{border-color:#4d6bd8;box-shadow:0 0 0 3px #4d6bd822}
-input.alias::placeholder{color:#4d5668}
-.x{border:0;background:transparent;color:#5f687a;font-size:15px;line-height:1;padding:2px 4px;border-radius:5px}
+input.alias{border-color:transparent;background:transparent}
+.c-alias:hover input.alias,.aliaswrap:focus-within input.alias{border-color:#2c2c2e;background:#141415}
+input.alias:focus,.c-alias:hover input.alias:focus{border-color:#4d6bd8;background:#141415}
+input.alias::placeholder{color:#565659}
+.x{border:0;background:transparent;color:#6a6a6d;font-size:15px;line-height:1;padding:2px 4px;border-radius:5px;
+  opacity:0;pointer-events:none;transition:opacity .12s}
+.c-alias:hover .x,.aliaswrap:focus-within .x{opacity:1;pointer-events:auto}
 .x:hover{color:#ffb4b4;background:#241619}
 code.actual{display:block;color:#a9bcff;font-size:11.5px;word-break:break-all;cursor:copy;line-height:1.45}
-code.actual:hover{color:#c9d4ea}
+code.actual:hover{color:#d6d6d9}
 code.ak{color:#86efac;font-size:12px}
-.tag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:5px;background:#1b2230;
-  border:1px solid #2a3346;color:#9fb0cc;font-size:10.5px;vertical-align:1px}
+.tag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:5px;background:#202022;
+  border:1px solid #2c2c2e;color:#a8a8ac;font-size:10.5px;vertical-align:1px}
 .tag.green{color:#86efac;border-color:#1f4a33;background:#12251b}
 .tag.warn{color:#fcd34d;border-color:#4a3a16;background:#241d0f}
 
 .addbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px;
-  background:#10141c;border-top:1px solid var(--line)}
-.addbar select,.addbar input{background:#0e121a;border:1px solid #283044;border-radius:7px;padding:7px 9px;font-size:12.5px}
+  background:#17171a;border-top:1px solid var(--line)}
+.addbar select,.addbar input{background:#141415;border:1px solid #2c2c2e;border-radius:7px;padding:7px 9px;font-size:12.5px}
 .addbar select{min-width:230px}
 .addbar input{flex:1;min-width:150px}
 .addbar input:disabled{opacity:.45}
 .addbar .lbl{color:var(--muted);font-size:11.5px}
 
-details{margin-top:14px;border:1px solid var(--line);border-radius:var(--radius);background:#12151d}
-details>summary{cursor:pointer;padding:12px 16px;font-weight:600;font-size:13px;color:#c9d4ea;list-style:none}
+details{margin-top:14px;border:1px solid var(--line);border-radius:var(--radius);background:#151516}
+details>summary{cursor:pointer;padding:12px 16px;font-weight:600;font-size:13px;color:#d6d6d9;list-style:none}
 details>summary::-webkit-details-marker{display:none}
 details>summary::before{content:"▸";display:inline-block;margin-right:8px;color:var(--muted);transition:.15s}
 details[open]>summary::before{transform:rotate(90deg)}
@@ -129,54 +134,54 @@ details .body{padding:0 16px 16px}
 @media(max-width:640px){.form{grid-template-columns:1fr}}
 .field{display:flex;flex-direction:column;gap:4px}
 .field label{font-size:11.5px;color:var(--muted)}
-.field input,.field select{background:#0e121a;border:1px solid #283044;border-radius:7px;padding:7px 9px;outline:none;width:100%}
+.field input,.field select{background:#141415;border:1px solid #2c2c2e;border-radius:7px;padding:7px 9px;outline:none;width:100%}
 .field input:focus,.field select:focus{border-color:#4d6bd8}
-.field .hint{font-size:10.5px;color:#5f687a}
+.field .hint{font-size:10.5px;color:#6a6a6d}
 .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center}
 .note{color:var(--muted);font-size:11.5px;line-height:1.7;margin-top:10px}
-.note b{color:#c9d4ea}
+.note b{color:#d6d6d9}
 .kv{display:grid;grid-template-columns:130px 1fr;gap:5px 12px;font-size:12px}
 .kv .k{color:var(--muted)}
 .kv .v{word-break:break-all}
 
-.drawer{position:fixed;left:0;right:0;bottom:0;z-index:40;background:#0d1017;
-  border-top:1px solid #33405a;box-shadow:0 -12px 40px #000a;transform:translateY(100%);
+.drawer{position:fixed;left:0;right:0;bottom:0;z-index:40;background:#111112;
+  border-top:1px solid #343436;box-shadow:0 -12px 40px #000a;transform:translateY(100%);
   transition:transform .18s ease;max-height:60vh;display:flex;flex-direction:column}
 .drawer.on{transform:none}
-.drawer-head{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #1e2532}
+.drawer-head{display:flex;align-items:center;gap:10px;padding:10px 16px;border-bottom:1px solid #222224}
 .drawer-head b{font-size:12.5px}
 .drawer-head .st{font-size:11.5px;color:var(--muted)}
 .drawer-head .st.ok{color:var(--green)}
 .drawer-head .st.err{color:var(--danger)}
 .drawer pre{margin:0;padding:12px 16px;overflow:auto;font-size:11.5px;line-height:1.5;
-  color:#c9d4ea;white-space:pre-wrap;word-break:break-all;flex:1}
+  color:#d6d6d9;white-space:pre-wrap;word-break:break-all;flex:1}
 .drawer pre a{color:#a9bcff;text-decoration:underline}
 .drawer pre a.runlink{display:inline-block;margin:2px 0;padding:3px 9px;border-radius:7px;
-  border:1px solid #2f3b52;background:#161c28;text-decoration:none;color:#c9d4ea}
-.drawer pre a.runlink:hover{border-color:#4d6bd8;background:#1b2333}
+  border:1px solid #313133;background:#1a1a1c;text-decoration:none;color:#d6d6d9}
+.drawer pre a.runlink:hover{border-color:#4d6bd8;background:#202022}
 .drawer pre a.runlink.primary{border-color:#4d6bd8;background:linear-gradient(135deg,#2a3a6b,#22304f);
   color:#dbe4ff;font-weight:600}
 .artifacts{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;padding:12px}
-.artcard{position:relative;border:1px solid var(--line);border-radius:11px;background:#12161f;overflow:hidden}
-.artcard:hover{border-color:#3a465e}
-.artcard .thumbwrap{position:relative;display:block;background:#0c0f16}
+.artcard{position:relative;border:1px solid var(--line);border-radius:11px;background:#151516;overflow:hidden}
+.artcard:hover{border-color:#3a3a3c}
+.artcard .thumbwrap{position:relative;display:block;background:#121213}
 .artcard .thumbwrap a.thumbimg{display:block}
-.artcard .thumbwrap img{display:block;width:100%;height:auto;background:#0c0f16}
+.artcard .thumbwrap img{display:block;width:100%;height:auto;background:#121213}
 .artcard .thumbwrap.noimg{aspect-ratio:9/19.5}
-.artcard .thumbwrap.noimg::before{content:"无法预览";position:absolute;inset:0;display:grid;place-items:center;color:#4a5468;font-size:11.5px}
+.artcard .thumbwrap.noimg::before{content:"无法预览";position:absolute;inset:0;display:grid;place-items:center;color:#5a5a5d;font-size:11.5px}
 .artcard .thumbbar{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;
   align-items:center;gap:6px;padding:6px 8px;background:linear-gradient(180deg,transparent,#000000d0 55%)}
 .artcard .thumbbar .btn{text-decoration:none;padding:4px 10px;font-size:11.5px;border-radius:7px;
-  background:#151a24dd;border:1px solid #3a465e}
+  background:#17171add;border:1px solid #3a3a3c}
 .artcard .thumbbar .btn.primary{background:linear-gradient(135deg,#6f8fff,#5b7cf0);border-color:#6f8fff;color:#fff}
 .artcard .artdel{position:absolute;top:8px;right:8px;z-index:3;width:24px;height:24px;border-radius:50%;
-  border:1px solid #ffffff26;background:#000000a8;color:#e8ecf4;font-size:14px;line-height:1;
+  border:1px solid #ffffff26;background:#000000a8;color:#ececec;font-size:14px;line-height:1;
   display:grid;place-items:center;padding:0}
 .artcard .artdel:hover{background:var(--danger);border-color:var(--danger);color:#fff}
 .artcard .artmeta{padding:8px 10px 10px}
-.artcard .artmeta .nm{font-size:11.5px;word-break:break-all;color:#c9d4ea}
+.artcard .artmeta .nm{font-size:11.5px;word-break:break-all;color:#d6d6d9}
 .artcard .artmeta .tm{font-size:10.5px;color:var(--muted);margin-top:3px}
-.toast{position:fixed;right:20px;bottom:20px;background:#1b2333;border:1px solid #33405a;
+.toast{position:fixed;right:20px;bottom:20px;background:#202022;border:1px solid #343436;
   padding:10px 14px;border-radius:9px;box-shadow:0 12px 40px #0008;opacity:0;transform:translateY(8px);
   transition:.2s;pointer-events:none;max-width:460px;font-size:12.5px;z-index:60}
 .toast.show{opacity:1;transform:none}
@@ -217,11 +222,11 @@ details .body{padding:0 16px 16px}
       <table>
         <thead>
           <tr>
-            <th>名称</th>
-            <th>ak 命令</th>
-            <th>快捷键</th>
-            <th>实际命令（点击复制）</th>
-            <th style="text-align:right">操作</th>
+            <th class="c-name">名称</th>
+            <th class="c-ak">ak 命令</th>
+            <th class="c-alias">快捷键</th>
+            <th class="c-ops">操作</th>
+            <th class="c-actual">实际命令（点击复制）</th>
           </tr>
         </thead>
         <tbody id="tbody-project"></tbody>
@@ -258,11 +263,11 @@ details .body{padding:0 16px 16px}
         <table>
           <thead>
             <tr>
-              <th>名称</th>
-              <th>ak 命令</th>
-              <th>快捷键</th>
-              <th>实际命令（点击复制）</th>
-              <th style="text-align:right">操作</th>
+              <th class="c-name">名称</th>
+              <th class="c-ak">ak 命令</th>
+              <th class="c-alias">快捷键</th>
+              <th class="c-ops">操作</th>
+              <th class="c-actual">实际命令（点击复制）</th>
             </tr>
           </thead>
           <tbody id="tbody-project-admin"></tbody>
@@ -308,11 +313,11 @@ details .body{padding:0 16px 16px}
       <table>
         <thead>
           <tr>
-            <th>名称</th>
-            <th>ak 命令</th>
-            <th>快捷键</th>
-            <th>实际命令（点击复制）</th>
-            <th style="text-align:right">操作</th>
+            <th class="c-name">名称</th>
+            <th class="c-ak">ak 命令</th>
+            <th class="c-alias">快捷键</th>
+            <th class="c-ops">操作</th>
+            <th class="c-actual">实际命令（点击复制）</th>
           </tr>
         </thead>
         <tbody id="tbody-commands"></tbody>
@@ -381,9 +386,22 @@ function toast(msg, err = false) {
   el._t = setTimeout(() => el.className = 'toast', 3600);
 }
 
-function markDirty() {
-  dirty = true;
-  $('#dirty').classList.add('on');
+let aliasTimer = null;
+function autosaveAliases() {
+  clearTimeout(aliasTimer);
+  aliasTimer = setTimeout(async () => {
+    try {
+      const items = collectItems();
+      await api('/api/aliases', {method: 'POST', body: JSON.stringify({items})});
+      S.config.aliases = S.config.aliases || {};
+      S.config.aliases.items = items;
+      dirty = false;
+      $('#dirty').classList.remove('on');
+      toast('快捷键已保存，新终端或按回车后生效');
+    } catch (e) {
+      toast('快捷键保存失败: ' + e.message, true);
+    }
+  }, 300);
 }
 
 async function load() {
@@ -407,7 +425,7 @@ function buildRows() {
     const aliases = Object.keys(items).filter(n => items[n] === c.target).sort();
     aliases.forEach(a => used.add(a));
     out.push({
-      kind: 'builtin', target: c.target, title: c.title, desc: c.desc, group: c.group,
+      kind: 'builtin', target: c.target, title: c.title, group: c.group,
       usage: c.usage, actual: c.command, aliases, runnable: !!c.runnable,
       run: c.run || c.target, engine: c.engine, available: c.available
     });
@@ -416,10 +434,10 @@ function buildRows() {
     if (used.has(n)) return;
     const v = String(items[n] || '');
     if (v.startsWith('shell:')) {
-      out.push({kind:'custom', target:'', title:n, desc:'自定义命令', group:'其他',
+      out.push({kind:'custom', target:'', title:n, group:'其他',
         usage:'自定义', actual:v.slice(6), aliases:[n], runnable:false});
     } else {
-      out.push({kind:'raw', target:v, title:n, desc:'未在内置列表中的 ak 命令', group:'其他',
+      out.push({kind:'raw', target:v, title:n, group:'其他',
         usage:'ak ' + v, actual:'ak ' + v, aliases:[n], runnable:false});
     }
   });
@@ -437,7 +455,7 @@ function render() {
   $('#run-banner').classList.toggle('on', !S.config.ui.allow_run_from_web);
 
   $('#proj').innerHTML = (S.projects || []).map(p =>
-    `<option value="${esc(p.id)}" ${S.current && p.id === S.current.id ? 'selected' : ''}>${esc(p.name)} (${esc(p.id)})</option>`
+    `<option value="${esc(p.id)}" ${S.current && p.id === S.current.id ? 'selected' : ''}>${esc(p.name)}</option>`
   ).join('') || '<option value="">（无项目）</option>';
 
   if (!activeTab) {
@@ -473,7 +491,7 @@ function renderGroupRows(list, groups, showHeader = true) {
     if (showHeader) html += `<tr class="grp"><td colspan="5">${esc(g)}</td></tr>`;
     current.forEach(({r, i}) => { html += rowHTML(r, i); });
   });
-  return html || '<tr><td colspan="5" style="padding:30px;text-align:center;color:#8b94a7">没有命令</td></tr>';
+  return html || '<tr><td colspan="5" style="padding:30px;text-align:center;color:#8f8f92">没有命令</td></tr>';
 }
 
 function showTab(tab) {
@@ -501,47 +519,47 @@ function rowHTML(r, i) {
     ? `<input class="cmd" value="${esc(r.actual)}" placeholder="adb shell ..." oninput="onCmd(${i}, this.value)">`
     : `<code class="actual" title="点击复制" onclick="copyActual(${i})">${esc(r.actual)}</code>`;
   const ops = [
-    `<button class="btn xs" onclick="copyRow(${i})">复制</button>`,
     r.runnable ? `<button class="btn xs primary" onclick="runRow(${i})">执行</button>` : '',
+    `<button class="btn xs" onclick="copyRow(${i})">复制</button>`,
     r.kind === 'custom' ? `<button class="btn xs danger" onclick="delRow(${i})">删除</button>` : ''
   ].join('');
   const tag = r.kind === 'builtin'
-    ? `<span class="tag">内置</span>`
+    ? ''
     : (r.kind === 'custom' ? `<span class="tag green">自定义</span>` : `<span class="tag warn">未识别</span>`);
   return `<tr class="row">
-    <td class="c-name"><div class="nm">${esc(r.title)}</div><div class="ds">${esc(r.desc || '')}</div></td>
+    <td class="c-name"><div class="nm">${esc(r.title)}</div></td>
     <td class="c-ak"><code class="ak">${esc(r.usage)}</code>${tag}</td>
     <td class="c-alias"><div class="aliaswrap">
       <input class="alias" value="${esc(aliasVal)}" placeholder="未设置" oninput="onAlias(${i}, this.value)">
       ${clearBtn}
     </div></td>
-    <td class="c-actual">${actual}</td>
     <td class="c-ops">${ops}</td>
+    <td class="c-actual">${actual}</td>
   </tr>`;
 }
 
 function onAlias(i, value) {
   rows[i].aliases = value.split(/[,\s]+/).map(s => s.trim()).filter(Boolean);
   if (rows[i].kind === 'custom') rows[i].title = rows[i].aliases[0] || '（未命名）';
-  markDirty();
+  autosaveAliases();
 }
 
 function onCmd(i, value) {
   rows[i].actual = value;
-  markDirty();
+  autosaveAliases();
 }
 
 function clearAlias(i) {
   rows[i].aliases = [];
   renderTable();
-  markDirty();
+  autosaveAliases();
 }
 
 function delRow(i) {
   rows.splice(i, 1);
   renderTable();
   renderAddOptions();
-  markDirty();
+  autosaveAliases();
 }
 
 function renderAddOptions() {
@@ -575,7 +593,7 @@ function addRow() {
   if (sel === '__custom__') {
     const cmd = $('#add-cmd').value.trim();
     if (!cmd) return toast('先填自定义命令', true);
-    rows.push({kind:'custom', target:'', title:alias, desc:'自定义命令', group:'其他',
+    rows.push({kind:'custom', target:'', title:alias, group:'其他',
       usage:'自定义', actual:cmd, aliases:[alias], runnable:false});
   } else {
     const r = rows.find(x => x.kind === 'builtin' && x.target === sel);
@@ -585,8 +603,7 @@ function addRow() {
   $('#add-alias').value = '';
   renderTable();
   renderAddOptions();
-  markDirty();
-  toast('已添加，记得点右上角「保存并生效」');
+  autosaveAliases();
 }
 
 function collectItems() {

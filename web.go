@@ -13,6 +13,8 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path"
+	"path/filepath"
 	"runtime"
 	"sort"
 	"strings"
@@ -133,9 +135,6 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 		act = orDash(proj.Activity)
 		module = proj.Module
 		variant = proj.Variant
-		if p, err := a.Store.APK(proj); err == nil {
-			apk = p
-		}
 		dev = a.device(proj)
 	}
 	if module == "" {
@@ -152,6 +151,18 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 	if mod == "" {
 		mod = "app"
 	}
+	moduleName := path.Base(strings.ReplaceAll(module, ":", "/"))
+	if moduleName == "." || moduleName == "/" || moduleName == "" {
+		moduleName = "app"
+	}
+	if proj != nil {
+		if p, err := a.Store.APK(proj); err == nil {
+			apk = p
+		} else {
+			dir := strings.TrimSuffix(apkGlobFor(module, variant), "*.apk")
+			apk = filepath.Join(proj.Root, filepath.FromSlash(dir+moduleName+"-"+variant+".apk"))
+		}
+	}
 	task := mod + ":assemble" + strings.ToUpper(variant[:1]) + variant[1:]
 	gradleBuild := "./gradlew " + gradleTask(module, variant)
 	gradleClean := "./gradlew clean " + gradleTask(module, variant)
@@ -162,8 +173,8 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 	layoutCmd := "adb shell uiautomator dump /sdcard/android-kit-ui.xml && adb exec-out cat /sdcard/android-kit-ui.xml"
 	shotCmd := "adb exec-out screencap -p > " + root + "/android-kit/screenshots/<time>.png"
 	if engine == "android" {
-		buildCmd = "android build ?" + task
-		cleanCmd = "android build ?" + mod + ":clean && android build ?" + task
+		buildCmd = "android build " + task
+		cleanCmd = "android build " + mod + ":clean && android build " + task
 		installCmd = "android install " + apk + devFlag
 		runCmd = "android run " + apk + " --activity " + act + devFlag
 		layoutCmd = "android layout -p" + devFlag
@@ -315,6 +326,11 @@ func (a *App) cmdWeb(args []string) error {
 			"display":   a.displayInfo(r.URL.Query().Get("project")),
 		})
 	}))
+	mux.HandleFunc("/api/activity", auth(func(w http.ResponseWriter, r *http.Request) {
+		a.reload()
+		proj, _ := a.webProject(r.URL.Query().Get("project"))
+		writeHTTPJSON(w, map[string]string{"activity": a.currentActivity(proj)})
+	}))
 	mux.HandleFunc("/api/state", auth(func(w http.ResponseWriter, r *http.Request) {
 		a.reload()
 		writeHTTPJSON(w, a.webState())
@@ -408,6 +424,32 @@ func (a *App) cmdWeb(args []string) error {
 		}
 		a.reload()
 		writeHTTPJSON(w, map[string]any{"ok": true, "applied": "immediate"})
+	}))
+	mux.HandleFunc("/api/aliases", auth(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "POST required", 405)
+			return
+		}
+		var body struct {
+			Items map[string]string `json:"items"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+		a.reload()
+		cfg := a.Config
+		if body.Items == nil {
+			body.Items = map[string]string{}
+		}
+		cfg.Aliases.Items = body.Items
+		cfg.Aliases.Preset = "custom"
+		if err := SaveConfig(a.Paths, cfg); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		a.reload()
+		writeHTTPJSON(w, map[string]any{"ok": true, "count": len(body.Items)})
 	}))
 	mux.HandleFunc("/api/run", auth(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {

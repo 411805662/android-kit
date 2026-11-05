@@ -24,6 +24,7 @@ type ArtifactItem struct {
 	Size      int64  `json:"size"`
 	ModTime   string `json:"mod_time"`
 	ProjectID string `json:"project_id"`
+	Activity  string `json:"activity,omitempty"`
 }
 
 func (a *App) artifactDirs(proj *Project) (hidden, visible string) {
@@ -95,6 +96,10 @@ func (a *App) projectArtifacts(projectID string) []ArtifactItem {
 			items[i].ShotURL = "/artifact?path=" + url.QueryEscape(shots[bestIndex].Path)
 		}
 		items[i].ViewerURL = viewer
+		sidecar := strings.TrimSuffix(items[i].Path, filepath.Ext(items[i].Path)) + ".activity"
+		if data, err := os.ReadFile(sidecar); err == nil {
+			items[i].Activity = strings.TrimSpace(string(data))
+		}
 	}
 	return items
 }
@@ -212,6 +217,10 @@ func (a *App) deleteArtifact(w http.ResponseWriter, r *http.Request) {
 	if err := os.Remove(path); err != nil {
 		http.Error(w, err.Error(), 500)
 		return
+	}
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".json", ".xml":
+		_ = os.Remove(strings.TrimSuffix(path, filepath.Ext(path)) + ".activity")
 	}
 	writeHTTPJSON(w, map[string]any{"ok": true, "path": path})
 }

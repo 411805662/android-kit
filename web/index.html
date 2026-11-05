@@ -178,6 +178,7 @@ details .body{padding:0 16px 16px}
   <div class="tabs">
     <button id="tab-project" onclick="showTab('project')">项目</button>
     <button id="tab-commands" onclick="showTab('commands')">命令</button>
+    <button id="tab-artifacts" onclick="showTab('artifacts')">截图 / UI 产物</button>
   </div>
 
   <div class="tabpane" id="pane-project">
@@ -242,15 +243,6 @@ details .body{padding:0 16px 16px}
       </div>
     </details>
 
-    <details id="d-artifacts">
-      <summary>截图 / UI 产物（点击在新页面打开）</summary>
-      <div class="artifacts" id="artifact-list"></div>
-      <div class="body" style="padding:0 16px 16px">
-        <div class="note">截图链接会直接打开原图；<span class="mono">.json</span> UI 树会打开对照查看器：左边截图 1:1，右边线框与元素属性。执行 <span class="mono">ak screenshot</span> / <span class="mono">ak layout -p</span> 后点「刷新产物」即可。</div>
-        <div class="actions"><button class="btn" onclick="loadArtifacts()">刷新产物</button></div>
-      </div>
-    </details>
-
     <details id="d-paths">
       <summary>存储路径</summary>
       <div class="body">
@@ -284,6 +276,15 @@ details .body{padding:0 16px 16px}
         <button class="btn primary" onclick="addRow()">+ 添加</button>
       </div>
     </div>
+  </div>
+
+  <div class="tabpane" id="pane-artifacts">
+    <div class="actions" style="margin:0 0 12px">
+      <button class="btn" onclick="loadArtifacts()">刷新产物</button>
+      <button class="btn danger" onclick="clearArtifacts()">清空当前项目产物</button>
+      <span class="note" style="margin:0">截图直接打开原图；UI 树打开 H5 对照；原始 JSON 按 jq 风格格式化展示。</span>
+    </div>
+    <div class="artifacts" id="artifact-list"></div>
   </div>
 
 </main>
@@ -342,6 +343,7 @@ async function load() {
     dirty = false;
     $('#dirty').classList.remove('on');
     render();
+    loadArtifacts();
   } catch (e) {
     toast('加载失败: ' + e.message, true);
   }
@@ -390,7 +392,7 @@ function render() {
 
   if (!activeTab) {
     const hashTab = location.hash.slice(1);
-    activeTab = (hashTab === 'project' || hashTab === 'commands')
+    activeTab = (hashTab === 'project' || hashTab === 'commands' || hashTab === 'artifacts')
       ? hashTab
       : (S.current && (S.projects || []).length ? 'commands' : 'project');
   }
@@ -422,17 +424,19 @@ function renderGroupRows(list, groups) {
 }
 
 function showTab(tab) {
-  activeTab = tab === 'commands' ? 'commands' : 'project';
+  activeTab = (tab === 'commands' || tab === 'artifacts') ? tab : 'project';
   $('#tab-project').classList.toggle('active', activeTab === 'project');
   $('#tab-commands').classList.toggle('active', activeTab === 'commands');
+  $('#tab-artifacts').classList.toggle('active', activeTab === 'artifacts');
   $('#pane-project').classList.toggle('active', activeTab === 'project');
   $('#pane-commands').classList.toggle('active', activeTab === 'commands');
+  $('#pane-artifacts').classList.toggle('active', activeTab === 'artifacts');
   if (location.hash !== '#' + activeTab) history.replaceState(null, '', '#' + activeTab);
 }
 
 window.addEventListener('hashchange', () => {
   const tab = location.hash.slice(1);
-  if (tab === 'project' || tab === 'commands') showTab(tab);
+  if (tab === 'project' || tab === 'commands' || tab === 'artifacts') showTab(tab);
 });
 
 function rowHTML(r, i) {
@@ -732,16 +736,36 @@ function renderArtifacts() {
     const links = ui && item.name.endsWith('.json')
       ? [
           `<a class="btn primary" href="${esc(artifactURL(viewerHref))}" target="_blank" rel="noopener">打开 H5 UI 对照</a>`,
-          `<a class="btn" href="${esc(artifactURL(item.url))}" target="_blank" rel="noopener">原始 JSON</a>`
+          `<a class="btn" href="${esc(artifactURL(item.url + '&pretty=1'))}" target="_blank" rel="noopener">打开 JSON</a>`
         ].join('')
       : `<a class="btn" href="${esc(artifactURL(item.url))}" target="_blank" rel="noopener">${shot ? '查看原图' : '打开文件'}</a>`;
+    const del = `<button class="btn xs danger" onclick="deleteArtifact('${esc(item.path)}')">删除</button>`;
     return `<div class="artifact">
       <div class="kind">${shot ? '截图' : 'UI 树'} · ${esc(item.mod_time || '')}</div>
       <div class="name mono">${esc(item.name)}</div>
-      <div class="links">${links}</div>
+      <div class="links">${links}${del}</div>
       <div class="path">${esc(item.path)}</div>
     </div>`;
   }).join('') : '<div class="empty" style="grid-column:1/-1">还没有截图或 UI 树</div>';
+}
+
+async function deleteArtifact(path) {
+  if (!confirm('删除这个产物文件？\n\n' + path)) return;
+  try {
+    await api('/api/artifact?path=' + encodeURIComponent(path), {method: 'DELETE'});
+    toast('已删除');
+    loadArtifacts();
+  } catch (e) { toast('删除失败: ' + e.message, true); }
+}
+
+async function clearArtifacts() {
+  const pid = S && S.current ? S.current.id : '';
+  if (!confirm('清空当前项目（' + (pid || '未选择') + '）的全部截图和 UI 树？此操作不可恢复。')) return;
+  try {
+    const res = await api('/api/artifacts/clear', {method: 'POST', body: JSON.stringify({project: pid})});
+    toast('已清理 ' + (res.removed || 0) + ' 个文件');
+    loadArtifacts();
+  } catch (e) { toast('清理失败: ' + e.message, true); }
 }
 
 function copyRow(i) {
@@ -850,7 +874,7 @@ function renderRunOutput(text) {
       link.className = 'runlink';
       const target = (isJSON && !saved)
         ? '/viewer?ui=' + encodeURIComponent(path) + (S && S.current ? '&project=' + encodeURIComponent(S.current.id) : '')
-        : '/artifact?path=' + encodeURIComponent(path);
+        : '/artifact?path=' + encodeURIComponent(path) + (isJSON ? '&pretty=1' : '');
       link.href = artifactURL(target);
       link.target = '_blank';
       link.rel = 'noopener';

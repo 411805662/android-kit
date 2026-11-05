@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"html"
 	"net/http"
 	"net/url"
 	"os"
@@ -178,7 +181,90 @@ func (a *App) serveArtifact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Header().Set("Cache-Control", "no-store")
+	if r.URL.Query().Get("pretty") != "" && strings.EqualFold(filepath.Ext(path), ".json") {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			http.NotFound(w, r)
+			return
+		}
+		var buf bytes.Buffer
+		if json.Indent(&buf, data, "", "  ") != nil {
+			buf.Reset()
+			buf.Write(data)
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		fmt.Fprintf(w, `<!doctype html><html lang="zh-CN"><head><meta charset="utf-8">
+<title>%s</title><style>
+:root{color-scheme:dark}
+body{margin:0;background:#0b0d12;color:#e8ecf4;font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.bar{position:sticky;top:0;display:flex;gap:10px;align-items:center;padding:10px 16px;
+  background:#10141c;border-bottom:1px solid #252b38;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif}
+.bar b{font-size:12.5px;font-weight:600}.bar span{color:#8b94a7;font-size:11.5px;word-break:break-all}
+.bar .spacer{flex:1}
+.bar button{background:#1a1f2b;border:1px solid #252b38;color:#e8ecf4;border-radius:7px;padding:5px 10px;cursor:pointer;font-size:11.5px}
+pre{margin:0;padding:16px 20px;white-space:pre;tab-size:2}
+</style></head><body>
+<div class="bar"><b>JSON</b><span>%s</span><div class="spacer"></div>
+<button onclick="navigator.clipboard.writeText(document.querySelector('pre').textContent)">复制</button></div>
+<pre>%s</pre></body></html>`, html.EscapeString(filepath.Base(path)), html.EscapeString(path), html.EscapeString(buf.String()))
+		return
+	}
 	http.ServeFile(w, r, path)
+}
+
+func (a *App) deleteArtifact(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		http.Error(w, "DELETE required", 405)
+		return
+	}
+	path, err := a.resolveArtifactPath(r.URL.Query().Get("path"))
+	if err != nil {
+		http.Error(w, err.Error(), 403)
+		return
+	}
+	info, err := os.Stat(path)
+	if err != nil || info.IsDir() {
+		http.NotFound(w, r)
+		return
+	}
+	if err := os.Remove(path); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	writeHTTPJSON(w, map[string]any{"ok": true, "path": path})
+}
+
+func (a *App) clearArtifacts(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "POST required", 405)
+		return
+	}
+	var body struct {
+		Project string `json:"project"`
+	}
+	_ = json.NewDecoder(r.Body).Decode(&body)
+	proj, err := a.webProject(body.Project)
+	if err != nil || proj == nil {
+		http.Error(w, "没有可用项目", 400)
+		return
+	}
+	hidden, visible := a.artifactDirs(proj)
+	removed := 0
+	for _, dir := range []string{filepath.Join(visible, "screenshots"), filepath.Join(hidden, "ui")} {
+		entries, err := os.ReadDir(dir)
+		if err != nil {
+			continue
+		}
+		for _, entry := range entries {
+			if entry.IsDir() {
+				continue
+			}
+			if err := os.Remove(filepath.Join(dir, entry.Name())); err == nil {
+				removed++
+			}
+		}
+	}
+	writeHTTPJSON(w, map[string]any{"ok": true, "removed": removed})
 }
 
 type DisplayInfo struct {

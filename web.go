@@ -291,6 +291,8 @@ func (a *App) cmdWeb(args []string) error {
 		w.Write(data)
 	})
 	mux.HandleFunc("/artifact", auth(a.serveArtifact))
+	mux.HandleFunc("/api/artifact", auth(a.deleteArtifact))
+	mux.HandleFunc("/api/artifacts/clear", auth(a.clearArtifacts))
 	mux.HandleFunc("/viewer", auth(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Query().Get("token") == token {
 			http.SetCookie(w, &http.Cookie{Name: "ak_token", Value: token, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode})

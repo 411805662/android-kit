@@ -16,12 +16,24 @@ button,input,select{font:inherit;color:inherit}
   background:#10141c;flex-wrap:wrap}
 .top h1{font-size:14px;margin:0;font-weight:650}
 .top .meta{color:var(--muted);font-size:11.5px}
-input[type=search]{background:#0e121a;border:1px solid #283044;border-radius:8px;padding:7px 10px;min-width:260px;outline:none}
-input[type=search]:focus{border-color:var(--accent)}
+.searchwrap{display:flex;align-items:center;gap:8px;background:#0e121a;border:1px solid #3a4a6b;
+  border-radius:10px;padding:4px 10px;box-shadow:0 0 0 3px #4d6bd81f}
+.searchwrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px #4d6bd840}
+.searchwrap .ico{font-size:14px;opacity:.85}
+.searchwrap label{font-size:11px;color:var(--muted);white-space:nowrap}
+input[type=search]{background:transparent;border:0;border-radius:8px;padding:6px 2px;min-width:300px;outline:none}
+.hiddenbar{display:none;align-items:center;gap:8px;font-size:11.5px;color:var(--warn)}
+.hiddenbar.on{display:flex}
 .btn{border:1px solid var(--line);background:#1a1f2b;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px}
 .btn:hover{border-color:#3a465e}
 .spacer{flex:1}
-.workspace{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 360px;min-height:0}
+.workspace{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 6px 360px;min-height:0}
+.splitter{cursor:col-resize;background:#151a24;border-left:1px solid var(--line);border-right:1px solid var(--line);
+  position:relative;touch-action:none}
+.splitter::after{content:"";position:absolute;left:2px;top:50%;transform:translateY(-50%);width:2px;height:36px;
+  border-radius:2px;background:#3a465e}
+.splitter:hover,.splitter.drag{background:#1d2534}
+.splitter:hover::after,.splitter.drag::after{background:var(--accent)}
 .stage{position:relative;overflow:auto;background:
   linear-gradient(45deg,#10141c 25%,transparent 25%),linear-gradient(-45deg,#10141c 25%,transparent 25%),
   linear-gradient(45deg,transparent 75%,#10141c 75%),linear-gradient(-45deg,transparent 75%,#10141c 75%) #0d1017;
@@ -32,6 +44,7 @@ input[type=search]:focus{border-color:var(--accent)}
 .overlay{position:absolute;top:0;left:0;pointer-events:none}
 .box{position:absolute;border:1px solid #6ea8ff88;background:#6ea8ff12;cursor:pointer;pointer-events:auto}
 .box:hover{border-color:#9bc0ff;background:#6ea8ff22}
+.box.window{pointer-events:none;border-color:#6ea8ff2e;background:transparent}
 .box.match{border:2px solid var(--danger);background:#f8717144;box-shadow:0 0 0 1px #f8717188 inset;z-index:20}
 .box.selected{border:2px solid var(--green);background:#4ade8044;box-shadow:0 0 0 2px #4ade8088 inset,0 0 12px #4ade80aa;z-index:30}
 .box.match.selected{border-color:var(--warn);background:#fbbf2433}
@@ -64,8 +77,16 @@ input[type=search]:focus{border-color:var(--accent)}
 <body>
 <div class="top">
   <h1>UI 查看器</h1>
-  <input type="search" id="search" placeholder="模糊搜索 id / text / content-desc / class" oninput="applyFilter()">
+  <div class="searchwrap">
+    <span class="ico">⌕</span>
+    <label for="search">搜索元素</label>
+    <input type="search" id="search" placeholder="id / text / content-desc / class" oninput="applyFilter()">
+  </div>
   <span class="status" id="match-status"></span>
+  <span class="hiddenbar" id="hiddenbar">
+    已隐藏 <b id="hidden-count">0</b> 个元素
+    <button class="btn" onclick="restoreHidden()">恢复全部</button>
+  </span>
   <div class="spacer"></div>
   <label class="status"><input type="checkbox" id="show-all" checked onchange="renderBoxes()"> 显示全部线框</label>
   <button class="btn" onclick="copyBounds()">复制选中 bounds</button>
@@ -85,7 +106,8 @@ input[type=search]:focus{border-color:var(--accent)}
       <button onclick="fitZoom()">适应</button>
     </div>
   </div>
-  <aside class="side">
+  <div class="splitter" id="splitter" title="拖动调整宽度"></div>
+  <aside class="side" id="side">
     <div class="head">元素信息</div>
     <div class="body" id="info"><div class="empty">点击左侧线框或截图上的元素</div></div>
   </aside>
@@ -113,8 +135,52 @@ let COORD_SCALE_X = 1;
 let COORD_SCALE_Y = 1;
 let selectedIndex = -1;
 let zoom = 1;
+const hiddenSet = new Set();
+let sideWidth = parseInt(localStorage.getItem('ak_viewer_side') || '360', 10) || 360;
 const INITIAL_QUERY = QS.get('q') || '';
 const INITIAL_SELECT = parseInt(QS.get('select') || '-1', 10);
+
+function isHidden(node) {
+  let cur = node;
+  while (cur) {
+    if (hiddenSet.has(cur.index)) return true;
+    cur = cur.parent >= 0 ? NODES[cur.parent] : null;
+  }
+  return false;
+}
+
+function isBackground(node) {
+  if (!node) return false;
+  if (node.isWindow) return true;
+  if (!TREE_W || !TREE_H) return false;
+  return node.bounds.w * node.bounds.h >= TREE_W * TREE_H * 0.9;
+}
+
+function applySplit() {
+  sideWidth = Math.min(Math.max(240, sideWidth), Math.max(320, window.innerWidth - 320));
+  $('.workspace').style.gridTemplateColumns = `minmax(0,1fr) 6px ${sideWidth}px`;
+  localStorage.setItem('ak_viewer_side', String(sideWidth));
+}
+
+function initSplitter() {
+  applySplit();
+  const el = $('#splitter');
+  let dragging = false;
+  const move = e => {
+    if (!dragging) return;
+    const x = (e.touches ? e.touches[0].clientX : e.clientX);
+    sideWidth = window.innerWidth - x;
+    applySplit();
+    e.preventDefault();
+  };
+  const stop = () => { dragging = false; el.classList.remove('drag'); document.body.style.userSelect = ''; };
+  el.addEventListener('mousedown', e => { dragging = true; el.classList.add('drag'); document.body.style.userSelect = 'none'; e.preventDefault(); });
+  el.addEventListener('touchstart', e => { dragging = true; el.classList.add('drag'); }, {passive:true});
+  window.addEventListener('mousemove', move);
+  window.addEventListener('touchmove', move, {passive:false});
+  window.addEventListener('mouseup', stop);
+  window.addEventListener('touchend', stop);
+}
 
 function artifactURL(path) { return '/artifact?path=' + encodeURIComponent(path); }
 
@@ -163,7 +229,8 @@ function walk(value, parent, windowInfo, depth, out) {
       cls: value.class || '',
       interactions: value.interactions || [],
       center: value.center || '',
-      childrenCount: Array.isArray(value.children) ? value.children.length : 0
+      childrenCount: Array.isArray(value.children) ? value.children.length : 0,
+      isWindow: false
     };
     out.push(node);
     parent = node.index;
@@ -190,7 +257,8 @@ function buildNodes(tree) {
     if (winBounds) {
       out.push({index:out.length, raw:Object.assign({},win), bounds:winBounds, parent:-1,
         window:info, depth:0, text:info.title, id:'', desc:'', cls:'window',
-        interactions:[], center:'', childrenCount:Array.isArray(win.content)?win.content.length:0});
+        interactions:[], center:'', childrenCount:Array.isArray(win.content)?win.content.length:0,
+        isWindow:true});
     }
     if (Array.isArray(win.content)) {
       win.content.forEach(child => walk(child, out.length-1, info, 1, out));
@@ -252,12 +320,20 @@ async function loadViewer() {
 }
 
 function calibrate() {
-  const windows = Array.isArray(TREE)
-    ? TREE.filter(w => w.type === 'APPLICATION').map(w => parseBounds(w.bounds)).filter(Boolean)
-    : [];
-  const bounds = windows.length ? windows : (Array.isArray(TREE) ? TREE.map(w => parseBounds(w.bounds)).filter(Boolean) : []);
-  TREE_W = Math.max(DISPLAY.width || 0, ...bounds.map(b => b.x2), 1);
-  TREE_H = Math.max(DISPLAY.height || 0, ...bounds.map(b => b.y2), 1);
+  const bounds = Array.isArray(TREE) ? TREE.map(w => parseBounds(w.bounds)).filter(Boolean) : [];
+  const limitW = NATIVE_W || DISPLAY.width || 0;
+  const limitH = NATIVE_H || DISPLAY.height || 0;
+  const extent = (values, limit) => {
+    const kept = limit ? values.filter(v => v <= limit * 1.02) : values;
+    if (!kept.length) return values.length ? Math.max(...values) : 0;
+    return Math.max(...kept);
+  };
+  TREE_W = extent(bounds.map(b => b.x2), limitW);
+  TREE_H = extent(bounds.map(b => b.y2), limitH);
+  if (!bounds.length || !TREE_W || !TREE_H) {
+    TREE_W = Math.max(DISPLAY.width || 0, 1);
+    TREE_H = Math.max(DISPLAY.height || 0, 1);
+  }
   COORD_SCALE_X = NATIVE_W / TREE_W;
   COORD_SCALE_Y = NATIVE_H / TREE_H;
   if (Math.abs(COORD_SCALE_X - 1) > 0.001 || Math.abs(COORD_SCALE_Y - 1) > 0.001) {
@@ -299,28 +375,43 @@ function renderBoxes() {
   const query = $('#search').value.trim().toLowerCase();
   const showAll = $('#show-all').checked;
   const visible = NODES.map(node => {
+    if (isHidden(node)) return '';
     const isMatch = matches(node, query);
     if (query && !isMatch) return '';
     if (!query && !showAll && node.depth > 2) return '';
     const b = scaleBounds(node.bounds);
+    if (b.w <= 0 || b.h <= 0) return '';
     const label = node.id || node.text || node.desc || node.cls || 'window';
     return {node, isMatch, b, label};
   }).filter(Boolean);
   const html = visible.sort((a, z) => {
     const area = x => x.b.w * x.b.h;
-    return area(a) - area(z);
+    return area(z) - area(a);
   }).map(({node, isMatch, b, label}) => {
-    return `<div class="box ${isMatch?'match':''} ${node.index===selectedIndex?'selected':''}"
+    const bg = isBackground(node);
+    const cls = [
+      'box',
+      bg ? 'window' : '',
+      isMatch ? 'match' : '',
+      node.index === selectedIndex ? 'selected' : ''
+    ].filter(Boolean).join(' ');
+    return `<div class="${cls}"
       style="left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px"
-      data-index="${node.index}" onclick="selectNode(${node.index},event)">
-      <span class="label">${esc(label)}</span>
+      data-index="${node.index}"${bg ? '' : ` onclick="selectNode(${node.index},event)"`}>
+      ${bg ? '' : `<span class="label">${esc(label)}</span>`}
     </div>`;
   }).join('');
   $('#overlay').innerHTML = html;
   $('#overlay').style.width = (NATIVE_W || 1) + 'px';
   $('#overlay').style.height = (NATIVE_H || 1) + 'px';
-  const count = NODES.filter(n => matches(n, query)).length;
-  $('#match-status').textContent = query ? `匹配 ${count} / ${NODES.length} 个节点` : `${NODES.length} 个节点 · ${DISPLAY.dpi} dpi`;
+  const count = NODES.filter(n => !isHidden(n) && matches(n, query)).length;
+  const total = NODES.length - hiddenSet.size;
+  const scaleTip = (Math.abs(COORD_SCALE_X - 1) > 0.001 || Math.abs(COORD_SCALE_Y - 1) > 0.001)
+    ? ` · 缩放 ${COORD_SCALE_X.toFixed(3)}×${COORD_SCALE_Y.toFixed(3)}`
+    : ' · 1:1';
+  $('#match-status').textContent = query
+    ? `匹配 ${count} / ${total} 个节点`
+    : `${total} 个节点 · ${DISPLAY.dpi} dpi${scaleTip}`;
   $('#match-status').className = 'status';
 }
 
@@ -338,6 +429,8 @@ function scaleBounds(bounds) {
 
 function selectNode(index, event) {
   if (event) event.stopPropagation();
+  const picked = NODES[index];
+  if (!picked || isBackground(picked)) return;
   selectedIndex = index;
   renderBoxes();
   const node = NODES[index];
@@ -359,6 +452,7 @@ function selectNode(index, event) {
   delete raw.children;
   delete raw.content;
   $('#info').innerHTML = `
+    <div class="section"><button class="btn" onclick="hideSelected()" title="从当前视图隐藏该元素及其子元素">删除元素（仅隐藏）</button></div>
     <div class="section"><h3>结构化属性</h3><div class="kv">
       ${rows.map(([k,v]) => `<div class="k">${esc(k)}</div><div class="v">${esc(v || '-')}</div>`).join('')}
     </div></div>
@@ -377,6 +471,38 @@ function copyBounds() {
   copyText(NODES[selectedIndex].raw.bounds || '');
 }
 
+function hideSelected() {
+  if (selectedIndex < 0) return toast('先选中一个元素');
+  hiddenSet.add(selectedIndex);
+  selectedIndex = -1;
+  $('#info').innerHTML = '<div class="empty">已隐藏，按 Delete 继续删除；点顶部「恢复全部」可还原</div>';
+  updateHiddenBar();
+  renderBoxes();
+}
+
+function restoreHidden() {
+  hiddenSet.clear();
+  selectedIndex = -1;
+  updateHiddenBar();
+  renderBoxes();
+  $('#info').innerHTML = '<div class="empty">点击左侧线框或截图上的元素</div>';
+}
+
+function updateHiddenBar() {
+  const n = hiddenSet.size;
+  $('#hidden-count').textContent = String(n);
+  $('#hiddenbar').classList.toggle('on', n > 0);
+}
+
+document.addEventListener('keydown', e => {
+  const tag = (e.target && e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+  if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIndex >= 0) {
+    e.preventDefault();
+    hideSelected();
+  }
+});
+
 async function copyText(text) {
   let ok = false;
   try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); ok = true; } } catch (_) {}
@@ -391,6 +517,7 @@ async function copyText(text) {
 }
 
 window.addEventListener('resize', () => { if (zoom < 1) fitZoom(); });
+initSplitter();
 loadViewer();
 </script>
 </body>

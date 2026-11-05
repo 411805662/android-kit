@@ -38,7 +38,7 @@ curl -fsSL https://github.com/411805662/android-kit/releases/latest/download/ins
 或走 jsDelivr（国内网络通常更快；新 tag 可能有几分钟缓存）：
 
 ```bash
-curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.2.4/install.sh | sh
+curl -fsSL https://cdn.jsdelivr.net/gh/411805662/android-kit@v0.2.5/install.sh | sh
 ```
 
 安装器会：
@@ -139,7 +139,7 @@ ak project add ~/new/path/AppA --id appa
 |---|---|---|
 | `c` | `ak clear` | 清除应用数据 |
 | `ss` | `ak screenshot [-a]` | 截图，保存到 `android-kit/screenshots/` |
-| `ui` | `ak layout [-p] [--full]` | UI 树，保存到 `~/.android-kit/artifacts/ui/` |
+| `ui` | `ak layout [-p] [--full]` | 截图 + UI 树，输出 H5 对照链接 |
 | | `ak text "hello world"` | 输入文本 |
 | | `ak paths` | 所有存储路径 |
 
@@ -201,7 +201,8 @@ ak web
 - 每行可复制 `ak` 命令、复制实际命令、直接执行；执行结果在底部抽屉里显示。
 - 项目设置、全局设置、存储路径都在同一页的折叠区里。
 - 「截图 / UI 产物」区列出所有截图与 UI 树；截图链接在新页面直接打开原图。
-- UI 树链接打开独立查看器：左边 1:1 截图，右边线框图；可模糊搜索 `id` / `text` / `content-desc` / `class`，匹配元素显示红色蒙层。
+- UI 树条目直接给「打开 H5 UI 对照」：左边 1:1 截图，右边线框图；可模糊搜索 `id` / `text` / `content-desc` / `class`，匹配元素显示红色蒙层。
+- `ak layout` 会自动截一张同时间戳的图，并输出 `# viewer:` H5 链接；`ak web` 没运行时只提示先启动网页配置台。
 - 点击线框选中元素后，右侧结构化展示 `resource-id`、文字、描述、`bounds`、左上坐标、宽高（px 与 dp）、交互状态和原始属性。
 - 保存后 CLI 下一条命令立即生效；已打开的终端按一次回车，prompt hook 会自动刷新。
 - 网页执行默认开启；可在「全局设置」里关闭 `allow_run_from_web`。

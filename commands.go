@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"net"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -395,6 +397,8 @@ func (a *App) cmdLayout(args []string) error {
 	full := fs.Bool("full", false, "包含不可交互节点")
 	flat := fs.Bool("flat", false, "输出扁平列表")
 	saveOnly := fs.Bool("save-only", false, "只保存，不打印内容")
+	printBody := fs.Bool("print", false, "同时把 UI JSON 打印到终端")
+	noShot := fs.Bool("no-shot", false, "不自动截图")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -402,11 +406,12 @@ func (a *App) cmdLayout(args []string) error {
 	if err != nil {
 		return err
 	}
-	hidden, _, err := a.Paths.EnsureProjectDirs(proj)
+	hidden, visible, err := a.Paths.EnsureProjectDirs(proj)
 	if err != nil {
 		return err
 	}
-	outPath := filepath.Join(hidden, "ui", timestamp()+".json")
+	stamp := timestamp()
+	outPath := filepath.Join(hidden, "ui", stamp+".json")
 	var content string
 	engine, err := a.engine()
 	if err != nil {
@@ -450,8 +455,29 @@ func (a *App) cmdLayout(args []string) error {
 	if err := os.WriteFile(outPath, []byte(content), 0o644); err != nil {
 		return err
 	}
+	shotPath := ""
+	if !*noShot {
+		shotPath = filepath.Join(visible, "screenshots", stamp+".png")
+		if err := os.MkdirAll(filepath.Dir(shotPath), 0o755); err != nil {
+			return err
+		}
+		if captured, err := a.captureScreenshot(proj, shotPath, false); err == nil {
+			shotPath = captured
+		} else {
+			shotPath = ""
+			fmt.Fprintln(os.Stderr, "# shot failed: "+err.Error())
+		}
+	}
 	fmt.Fprintln(os.Stderr, "# saved: "+outPath)
-	if !*saveOnly {
+	if shotPath != "" {
+		fmt.Fprintln(os.Stderr, "# shot: "+shotPath)
+	}
+	if viewer := a.viewerURL(proj, outPath, shotPath); viewer != "" {
+		fmt.Fprintln(os.Stderr, "# viewer: "+viewer)
+	} else {
+		fmt.Fprintln(os.Stderr, "# hint: 运行 ak web 后可获得 H5 对照链接")
+	}
+	if !*saveOnly && *printBody {
 		fmt.Println(content)
 	}
 	return nil
@@ -492,13 +518,22 @@ func (a *App) cmdScreenshot(args []string) error {
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
-	engine, err := a.engine()
+	path, err = a.captureScreenshot(proj, path, *annotate || *annotateLong)
 	if err != nil {
 		return err
 	}
+	fmt.Println(path)
+	return nil
+}
+
+func (a *App) captureScreenshot(proj *Project, path string, annotate bool) (string, error) {
+	engine, err := a.engine()
+	if err != nil {
+		return "", err
+	}
 	if engine == "android" {
 		cmdArgs := []string{"screen", "capture", "--output", path}
-		if *annotate || *annotateLong {
+		if annotate {
 			cmdArgs = append(cmdArgs, "--annotate")
 		}
 		if dev := a.device(proj); dev != "" {
@@ -506,7 +541,7 @@ func (a *App) cmdScreenshot(args []string) error {
 		}
 		out, err := runCapture(proj.Root, proj.EnvList(), a.androidPath(), cmdArgs...)
 		if err != nil {
-			return fmt.Errorf("android screen capture 失败: %s", out)
+			return "", fmt.Errorf("android screen capture 失败: %s", out)
 		}
 		if !exists(path) {
 			if strings.Contains(out, ".png") {
@@ -516,7 +551,7 @@ func (a *App) cmdScreenshot(args []string) error {
 	} else {
 		adb, ok := lookPath("adb")
 		if !ok {
-			return fmt.Errorf("找不到 adb")
+			return "", fmt.Errorf("找不到 adb")
 		}
 		cmd := []string{"exec-out", "screencap", "-p"}
 		if serial := a.device(proj); serial != "" {
@@ -524,14 +559,48 @@ func (a *App) cmdScreenshot(args []string) error {
 		}
 		data, err := execCaptureBytes(adb, cmd...)
 		if err != nil {
-			return err
+			return "", err
 		}
 		if err := os.WriteFile(path, data, 0o644); err != nil {
-			return err
+			return "", err
 		}
 	}
-	fmt.Println(path)
-	return nil
+	return path, nil
+}
+
+// viewerURL returns a ready-to-open H5 viewer link when `ak web` is running.
+func (a *App) viewerURL(proj *Project, uiPath, shotPath string) string {
+	baseBytes, err := os.ReadFile(a.Paths.WebURL)
+	if err != nil {
+		return ""
+	}
+	base := strings.TrimSpace(string(baseBytes))
+	if base == "" {
+		return ""
+	}
+	host := strings.TrimPrefix(strings.TrimPrefix(base, "http://"), "https://")
+	conn, err := net.DialTimeout("tcp", host, 300*time.Millisecond)
+	if err != nil {
+		return ""
+	}
+	_ = conn.Close()
+	tokenBytes, err := os.ReadFile(a.Paths.WebToken)
+	if err != nil {
+		return ""
+	}
+	token := strings.TrimSpace(string(tokenBytes))
+	q := url.Values{}
+	q.Set("ui", uiPath)
+	if shotPath != "" {
+		q.Set("shot", shotPath)
+	}
+	if proj != nil {
+		q.Set("project", proj.ID)
+	}
+	if token != "" {
+		q.Set("token", token)
+	}
+	return base + "/viewer?" + q.Encode()
 }
 
 func extractPNGPath(out string) string {

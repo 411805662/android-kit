@@ -192,7 +192,7 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 
 		{ID: "clear", Target: "clear", Group: groupDebug, Title: "清除数据", Desc: "pm clear，登录态会丢失", Command: "adb shell pm clear " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "clear"},
 		{ID: "screenshot", Target: "screenshot", Group: groupDebug, Title: "截图", Desc: "保存到 android-kit/screenshots", Command: shotCmd, Engine: engine, Available: true, Runnable: true, Run: "screenshot"},
-		{ID: "layout", Target: "layout -p", Group: groupDebug, Title: "UI 树", Desc: "保存到 ~/.android-kit/artifacts/ui，同时打印", Command: layoutCmd, Engine: engine, Available: true, Runnable: true, Run: "layout -p"},
+		{ID: "layout", Target: "layout -p", Group: groupDebug, Title: "UI 树", Desc: "截图 + UI 树，输出 H5 对照链接", Command: layoutCmd, Engine: engine, Available: true, Runnable: true, Run: "layout -p"},
 		{ID: "text", Target: "text", Group: groupDebug, Title: "输入文本", Desc: "空格自动转 %s", Command: "adb shell input text <text>", Engine: "adb", Available: true, Runnable: false},
 		{ID: "paths", Target: "paths", Group: groupDebug, Title: "存储路径", Desc: "查看所有目录和文件位置", Command: "ak paths", Engine: "-", Available: true, Runnable: true, Run: "paths"},
 
@@ -241,6 +241,11 @@ func (a *App) cmdWeb(args []string) error {
 	}
 	actualPort := ln.Addr().(*net.TCPAddr).Port
 	url := fmt.Sprintf("http://127.0.0.1:%d/?token=%s", actualPort, token)
+	baseURL := fmt.Sprintf("http://127.0.0.1:%d", actualPort)
+	if err := atomicWrite(a.Paths.WebURL, []byte(baseURL+"\n"), 0o600); err != nil {
+		return err
+	}
+	defer os.Remove(a.Paths.WebURL)
 	fmt.Println(url)
 	if *printURL {
 		ln.Close()

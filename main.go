@@ -222,7 +222,7 @@ func printHelp() {
   快捷键  命令                        说明
   c       ak clear                    清除应用数据
   ss      ak screenshot [-a]          截图到 <project>/android-kit/screenshots
-  ui      ak layout -p                导出 UI 树到 ~/.android-kit/artifacts/ui
+  ui      ak layout -p                截图 + UI 树，输出 H5 对照链接
   -       ak text "hello world"       输入文本
   -       ak paths                    查看所有存储路径
 

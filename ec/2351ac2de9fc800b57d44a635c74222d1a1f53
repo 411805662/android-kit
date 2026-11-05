@@ -1,0 +1,56 @@
+artifacts.go
+  s_eb1e2c85f62b50::t_4b1628c4f060cd 4-5,7,184-211,215-268
+  s_eb1e2c85f62b50::t_49419aebfd11dc 269
+web/viewer.html
+  s_62becc3ae9a79b::t_bbc5766a0af36e 138-139,143-151,159-183
+  s_62becc3ae9a79b::t_9bbef0278a5440 80-84,86-89,109-110
+  s_62becc3ae9a79b::t_61113375b2070d 19-26,30-36,47
+  s_62becc3ae9a79b::t_94c4f35965020b 474-505,520
+  s_62becc3ae9a79b::t_3fd5973708390d 324-333
+  s_62becc3ae9a79b::t_bb2922b7ed100f 323,334-336
+  s_62becc3ae9a79b::t_c93d346b8d22f2 232-233,260-261
+  s_62becc3ae9a79b::t_948dacf00848b8 432,455
+  s_62becc3ae9a79b::t_9ac3bf60965b5f 407-414
+  s_62becc3ae9a79b::t_2dee2f94419323 378,383,389,392-393,395-398
+  s_62becc3ae9a79b::t_494399acf26d60 152-158,391,394,400-401,433
+  s_62becc3ae9a79b::t_d6603baada91a9 184
+web/index.html
+  s_eb1e2c85f62b50::t_76608c7b1f14b5 739,742,746,752-769
+  s_eb1e2c85f62b50::t_8b5e2f1d5a0841 346
+  s_eb1e2c85f62b50::t_e6a398d3b2c5d4 877
+  s_eb1e2c85f62b50::t_a20895fd84d101 181,281-287
+  s_eb1e2c85f62b50::t_7121e43cbe0cb3 395,427,430,433,439
+  s_eb1e2c85f62b50::t_896df608df4bec 288-289
+  s_eb1e2c85f62b50::t_d5724532b604df 770
+README.md
+  s_62becc3ae9a79b::t_f5a50b795f6c23 206-207
+  s_62becc3ae9a79b::t_1fece85d0e6b01 41
+web.go
+  s_eb1e2c85f62b50::t_073f4095b3e0cc 294-295
+version.go
+  s_62becc3ae9a79b::t_59aad73c4e80a5 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ec2351ac2de9fc800b57d44a635c74222d1a1f53",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    },
+    "s_eb1e2c85f62b50": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1abf3-1a5b-7553-8639-364a6dacd49b",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

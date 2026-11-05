@@ -22,6 +22,7 @@ import (
 )
 
 //go:embed web/index.html
+//go:embed web/viewer.html
 var webFS embed.FS
 
 var webRunMu sync.Mutex
@@ -58,6 +59,8 @@ type WebState struct {
 	Commands    []CommandInfo     `json:"commands"`
 	Custom      []CustomAlias     `json:"custom"`
 	ProjectDirs map[string]string `json:"project_dirs"`
+	Artifacts   []ArtifactItem    `json:"artifacts"`
+	Display     DisplayInfo       `json:"display"`
 }
 
 func (a *App) webState() WebState {
@@ -86,6 +89,8 @@ func (a *App) webState() WebState {
 		Commands:    a.commandCatalog(proj, engine),
 		Custom:      a.customAliases(),
 		ProjectDirs: dirs,
+		Artifacts:   a.projectArtifacts(""),
+		Display:     a.displayInfo(""),
 	}
 }
 
@@ -273,6 +278,26 @@ func (a *App) cmdWeb(args []string) error {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write(data)
 	})
+	mux.HandleFunc("/artifact", auth(a.serveArtifact))
+	mux.HandleFunc("/viewer", auth(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("token") == token {
+			http.SetCookie(w, &http.Cookie{Name: "ak_token", Value: token, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode})
+		}
+		data, err := webFS.ReadFile("web/viewer.html")
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write(data)
+	}))
+	mux.HandleFunc("/api/artifacts", auth(func(w http.ResponseWriter, r *http.Request) {
+		a.reload()
+		writeHTTPJSON(w, map[string]any{
+			"artifacts": a.projectArtifacts(r.URL.Query().Get("project")),
+			"display":   a.displayInfo(r.URL.Query().Get("project")),
+		})
+	}))
 	mux.HandleFunc("/api/state", auth(func(w http.ResponseWriter, r *http.Request) {
 		a.reload()
 		writeHTTPJSON(w, a.webState())

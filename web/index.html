@@ -125,6 +125,14 @@ details .body{padding:0 16px 16px}
 .drawer-head .st.err{color:var(--danger)}
 .drawer pre{margin:0;padding:12px 16px;overflow:auto;font-size:11.5px;line-height:1.5;
   color:#c9d4ea;white-space:pre-wrap;word-break:break-all;flex:1}
+.drawer pre a{color:#a9bcff;text-decoration:underline}
+.artifacts{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:12px}
+.artifact{padding:10px;border:1px solid var(--line);border-radius:9px;background:#12161f}
+.artifact .kind{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.artifact .name{font-size:12px;word-break:break-all;margin:4px 0 8px}
+.artifact .links{display:flex;gap:6px;flex-wrap:wrap}
+.artifact a.btn{text-decoration:none;padding:5px 9px;font-size:11.5px}
+.artifact .path{color:#5f687a;font-size:10.5px;word-break:break-all;margin-top:7px}
 .toast{position:fixed;right:20px;bottom:20px;background:#1b2333;border:1px solid #33405a;
   padding:10px 14px;border-radius:9px;box-shadow:0 12px 40px #0008;opacity:0;transform:translateY(8px);
   transition:.2s;pointer-events:none;max-width:460px;font-size:12.5px;z-index:60}
@@ -232,6 +240,15 @@ details .body{padding:0 16px 16px}
       <div class="note">可用环境变量覆盖：<span class="mono">ANDROID_KIT_HOME</span>、<span class="mono">ANDROID_KIT_CONFIG_DIR</span>、<span class="mono">ANDROID_KIT_DATA_DIR</span>、<span class="mono">ANDROID_KIT_STATE_DIR</span>、<span class="mono">ANDROID_KIT_CACHE_DIR</span>、<span class="mono">ANDROID_KIT_BIN_DIR</span>。</div>
     </div>
   </details>
+
+  <details id="d-artifacts">
+    <summary>截图 / UI 产物（点击在新页面打开）</summary>
+    <div class="artifacts" id="artifact-list"></div>
+    <div class="body" style="padding:0 16px 16px">
+      <div class="note">截图链接会直接打开原图；<span class="mono">.json</span> UI 树会打开对照查看器：左边截图 1:1，右边线框与元素属性。执行 <span class="mono">ak screenshot</span> / <span class="mono">ak layout -p</span> 后点「刷新产物」即可。</div>
+      <div class="actions"><button class="btn" onclick="loadArtifacts()">刷新产物</button></div>
+    </div>
+  </details>
 </main>
 
 <div class="drawer" id="drawer">
@@ -336,6 +353,7 @@ function render() {
   renderProject();
   renderSettings();
   renderPaths();
+  renderArtifacts();
 }
 
 function renderTable() {
@@ -622,6 +640,39 @@ function renderPaths() {
     : '<div class="k">-</div><div class="v">未选择项目</div>';
 }
 
+async function loadArtifacts() {
+  try {
+    const state = await api('/api/artifacts');
+    S = S || {};
+    S.artifacts = state.artifacts || [];
+    S.display = state.display || S.display;
+    renderArtifacts();
+  } catch (e) { toast('刷新产物失败: ' + e.message, true); }
+}
+
+function artifactURL(url) {
+  if (!url) return '';
+  return url + (url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(TOKEN);
+}
+
+function renderArtifacts() {
+  const list = (S && S.artifacts) || [];
+  $('#artifact-list').innerHTML = list.length ? list.map(item => {
+    const shot = item.kind === 'screenshot';
+    const ui = item.kind === 'ui';
+    const links = [
+      `<a class="btn" href="${esc(artifactURL(item.url))}" target="_blank" rel="noopener">${shot ? '查看原图' : '打开文件'}</a>`,
+      ui && item.name.endsWith('.json') ? `<a class="btn primary" href="${esc(artifactURL(item.viewer_url || '/viewer?ui=' + encodeURIComponent(item.path) + (item.project_id ? '&project=' + encodeURIComponent(item.project_id) : '')))}" target="_blank" rel="noopener">UI 对照查看</a>` : ''
+    ].join('');
+    return `<div class="artifact">
+      <div class="kind">${shot ? '截图' : 'UI 树'} · ${esc(item.mod_time || '')}</div>
+      <div class="name mono">${esc(item.name)}</div>
+      <div class="links">${links}</div>
+      <div class="path">${esc(item.path)}</div>
+    </div>`;
+  }).join('') : '<div class="empty" style="grid-column:1/-1">还没有截图或 UI 树</div>';
+}
+
 function copyRow(i) {
   const r = rows[i];
   copyText(r.kind === 'custom' ? r.actual : 'ak ' + r.target);
@@ -672,15 +723,46 @@ async function runRow(i) {
     const res = await api('/api/run', {method:'POST', body: JSON.stringify({command: cmd})});
     $('#drawer-status').textContent = (res.ok ? '成功' : '失败') + ' · ' + (res.duration || '');
     $('#drawer-status').className = 'st ' + (res.ok ? 'ok' : 'err');
-    $('#drawer-out').textContent = (res.output || '') + (res.error ? '\n[error] ' + res.error : '');
+    $('#drawer-out').innerHTML = renderRunOutput(res.output || '');
+    if (res.error) {
+      $('#drawer-out').appendChild(document.createTextNode('\n[error] ' + res.error));
+    }
     if (res.ok) toast('执行完成：ak ' + cmd);
     else toast('执行失败：ak ' + cmd, true);
+    if (res.ok && (cmd === 'screenshot' || cmd.startsWith('screenshot') || cmd === 'layout -p')) {
+      loadArtifacts();
+    }
   } catch (e) {
     $('#drawer-status').textContent = '失败';
     $('#drawer-status').className = 'st err';
-    $('#drawer-out').textContent = String(e.message || e);
+    $('#drawer-out').innerHTML = renderRunOutput(String(e.message || e));
     toast('执行失败: ' + e.message, true);
   }
+}
+
+function renderRunOutput(text) {
+  const fragment = document.createDocumentFragment();
+  const lines = String(text || '').split(/\r?\n/);
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim();
+    const isImage = /\.(png|jpe?g|webp)$/i.test(trimmed) && !trimmed.includes(' ') && !trimmed.includes('→');
+    const isJSON = /\.json$/i.test(trimmed) && !trimmed.includes(' ') && !trimmed.includes('→');
+    if (isImage || isJSON) {
+      const link = document.createElement('a');
+      const target = isJSON
+        ? '/viewer?ui=' + encodeURIComponent(trimmed) + (S && S.current ? '&project=' + encodeURIComponent(S.current.id) : '')
+        : '/artifact?path=' + encodeURIComponent(trimmed);
+      link.href = artifactURL(target);
+      link.target = '_blank';
+      link.rel = 'noopener';
+      link.textContent = trimmed + (isImage ? '  ↗ 打开图片' : '  ↗ 打开 UI 对照');
+      fragment.appendChild(link);
+    } else {
+      fragment.appendChild(document.createTextNode(line));
+    }
+    if (idx < lines.length - 1) fragment.appendChild(document.createTextNode('\n'));
+  });
+  return fragment;
 }
 
 load();

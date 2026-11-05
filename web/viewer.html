@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>android-kit UI 查看器</title>
+<style>
+:root{--bg:#0b0d12;--panel:#12151d;--line:#252b38;--text:#e8ecf4;--muted:#8b94a7;
+  --accent:#7c9cff;--green:#4ade80;--danger:#f87171;--warn:#fbbf24}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC",sans-serif;
+  display:flex;flex-direction:column;overflow:hidden}
+button,input,select{font:inherit;color:inherit}
+.top{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);
+  background:#10141c;flex-wrap:wrap}
+.top h1{font-size:14px;margin:0;font-weight:650}
+.top .meta{color:var(--muted);font-size:11.5px}
+input[type=search]{background:#0e121a;border:1px solid #283044;border-radius:8px;padding:7px 10px;min-width:260px;outline:none}
+input[type=search]:focus{border-color:var(--accent)}
+.btn{border:1px solid var(--line);background:#1a1f2b;padding:6px 10px;border-radius:8px;cursor:pointer;font-size:12px}
+.btn:hover{border-color:#3a465e}
+.spacer{flex:1}
+.workspace{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 360px;min-height:0}
+.stage{position:relative;overflow:auto;background:
+  linear-gradient(45deg,#10141c 25%,transparent 25%),linear-gradient(-45deg,#10141c 25%,transparent 25%),
+  linear-gradient(45deg,transparent 75%,#10141c 75%),linear-gradient(-45deg,transparent 75%,#10141c 75%) #0d1017;
+  background-size:20px 20px;background-position:0 0,0 10px,10px -10px,-10px 0;
+  padding:24px;display:flex;gap:24px;align-items:flex-start}
+.canvas-wrap{position:relative;flex:0 0 auto;filter:drop-shadow(0 12px 30px #000a)}
+.canvas-wrap img{display:block;max-width:none;image-rendering:auto}
+.overlay{position:absolute;inset:0;pointer-events:auto}
+.box{position:absolute;border:1px solid #6ea8ff55;background:#6ea8ff0d;cursor:pointer;pointer-events:auto}
+.box:hover{border-color:#9bc0ff;background:#6ea8ff22}
+.box.match{border:2px solid var(--danger);background:#f8717133;box-shadow:0 0 0 1px #f8717155 inset}
+.box.selected{border:2px solid var(--green);background:#4ade8033;box-shadow:0 0 0 2px #4ade8055 inset,0 0 12px #4ade8077;z-index:10}
+.box.match.selected{border-color:var(--warn);background:#fbbf2433}
+.label{position:absolute;left:0;top:-17px;background:#1b2333;border:1px solid #33405a;border-radius:4px;
+  color:#c9d4ea;font-size:10px;padding:1px 5px;white-space:nowrap;display:none;max-width:260px;overflow:hidden;text-overflow:ellipsis}
+.box.selected .label,.box.match .label{display:block}
+.zoombar{position:absolute;left:20px;bottom:20px;background:#151a24e8;border:1px solid var(--line);
+  border-radius:8px;padding:6px 8px;display:flex;align-items:center;gap:6px;font-size:11.5px;z-index:20}
+.zoombar button{width:26px;height:26px;border:1px solid var(--line);background:#1a1f2b;border-radius:6px;cursor:pointer}
+.side{border-left:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;min-height:0}
+.side .head{padding:10px 14px;border-bottom:1px solid var(--line);font-weight:650;font-size:12.5px}
+.side .body{padding:12px 14px;overflow:auto;flex:1}
+.section{margin-bottom:16px}
+.section h3{margin:0 0 8px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.kv{display:grid;grid-template-columns:90px 1fr;gap:4px 10px;font-size:12px}
+.kv .k{color:var(--muted)}
+.kv .v{word-break:break-all;font-family:ui-monospace,Menlo,monospace;font-size:11.5px}
+.raw{background:#0c0f16;border:1px solid #222938;border-radius:8px;padding:9px;font-size:11px;
+  white-space:pre-wrap;word-break:break-all;max-height:320px;overflow:auto;color:#c9d4ea}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-size:10.5px;padding:2px 7px;border-radius:999px;background:#1b2230;border:1px solid #2a3346;color:#9fb0cc}
+.empty{color:var(--muted);padding:30px 14px;text-align:center}
+.status{font-size:11.5px;color:var(--muted)}
+.status.err{color:var(--danger)}
+.toast{position:fixed;right:18px;bottom:18px;background:#1b2333;border:1px solid #33405a;padding:9px 13px;
+  border-radius:8px;opacity:0;transform:translateY(8px);transition:.2s;pointer-events:none;z-index:50;font-size:12px}
+.toast.show{opacity:1;transform:none}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>UI 查看器</h1>
+  <input type="search" id="search" placeholder="模糊搜索 id / text / content-desc / class" oninput="applyFilter()">
+  <span class="status" id="match-status"></span>
+  <div class="spacer"></div>
+  <label class="status"><input type="checkbox" id="show-all" checked onchange="renderBoxes()"> 显示全部线框</label>
+  <button class="btn" onclick="copyBounds()">复制选中 bounds</button>
+  <a class="btn" id="shot-link" target="_blank" rel="noopener">原图</a>
+</div>
+<div class="workspace">
+  <div class="stage" id="stage">
+    <div class="canvas-wrap" id="canvas-wrap">
+      <img id="shot" alt="截图">
+      <div class="overlay" id="overlay"></div>
+    </div>
+    <div class="zoombar">
+      <button onclick="setZoom(zoom-0.1)">−</button>
+      <span id="zoom-label">100%</span>
+      <button onclick="setZoom(zoom+0.1)">+</button>
+      <button onclick="setZoom(1)">1:1</button>
+      <button onclick="fitZoom()">适应</button>
+    </div>
+  </div>
+  <aside class="side">
+    <div class="head">元素信息</div>
+    <div class="body" id="info"><div class="empty">点击左侧线框或截图上的元素</div></div>
+  </aside>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const QS = new URLSearchParams(location.search);
+const TOKEN = QS.get('token') || sessionStorage.getItem('ak_token') || '';
+if (TOKEN) sessionStorage.setItem('ak_token', TOKEN);
+const UI_PATH = QS.get('ui') || '';
+const SHOT_PATH = QS.get('shot') || '';
+const PROJECT_ID = QS.get('project') || '';
+
+let TREE = [];
+let NODES = [];
+let DISPLAY = {dpi:160, scale:1, width:0, height:0, source:'默认'};
+let NATIVE_W = 0;
+let NATIVE_H = 0;
+let TREE_W = 0;
+let TREE_H = 0;
+let COORD_SCALE_X = 1;
+let COORD_SCALE_Y = 1;
+let selectedIndex = -1;
+let zoom = 1;
+
+function artifactURL(path) { return '/artifact?path=' + encodeURIComponent(path); }
+
+function resourceURL(url) {
+  return url + (url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(TOKEN);
+}
+
+async function api(path) {
+  const res = await fetch(path, {headers:{'X-AK-Token':TOKEN}});
+  if (!res.ok) throw new Error((await res.text()) || res.statusText);
+  return res.json();
+}
+
+function toast(msg) {
+  const el = $('#toast');
+  el.textContent = msg;
+  el.className = 'toast show';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.className = 'toast', 2500);
+}
+
+function parseBounds(value) {
+  const m = String(value || '').match(/\[(\d+),(\d+)\]\[(\d+),(\d+)\]/);
+  if (!m) return null;
+  return {x:+m[1], y:+m[2], x2:+m[3], y2:+m[4], w:+m[3]-+m[1], h:+m[4]-+m[2]};
+}
+
+function walk(value, parent, windowInfo, depth, out) {
+  if (!value || typeof value !== 'object') return;
+  if (Array.isArray(value)) {
+    value.forEach(v => walk(v, parent, windowInfo, depth, out));
+    return;
+  }
+  const b = parseBounds(value.bounds);
+  if (b) {
+    const node = {
+      index: out.length,
+      raw: Object.assign({}, value),
+      bounds: b,
+      parent,
+      window: windowInfo,
+      depth,
+      text: value.text || '',
+      id: value['resource-id'] || '',
+      desc: value['content-desc'] || '',
+      cls: value.class || '',
+      interactions: value.interactions || [],
+      center: value.center || '',
+      childrenCount: Array.isArray(value.children) ? value.children.length : 0
+    };
+    out.push(node);
+    parent = node.index;
+  }
+  if (Array.isArray(value.children)) {
+    value.children.forEach(child => walk(child, parent, windowInfo, depth+1, out));
+  }
+  if (Array.isArray(value.content)) {
+    value.content.forEach(child => walk(child, parent, windowInfo, depth+1, out));
+  }
+}
+
+function buildNodes(tree) {
+  const out = [];
+  (tree || []).forEach((win, wi) => {
+    const info = {
+      title: win['window-title'] || '',
+      type: win.type || '',
+      layer: win.layer,
+      active: !!win.active,
+      focused: !!win.focused
+    };
+    const winBounds = parseBounds(win.bounds);
+    if (winBounds) {
+      out.push({index:out.length, raw:Object.assign({},win), bounds:winBounds, parent:-1,
+        window:info, depth:0, text:info.title, id:'', desc:'', cls:'window',
+        interactions:[], center:'', childrenCount:Array.isArray(win.content)?win.content.length:0});
+    }
+    if (Array.isArray(win.content)) {
+      win.content.forEach(child => walk(child, out.length-1, info, 1, out));
+    }
+  });
+  return out;
+}
+
+async function loadViewer() {
+  try {
+    const state = await api('/api/artifacts' + (PROJECT_ID ? '?project=' + encodeURIComponent(PROJECT_ID) : ''));
+    DISPLAY = state.display || DISPLAY;
+    if (UI_PATH && SHOT_PATH) {
+      const uiRes = await fetch(resourceURL(artifactURL(UI_PATH)), {headers:{'X-AK-Token':TOKEN}});
+      if (!uiRes.ok) throw new Error('读取 UI JSON 失败: ' + (await uiRes.text()));
+      TREE = await uiRes.json();
+      NODES = buildNodes(TREE);
+      $('#shot').src = resourceURL(artifactURL(SHOT_PATH));
+      $('#shot-link').href = resourceURL(artifactURL(SHOT_PATH));
+      $('#shot').onload = () => {
+        NATIVE_W = $('#shot').naturalWidth;
+        NATIVE_H = $('#shot').naturalHeight;
+        calibrate();
+        renderBoxes();
+        fitZoom();
+      };
+    } else if (UI_PATH) {
+      const uiRes = await fetch(resourceURL(artifactURL(UI_PATH)), {headers:{'X-AK-Token':TOKEN}});
+      if (!uiRes.ok) throw new Error('读取 UI JSON 失败: ' + (await uiRes.text()));
+      TREE = await uiRes.json();
+      NODES = buildNodes(TREE);
+      NATIVE_W = Math.max(...NODES.map(n => n.bounds.x2), DISPLAY.width, 1);
+      NATIVE_H = Math.max(...NODES.map(n => n.bounds.y2), DISPLAY.height, 1);
+      calibrate();
+      $('#shot').style.display = 'none';
+      $('#canvas-wrap').style.width = NATIVE_W + 'px';
+      $('#canvas-wrap').style.height = NATIVE_H + 'px';
+      $('#shot-link').style.display = 'none';
+      fitZoom();
+    } else {
+      const all = state.artifacts || [];
+      const ui = all.find(x => x.kind === 'ui' && x.name.endsWith('.json'));
+      const shot = all.find(x => x.kind === 'screenshot');
+      if (!ui) throw new Error('没有找到 UI JSON，先执行 ak layout -p');
+      const next = new URL(location.href);
+      next.searchParams.set('ui', ui.path);
+      if (shot) next.searchParams.set('shot', shot.path);
+      if (PROJECT_ID) next.searchParams.set('project', PROJECT_ID);
+      location.replace(next.toString());
+      return;
+    }
+    renderBoxes();
+  } catch (e) {
+    $('#match-status').textContent = '加载失败: ' + e.message;
+    $('#match-status').className = 'status err';
+  }
+}
+
+function calibrate() {
+  const windows = Array.isArray(TREE)
+    ? TREE.filter(w => w.type === 'APPLICATION').map(w => parseBounds(w.bounds)).filter(Boolean)
+    : [];
+  const bounds = windows.length ? windows : (Array.isArray(TREE) ? TREE.map(w => parseBounds(w.bounds)).filter(Boolean) : []);
+  TREE_W = Math.max(DISPLAY.width || 0, ...bounds.map(b => b.x2), 1);
+  TREE_H = Math.max(DISPLAY.height || 0, ...bounds.map(b => b.y2), 1);
+  COORD_SCALE_X = NATIVE_W / TREE_W;
+  COORD_SCALE_Y = NATIVE_H / TREE_H;
+  if (Math.abs(COORD_SCALE_X - 1) > 0.001 || Math.abs(COORD_SCALE_Y - 1) > 0.001) {
+    $('#match-status').title = `UI 坐标 ${TREE_W}×${TREE_H} → 截图 ${NATIVE_W}×${NATIVE_H}，校准 ${COORD_SCALE_X.toFixed(3)}×${COORD_SCALE_Y.toFixed(3)}`;
+  }
+}
+
+function setZoom(value) {
+  zoom = Math.min(2, Math.max(0.05, value));
+  $('#canvas-wrap').style.transformOrigin = '0 0';
+  $('#canvas-wrap').style.transform = 'scale(' + zoom + ')';
+  const w = (NATIVE_W || $('#shot').naturalWidth || 1) * zoom;
+  const h = (NATIVE_H || $('#shot').naturalHeight || 1) * zoom;
+  $('#stage').style.minWidth = (w + 48) + 'px';
+  $('#stage').style.minHeight = (h + 48) + 'px';
+  $('#zoom-label').textContent = Math.round(zoom*100) + '%';
+}
+
+function fitZoom() {
+  const stage = $('#stage');
+  const w = NATIVE_W || $('#shot').naturalWidth || 1;
+  const h = NATIVE_H || $('#shot').naturalHeight || 1;
+  const availW = Math.max(200, stage.clientWidth - 48);
+  const availH = Math.max(200, stage.clientHeight - 48);
+  setZoom(Math.min(1, availW/w, availH/h));
+}
+
+function searchable(node) {
+  return [node.id, node.text, node.desc, node.cls, node.raw.class, node.raw['resource-id'], node.raw['content-desc']]
+    .filter(Boolean).join('\n').toLowerCase();
+}
+
+function matches(node, query) {
+  if (!query) return false;
+  return query.split(/\s+/).filter(Boolean).every(word => searchable(node).includes(word));
+}
+
+function renderBoxes() {
+  const query = $('#search').value.trim().toLowerCase();
+  const showAll = $('#show-all').checked;
+  const html = NODES.map(node => {
+    const isMatch = matches(node, query);
+    if (query && !isMatch) return '';
+    if (!query && !showAll && node.depth > 2) return '';
+    const b = scaleBounds(node.bounds);
+    const label = node.id || node.text || node.desc || node.cls || 'window';
+    return `<div class="box ${isMatch?'match':''} ${node.index===selectedIndex?'selected':''}"
+      style="left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px"
+      data-index="${node.index}" onclick="selectNode(${node.index},event)">
+      <span class="label">${esc(label)}</span>
+    </div>`;
+  }).join('');
+  $('#overlay').innerHTML = html;
+  const count = NODES.filter(n => matches(n, query)).length;
+  $('#match-status').textContent = query ? `匹配 ${count} / ${NODES.length} 个节点` : `${NODES.length} 个节点 · ${DISPLAY.dpi} dpi`;
+  $('#match-status').className = 'status';
+}
+
+function applyFilter() { renderBoxes(); }
+
+function scaleBounds(bounds) {
+  return {
+    x: bounds.x * COORD_SCALE_X, y: bounds.y * COORD_SCALE_Y,
+    x2: bounds.x2 * COORD_SCALE_X, y2: bounds.y2 * COORD_SCALE_Y,
+    w: bounds.w * COORD_SCALE_X, h: bounds.h * COORD_SCALE_Y
+  };
+}
+
+function selectNode(index, event) {
+  if (event) event.stopPropagation();
+  selectedIndex = index;
+  renderBoxes();
+  const node = NODES[index];
+  if (!node) return;
+  const b = scaleBounds(node.bounds);
+  const scale = DISPLAY.scale || 1;
+  const dp = value => (value/scale).toFixed(1);
+  const rows = [
+    ['resource-id', node.id], ['text', node.text], ['content-desc', node.desc],
+    ['class', node.cls], ['bounds', node.raw.bounds], ['center', node.center],
+    ['左上 (px)', `${b.x}, ${b.y}`], ['宽高 (px)', `${b.w} × ${b.h}`],
+    ['左上 (dp)', `${dp(b.x)}, ${dp(b.y)}`], ['宽高 (dp)', `${dp(b.w)} × ${dp(b.h)}`],
+    ['window', `${node.window.title || '(untitled)'} · layer ${node.window.layer ?? '-'}`],
+    ['type / depth', `${node.window.type || '-'} / ${node.depth}`],
+    ['children', node.childrenCount], ['node #', node.index]
+  ];
+  const chips = node.interactions.map(x => `<span class="chip">${esc(x)}</span>`).join('') || '<span class="chip">无</span>';
+  const raw = Object.assign({}, node.raw);
+  delete raw.children;
+  delete raw.content;
+  $('#info').innerHTML = `
+    <div class="section"><h3>结构化属性</h3><div class="kv">
+      ${rows.map(([k,v]) => `<div class="k">${esc(k)}</div><div class="v">${esc(v || '-')}</div>`).join('')}
+    </div></div>
+    <div class="section"><h3>交互 / 状态</h3><div class="chips">${chips}</div></div>
+    <div class="section"><h3>原始属性</h3><div class="raw">${esc(JSON.stringify(raw, null, 2))}</div></div>
+    <div class="section"><h3>px → dp 换算</h3><div class="kv">
+      <div class="k">dpi</div><div class="v">${DISPLAY.dpi} (${DISPLAY.source})</div>
+      <div class="k">公式</div><div class="v">dp = px ÷ ${scale.toFixed(3)}</div>
+      <div class="k">屏幕</div><div class="v">${DISPLAY.width || '?'} × ${DISPLAY.height || '?'} px</div>
+      <div class="k">UI / 图</div><div class="v">${TREE_W}×${TREE_H} → ${NATIVE_W}×${NATIVE_H}</div>
+    </div></div>`;
+}
+
+function copyBounds() {
+  if (selectedIndex < 0) return toast('先选中一个元素');
+  copyText(NODES[selectedIndex].raw.bounds || '');
+}
+
+async function copyText(text) {
+  let ok = false;
+  try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(text); ok = true; } } catch (_) {}
+  if (!ok) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    try { ok = document.execCommand('copy'); } catch (_) {}
+    ta.remove();
+  }
+  toast(ok ? '已复制 ' + text : '复制失败');
+}
+
+window.addEventListener('resize', () => { if (zoom < 1) fitZoom(); });
+loadViewer();
+</script>
+</body>
+</html>

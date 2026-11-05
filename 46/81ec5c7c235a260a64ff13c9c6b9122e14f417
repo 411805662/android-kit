@@ -1,0 +1,50 @@
+commands.go
+  s_62becc3ae9a79b::t_2c561ccac59d32 783
+install.sh
+  s_62becc3ae9a79b::t_4378e1cf196760 122
+runtime.go
+  s_62becc3ae9a79b::t_2c561ccac59d32 157-158,176-178
+main.go
+  s_62becc3ae9a79b::t_098faa6efcd0de 52-55
+  s_62becc3ae9a79b::t_2c561ccac59d32 224-225
+version.go
+  s_62becc3ae9a79b::t_2c561ccac59d32 5
+paths.go
+  s_62becc3ae9a79b::t_2c561ccac59d32 17,56,60-63,74-78,81-84,88,130
+  s_62becc3ae9a79b::t_dd78f374f9067f 58-59
+web/index.html
+  s_62becc3ae9a79b::t_2c561ccac59d32 686,696
+  s_62becc3ae9a79b::t_bbab87cfbf63a4 690
+web.go
+  s_62becc3ae9a79b::t_2c561ccac59d32 195
+project_cmds.go
+  s_62becc3ae9a79b::t_bbab87cfbf63a4 354,361
+  s_62becc3ae9a79b::t_2c561ccac59d32 342,360,362
+setup.go
+  s_62becc3ae9a79b::t_bbab87cfbf63a4 176-178
+artifacts.go
+  s_62becc3ae9a79b::t_2c561ccac59d32 31-32,127,129
+README.md
+  s_62becc3ae9a79b::t_4378e1cf196760 41,142,195,217-224,226-228,231-232,239-240,247,291,311
+  s_62becc3ae9a79b::t_bbab87cfbf63a4 225
+config.go
+  s_62becc3ae9a79b::t_bbab87cfbf63a4 28-29,84-85,157-158
+install.ps1
+  s_62becc3ae9a79b::t_4378e1cf196760 39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4681ec5c7c235a260a64ff13c9c6b9122e14f417",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "workbuddy/hy4free"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

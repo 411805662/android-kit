@@ -62,6 +62,7 @@ func (a *App) writeManifest(backups map[string]string) error {
 func (a *App) cmdSetup(args []string) error {
 	fs := flag.NewFlagSet("setup", flag.ContinueOnError)
 	yes := fs.Bool("yes", false, "非交互")
+	shell := fs.String("shell", "auto", "zsh|bash|auto")
 	aliases := fs.String("aliases", "", "classic|none")
 	forceAliases := fs.Bool("force-aliases", false, "覆盖同名 alias/function")
 	noShell := fs.Bool("no-shell", false, "不修改 shell rc")
@@ -69,6 +70,7 @@ func (a *App) cmdSetup(args []string) error {
 		return err
 	}
 	_ = yes
+	_ = shell
 	if err := a.Paths.Ensure(); err != nil {
 		return err
 	}

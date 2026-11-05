@@ -29,11 +29,11 @@ input[type=search]:focus{border-color:var(--accent)}
   padding:24px;display:flex;gap:24px;align-items:flex-start}
 .canvas-wrap{position:relative;flex:0 0 auto;filter:drop-shadow(0 12px 30px #000a)}
 .canvas-wrap img{display:block;max-width:none;image-rendering:auto}
-.overlay{position:absolute;inset:0;pointer-events:auto}
-.box{position:absolute;border:1px solid #6ea8ff55;background:#6ea8ff0d;cursor:pointer;pointer-events:auto}
+.overlay{position:absolute;top:0;left:0;pointer-events:none}
+.box{position:absolute;border:1px solid #6ea8ff88;background:#6ea8ff12;cursor:pointer;pointer-events:auto}
 .box:hover{border-color:#9bc0ff;background:#6ea8ff22}
-.box.match{border:2px solid var(--danger);background:#f8717133;box-shadow:0 0 0 1px #f8717155 inset}
-.box.selected{border:2px solid var(--green);background:#4ade8033;box-shadow:0 0 0 2px #4ade8055 inset,0 0 12px #4ade8077;z-index:10}
+.box.match{border:2px solid var(--danger);background:#f8717144;box-shadow:0 0 0 1px #f8717188 inset;z-index:20}
+.box.selected{border:2px solid var(--green);background:#4ade8044;box-shadow:0 0 0 2px #4ade8088 inset,0 0 12px #4ade80aa;z-index:30}
 .box.match.selected{border-color:var(--warn);background:#fbbf2433}
 .label{position:absolute;left:0;top:-17px;background:#1b2333;border:1px solid #33405a;border-radius:4px;
   color:#c9d4ea;font-size:10px;padding:1px 5px;white-space:nowrap;display:none;max-width:260px;overflow:hidden;text-overflow:ellipsis}
@@ -113,6 +113,8 @@ let COORD_SCALE_X = 1;
 let COORD_SCALE_Y = 1;
 let selectedIndex = -1;
 let zoom = 1;
+const INITIAL_QUERY = QS.get('q') || '';
+const INITIAL_SELECT = parseInt(QS.get('select') || '-1', 10);
 
 function artifactURL(path) { return '/artifact?path=' + encodeURIComponent(path); }
 
@@ -213,6 +215,7 @@ async function loadViewer() {
         NATIVE_H = $('#shot').naturalHeight;
         calibrate();
         renderBoxes();
+        if (INITIAL_SELECT >= 0) selectNode(INITIAL_SELECT);
         fitZoom();
       };
     } else if (UI_PATH) {
@@ -241,6 +244,7 @@ async function loadViewer() {
       return;
     }
     renderBoxes();
+    if (INITIAL_SELECT >= 0 && (!SHOT_PATH || $('#shot').complete)) selectNode(INITIAL_SELECT);
   } catch (e) {
     $('#match-status').textContent = '加载失败: ' + e.message;
     $('#match-status').className = 'status err';
@@ -294,12 +298,18 @@ function matches(node, query) {
 function renderBoxes() {
   const query = $('#search').value.trim().toLowerCase();
   const showAll = $('#show-all').checked;
-  const html = NODES.map(node => {
+  const visible = NODES.map(node => {
     const isMatch = matches(node, query);
     if (query && !isMatch) return '';
     if (!query && !showAll && node.depth > 2) return '';
     const b = scaleBounds(node.bounds);
     const label = node.id || node.text || node.desc || node.cls || 'window';
+    return {node, isMatch, b, label};
+  }).filter(Boolean);
+  const html = visible.sort((a, z) => {
+    const area = x => x.b.w * x.b.h;
+    return area(a) - area(z);
+  }).map(({node, isMatch, b, label}) => {
     return `<div class="box ${isMatch?'match':''} ${node.index===selectedIndex?'selected':''}"
       style="left:${b.x}px;top:${b.y}px;width:${b.w}px;height:${b.h}px"
       data-index="${node.index}" onclick="selectNode(${node.index},event)">
@@ -307,12 +317,16 @@ function renderBoxes() {
     </div>`;
   }).join('');
   $('#overlay').innerHTML = html;
+  $('#overlay').style.width = (NATIVE_W || 1) + 'px';
+  $('#overlay').style.height = (NATIVE_H || 1) + 'px';
   const count = NODES.filter(n => matches(n, query)).length;
   $('#match-status').textContent = query ? `匹配 ${count} / ${NODES.length} 个节点` : `${NODES.length} 个节点 · ${DISPLAY.dpi} dpi`;
   $('#match-status').className = 'status';
 }
 
 function applyFilter() { renderBoxes(); }
+
+if (INITIAL_QUERY) $('#search').value = INITIAL_QUERY;
 
 function scaleBounds(bounds) {
   return {

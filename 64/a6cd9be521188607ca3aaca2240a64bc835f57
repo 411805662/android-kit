@@ -1,0 +1,28 @@
+web/viewer.html
+  s_62becc3ae9a79b::t_ebff48056671c2 117
+  s_62becc3ae9a79b::t_5fd8b0a3f23c3a 32-33,35-36,301,307-312
+  s_62becc3ae9a79b::t_2db05650989a74 116,329
+  s_62becc3ae9a79b::t_ed85fe76033145 218,247
+  s_62becc3ae9a79b::t_47126240d24319 320-321
+  s_62becc3ae9a79b::t_5217f29a97b097 330
+README.md
+  s_62becc3ae9a79b::t_270465fc66b220 41
+version.go
+  s_62becc3ae9a79b::t_072fddaa1c7ebe 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "64a6cd9be521188607ca3aaca2240a64bc835f57",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "workbuddy/hy4free"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

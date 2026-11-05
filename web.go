@@ -30,6 +30,37 @@ var webFS embed.FS
 
 var webRunMu sync.Mutex
 
+// webPageTheme is replaced in the served HTML so the saved theme applies on the
+// very first paint, without a flash of the other theme.
+const webPageTheme = "__AK_THEME__"
+
+func (a *App) readUITheme() string {
+	data, err := os.ReadFile(a.Paths.UITheme)
+	if err != nil {
+		return "auto"
+	}
+	t := strings.TrimSpace(string(data))
+	if t != "light" && t != "dark" {
+		return "auto"
+	}
+	return t
+}
+
+func (a *App) writeUITheme(t string) error {
+	if t != "light" && t != "dark" && t != "auto" {
+		return fmt.Errorf("未知主题: %s", t)
+	}
+	return atomicWrite(a.Paths.UITheme, []byte(t+"\n"), 0o644)
+}
+
+func (a *App) webPage(name string) ([]byte, error) {
+	data, err := webFS.ReadFile("web/" + name)
+	if err != nil {
+		return nil, err
+	}
+	return []byte(strings.ReplaceAll(string(data), webPageTheme, a.readUITheme())), nil
+}
+
 type CommandInfo struct {
 	ID        string   `json:"id"`
 	Target    string   `json:"target"`
@@ -296,7 +327,7 @@ func (a *App) cmdWeb(args []string) error {
 		if r.URL.Query().Get("token") == token {
 			http.SetCookie(w, &http.Cookie{Name: "ak_token", Value: token, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode})
 		}
-		data, err := webFS.ReadFile("web/index.html")
+		data, err := a.webPage("index.html")
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return
@@ -304,6 +335,27 @@ func (a *App) cmdWeb(args []string) error {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write(data)
 	})
+	mux.HandleFunc("/api/theme", auth(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodGet:
+			writeHTTPJSON(w, map[string]any{"theme": a.readUITheme()})
+		case http.MethodPost, http.MethodPut:
+			var body struct {
+				Theme string `json:"theme"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+				http.Error(w, "bad request", http.StatusBadRequest)
+				return
+			}
+			if err := a.writeUITheme(body.Theme); err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			writeHTTPJSON(w, map[string]any{"theme": body.Theme})
+		default:
+			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		}
+	}))
 	mux.HandleFunc("/artifact", auth(a.serveArtifact))
 	mux.HandleFunc("/api/artifact", auth(a.deleteArtifact))
 	mux.HandleFunc("/api/artifacts/clear", auth(a.clearArtifacts))
@@ -311,7 +363,7 @@ func (a *App) cmdWeb(args []string) error {
 		if r.URL.Query().Get("token") == token {
 			http.SetCookie(w, &http.Cookie{Name: "ak_token", Value: token, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode})
 		}
-		data, err := webFS.ReadFile("web/viewer.html")
+		data, err := a.webPage("viewer.html")
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return

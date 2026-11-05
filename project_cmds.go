@@ -348,6 +348,7 @@ func (a *App) cmdPaths(args []string) error {
 		{"backups", a.Paths.BackupDir},
 		{"state", a.Paths.StateDir},
 		{"web token", a.Paths.WebToken},
+		{"ui theme", a.Paths.UITheme},
 		{"reload stamp", a.Paths.Stamp},
 		{"logs", a.Paths.LogsDir},
 		{"cache", a.Paths.CacheDir},

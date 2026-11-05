@@ -157,7 +157,7 @@ ak web
 - 每行可执行、复制 `ak` 命令、复制实际命令；执行结果在底部抽屉里显示。
 - 「UI 截图」画廊按缩略图展示，可单独删除或清空；UI 树卡片可打开 H5 对照查看器，或看格式化后的 JSON。
 - H5 对照查看器：左截图 / 右线框图 1:1 对齐，可搜索 `id`、`text`、`content-desc`、`class`；悬停线框看元素，点选后右侧展示完整属性（含 px / dp 换算）和当前页面 Activity；背景容器不挡点击，可隐藏元素并一键恢复；中间分隔条可拖动。
-- 配置台、H5 查看器、JSON 页都支持黑白主题切换（右上角 🌙 / ☀️），选择记在浏览器本地。
+- 配置台、H5 查看器、JSON 页都支持黑白主题切换（右上角 🌙 / ☀️），选择保存在 `~/.android-kit/ui-theme`，换端口、重启都还在；没选过则跟随系统。
 - `ak layout` 会自动截一张同时间戳的图，并输出 H5 链接。
 
 ## 存储位置
@@ -171,6 +171,7 @@ ak web
 | 项目配置 | `~/.android-kit/projects/*.toml` |
 | UI 树等历史产物 | `~/.android-kit/artifacts/` |
 | 备份 / 缓存 / 日志 / token | `~/.android-kit/` |
+| 网页主题选择 | `~/.android-kit/ui-theme` |
 | 需要人工查看的产物 | `<project>/android-kit/`（`screenshots`、`previews`、`reports`） |
 
 需要人工查看的截图、预览、报告放在项目目录，其余历史数据集中在用户目录，不跟单个项目绑定。项目内目录首次创建会写入 `.gitignore`（内容 `*`），不会污染 git；要提交某张截图用 `git add -f`。
@@ -201,7 +202,7 @@ ak unset --purge       # 连配置和项目列表一起删除
 
 ```bash
 go build -o bin/android-kit .
-./scripts/build-release.sh 0.2.13
+./scripts/build-release.sh 0.2.14
 ```
 
 推送 `v*` tag 会触发 GitHub Actions 构建 macOS / Linux / Windows 产物并上传 Release。

@@ -6,8 +6,7 @@
 <title>UI JSON</title>
 <script>
 (function () {
-  var t = null;
-  try { t = localStorage.getItem('ak_theme'); } catch (e) {}
+  var t = "__AK_THEME__";
   if (t !== 'light' && t !== 'dark') {
     t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
   }
@@ -70,8 +69,12 @@ function applyTheme(t) {
 }
 function toggleTheme() {
   const t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-  try { localStorage.setItem('ak_theme', t); } catch (e) {}
   applyTheme(t);
+  fetch('/api/theme', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-AK-Token': TOKEN},
+    body: JSON.stringify({theme: t})
+  }).catch(() => {});
 }
 applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
 

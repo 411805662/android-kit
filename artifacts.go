@@ -187,7 +187,7 @@ func (a *App) serveArtifact(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Cache-Control", "no-store")
 	if r.URL.Query().Get("pretty") != "" && strings.EqualFold(filepath.Ext(path), ".json") {
-		data, err := webFS.ReadFile("web/json.html")
+		data, err := a.webPage("json.html")
 		if err != nil {
 			http.Error(w, err.Error(), 500)
 			return

@@ -366,6 +366,10 @@ function searchable(node) {
     .filter(Boolean).join('\n').toLowerCase();
 }
 
+// 只保留 :id/ 后面的名字：com.pkg:id/btn_login -> btn_login
+const ID_PREFIX = /^[^:]*:(?:id\/)?/;
+function shortId(v) { return String(v ?? '').replace(ID_PREFIX, ''); }
+
 function matches(node, query) {
   if (!query) return false;
   return query.split(/\s+/).filter(Boolean).every(word => searchable(node).includes(word));
@@ -381,7 +385,7 @@ function renderBoxes() {
     if (!query && !showAll && node.depth > 2) return '';
     const b = scaleBounds(node.bounds);
     if (b.w <= 0 || b.h <= 0) return '';
-    const label = node.id || node.text || node.desc || node.cls || 'window';
+    const label = shortId(node.id) || node.text || node.desc || node.cls || 'window';
     return {node, isMatch, b, label};
   }).filter(Boolean);
   const html = visible.sort((a, z) => {
@@ -437,11 +441,12 @@ function selectNode(index, event) {
   if (!node) return;
   const b = scaleBounds(node.bounds);
   const scale = DISPLAY.scale || 1;
-  const dp = value => (value/scale).toFixed(1);
+  const px = value => Math.round(value);
+  const dp = value => Math.round(value/scale);
   const rows = [
-    ['resource-id', node.id], ['text', node.text], ['content-desc', node.desc],
+    ['resource-id', shortId(node.id)], ['text', node.text], ['content-desc', node.desc],
     ['class', node.cls], ['bounds', node.raw.bounds], ['center', node.center],
-    ['左上 (px)', `${b.x}, ${b.y}`], ['宽高 (px)', `${b.w} × ${b.h}`],
+    ['左上 (px)', `${px(b.x)}, ${px(b.y)}`], ['宽高 (px)', `${px(b.w)} × ${px(b.h)}`],
     ['左上 (dp)', `${dp(b.x)}, ${dp(b.y)}`], ['宽高 (dp)', `${dp(b.w)} × ${dp(b.h)}`],
     ['window', `${node.window.title || '(untitled)'} · layer ${node.window.layer ?? '-'}`],
     ['type / depth', `${node.window.type || '-'} / ${node.depth}`],
@@ -451,6 +456,8 @@ function selectNode(index, event) {
   const raw = Object.assign({}, node.raw);
   delete raw.children;
   delete raw.content;
+  delete raw.interactions;
+  if (raw['resource-id']) raw['resource-id'] = shortId(raw['resource-id']);
   $('#info').innerHTML = `
     <div class="section"><button class="btn" onclick="hideSelected()" title="从当前视图隐藏该元素及其子元素">删除元素（仅隐藏）</button></div>
     <div class="section"><h3>结构化属性</h3><div class="kv">

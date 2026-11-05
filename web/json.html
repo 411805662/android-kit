@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>UI JSON</title>
+<style>
+:root{--bg:#0b0d12;--line:#252b38;--text:#e8ecf4;--muted:#8b94a7;--accent:#7c9cff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--text);
+  font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  display:flex;flex-direction:column;overflow:hidden}
+.bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;
+  background:#10141c;border-bottom:1px solid var(--line);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;flex:0 0 auto}
+.bar b{font-size:13px}
+.bar .file{color:var(--muted);font-size:11.5px;max-width:34ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.spacer{flex:1}
+input[type=search]{background:#0e121a;border:1px solid #283044;border-radius:8px;
+  padding:7px 11px;min-width:280px;outline:none;color:var(--text);font-size:12.5px}
+input[type=search]:focus{border-color:var(--accent);box-shadow:0 0 0 3px #4d6bd822}
+input[type=search]::placeholder{color:#4d5668}
+.st{color:var(--muted);font-size:11.5px;white-space:nowrap}
+.st.err{color:#f87171}
+.chk{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:11.5px;white-space:nowrap}
+button{background:#1a1f2b;border:1px solid var(--line);color:var(--text);border-radius:7px;
+  padding:6px 11px;cursor:pointer;font-size:11.5px}
+button:hover{border-color:#3a465e;background:#202736}
+.content{flex:1;overflow:auto}
+pre{margin:0;padding:16px 20px;white-space:pre;tab-size:2}
+mark{background:#fbbf2455;color:#ffe9a8;border-radius:2px;padding:0 1px}
+.hit{background:#1c2534}
+.empty{color:var(--muted);padding:24px 20px}
+</style>
+</head>
+<body>
+<div class="bar">
+  <b>UI JSON</b>
+  <span class="file" id="file"></span>
+  <div class="spacer"></div>
+  <input type="search" id="search" placeholder="搜索 id / 中文 / 文本（空格分词）" autocomplete="off">
+  <span class="st" id="status"></span>
+  <label class="chk"><input type="checkbox" id="only"> 只看匹配行</label>
+  <button id="copy">复制</button>
+  <a id="raw" class="st" target="_blank" rel="noopener">原始文件</a>
+</div>
+<div class="content"><pre id="pre">加载中…</pre></div>
+<script>
+const $ = s => document.querySelector(s);
+const QS = new URLSearchParams(location.search);
+const PATH = QS.get('path') || '';
+const TOKEN = QS.get('token') || sessionStorage.getItem('ak_token') || '';
+if (TOKEN) sessionStorage.setItem('ak_token', TOKEN);
+$('#file').textContent = PATH.split('/').pop() || PATH;
+$('#file').title = PATH;
+$('#raw').href = '/artifact?path=' + encodeURIComponent(PATH) + (TOKEN ? '&token=' + encodeURIComponent(TOKEN) : '');
+
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const escRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+// 去掉 "包名:id/" 前缀，只留最后的 id 名
+const ID_PREFIX = /^[^:]*:(?:id\/)?/;
+const shortId = v => String(v ?? '').replace(ID_PREFIX, '');
+
+function transform(value, key) {
+  if (Array.isArray(value)) return value.map(v => transform(v));
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) {
+      if (k === 'interactions') continue;   // 不展示 interactions 节点
+      out[k] = (k === 'resource-id') ? shortId(v) : transform(v, k);
+    }
+    return out;
+  }
+  return value;
+}
+
+let TEXT = '';
+let LINES = [];
+
+function render() {
+  const query = $('#search').value.trim();
+  const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
+  const only = $('#only').checked;
+  let shown = 0;
+  const html = LINES.map(line => {
+    const hit = terms.length > 0 && terms.some(t => line.toLowerCase().includes(t));
+    if (hit) shown++;
+    if (only && terms.length > 0 && !hit) return '';
+    let out = esc(line);
+    if (hit) {
+      terms.forEach(t => {
+        out = out.replace(new RegExp(escRe(esc(t)), 'gi'), m => '\u0000' + m + '\u0001');
+      });
+      out = out.split('\u0000').join('<mark>').split('\u0001').join('</mark>');
+      out = '<span class="hit">' + out + '</span>';
+    }
+    return out;
+  }).filter(x => x !== '').join('\n');
+
+  const st = $('#status');
+  if (!terms.length) {
+    st.textContent = LINES.length + ' 行';
+    st.className = 'st';
+  } else {
+    st.textContent = shown + ' 行匹配';
+    st.className = 'st';
+  }
+  $('#pre').innerHTML = html || '<span class="empty">没有匹配的行</span>';
+  const mark = $('#pre').querySelector('mark');
+  if (mark) mark.scrollIntoView({block: 'center'});
+}
+
+async function load() {
+  try {
+    const res = await fetch('/artifact?path=' + encodeURIComponent(PATH), {headers: {'X-AK-Token': TOKEN}});
+    if (!res.ok) throw new Error((await res.text()) || res.statusText);
+    const data = await res.json();
+    TEXT = JSON.stringify(transform(data), null, 2);
+    LINES = TEXT.split('\n');
+    render();
+  } catch (e) {
+    $('#pre').innerHTML = '<span class="empty">加载失败: ' + esc(e.message) + '</span>';
+  }
+}
+
+$('#search').addEventListener('input', render);
+$('#only').addEventListener('change', render);
+$('#copy').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(TEXT); $('#copy').textContent = '已复制'; }
+  catch (_) { $('#copy').textContent = '复制失败'; }
+  setTimeout(() => { $('#copy').textContent = '复制'; }, 1500);
+});
+load();
+</script>
+</body>
+</html>

@@ -23,6 +23,7 @@ import (
 
 //go:embed web/index.html
 //go:embed web/viewer.html
+//go:embed web/json.html
 var webFS embed.FS
 
 var webRunMu sync.Mutex

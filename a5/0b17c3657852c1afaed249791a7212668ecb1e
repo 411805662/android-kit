@@ -1,0 +1,49 @@
+artifacts.go
+  s_eb1e2c85f62b50::t_8db5ca5abb9c67 90-124
+web/index.html
+  s_62becc3ae9a79b::t_df08d7e79860a5 729
+  s_eb1e2c85f62b50::t_e355c70eb50989 192,195,197,206,209-215,217-221,223,225-227
+  s_62becc3ae9a79b::t_21762f3d90c5f7 1061-1062,1064-1065
+  s_eb1e2c85f62b50::t_4d382ff886597b 202-203
+  s_eb1e2c85f62b50::t_160a08407e5b32 204
+  s_62becc3ae9a79b::t_e110252a8ff565 360
+  s_62becc3ae9a79b::t_dddd190c57fbb3 106-109
+  s_eb1e2c85f62b50::t_72e09323c583fb 103,110-112,236-238,398,876-885,889,905-906,909,913-915,924-1014
+  s_62becc3ae9a79b::t_0c4f5fdcd714fe 907-908
+  s_eb1e2c85f62b50::t_5ffa0aa1dfefc5 200-201
+  s_62becc3ae9a79b::t_78c19da3a81421 354,366,1015
+README.md
+  s_62becc3ae9a79b::t_efa1a7fd83d31e 90
+paths.go
+  s_eb1e2c85f62b50::t_164738f78b8608 28-32,115
+  s_eb1e2c85f62b50::t_6e6ea6c8a6a49d 13-27
+web.go
+  s_eb1e2c85f62b50::t_4a78b376647cb8 102,137
+  s_eb1e2c85f62b50::t_12471f59793af9 542-559
+version.go
+  s_eb1e2c85f62b50::t_1f61cc48eff883 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a50b17c3657852c1afaed249791a7212668ecb1e",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    },
+    "s_eb1e2c85f62b50": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1abf3-1a5b-7553-8639-364a6dacd49b",
+        "model": "agne/agnes-3.0-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

@@ -195,14 +195,11 @@ func printHelp() {
   -       ak web                      打开本地网页配置台
   dev     ak cd                       进入当前项目目录
   -       ak devices                  设备列表
-  -       ak project add [路径]       登记项目（自动探测包名、Activity、模块）
-  -       ak project list             列出项目
-  -       ak project show [id]        查看项目配置
-  -       ak project use <id>         设为默认项目
-  -       ak project remove <id>      删除项目配置
-  -       ak use <id>                 同 project use
   -       ak status                   当前项目 / 设备 / 引擎状态
   -       ak doctor                   环境诊断
+
+  目录即项目：cd 到项目目录直接执行命令，未登记的目录会自动识别并登记，
+  包名、模块、APK 路径都从目录内容解析，不需要先手动添加项目。
 
 构建 · 安装 · 卸载 · 部署
   快捷键  命令                        说明

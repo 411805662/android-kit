@@ -169,6 +169,9 @@ func (s *ProjectStore) Resolve(flag string) (*Project, error) {
 		if p := s.matchRootUpward(cwd); p != nil {
 			return p, nil
 		}
+		if p := s.autoRegister(cwd); p != nil {
+			return p, nil
+		}
 	}
 	cfg := LoadConfig(s.Paths)
 	if cfg.DefaultProject != "" {
@@ -218,6 +221,33 @@ func (s *ProjectStore) matchRootUpward(start string) *Project {
 		}
 	}
 	return best
+}
+
+// autoRegister 在未登记的 Android 工程目录里自动登记项目：cd 到哪个项目，
+// ak 命令就作用于哪个项目，不用先手动 ak project add。
+// 设 AK_NO_AUTO_REGISTER=1 可关掉。
+func (s *ProjectStore) autoRegister(start string) *Project {
+	if os.Getenv("AK_NO_AUTO_REGISTER") != "" {
+		return nil
+	}
+	root := findGradleRoot(start)
+	if root == "" {
+		return nil
+	}
+	proj, err := DetectProject(root)
+	if err != nil || proj == nil || proj.Package == "" {
+		// 没有包名的多半不是 Android 应用工程，不自动登记
+		return nil
+	}
+	if existing := s.Get(proj.ID); existing != nil {
+		// 目录同名但不是同一个工程，用路径后缀区分
+		proj.ID = proj.ID + "-" + shortHash(root)
+	}
+	if err := s.Save(proj); err != nil {
+		return nil
+	}
+	fmt.Fprintf(os.Stderr, "ak: 已自动登记项目 %s → %s\n", proj.ID, proj.Root)
+	return proj
 }
 
 func (s *ProjectStore) SetDefault(id string) error {

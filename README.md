@@ -22,7 +22,7 @@ ss       # 截图
 ui       # 截图 + UI 树，输出 H5 对照链接
 ```
 
-项目在哪个目录、包名是什么，全部从配置里解析；启动应用不需要知道 Activity，`ak open` 会让设备自己解析 launcher 默认 Activity。换项目只改配置，命令本身不用动。底层优先调用官方 Android CLI，没有则回退 Gradle + adb。
+**目录即项目**：cd 到项目目录直接敲命令就行，包名、模块、APK 路径都从目录内容解析；启动应用不需要知道 Activity，`ak open` 会让设备自己解析 launcher 默认 Activity。换项目只要 cd，命令本身不用动。底层优先调用官方 Android CLI，没有则回退 Gradle + adb。
 
 `ak` 是完整命令入口，`ak web` 打开本地网页配置台。
 
@@ -51,21 +51,21 @@ irm https://cdn.jsdelivr.net/gh/411805662/android-kit@main/install.ps1 | iex
 ## 快速开始
 
 ```bash
-ak project add ~/dev/Android/MyApp --default   # 给个目录就行，包名 / 模块 / APK 路径自动识别
-ak doctor                                      # 检查 adb / CLI / Java / 项目
-ak run                                         # 构建 + 安装 + 启动
+cd ~/dev/Android/MyApp   # 进到项目目录，第一次会自动登记
+ak doctor                # 检查 adb / CLI / Java / 项目
+ak run                   # 构建 + 安装 + 启动
 ```
 
-项目名默认取目录名，包名从 `build.gradle` / `AndroidManifest.xml` 读取，都不用填。
+项目名取目录名，包名从 `build.gradle` / `AndroidManifest.xml` 读取，都不用填。多个项目之间切换就是 cd 到另一个目录，`ak status` 随时能看到当前生效的是哪个项目。
 
 多项目：
 
 ```bash
-ak project add ~/dev/Android/AppB --id appb
-ak use appb            # 切换默认项目
-ak -p appb run         # 临时指定项目
-ak project list
+cd ~/dev/Android/AppB    # 换目录即换项目
+ak -p appb run           # 也可以临时指定项目
 ```
+
+自动登记可以用 `AK_NO_AUTO_REGISTER=1` 关掉，此时只会使用已登记的项目。
 
 ## 命令
 
@@ -76,14 +76,10 @@ ak project list
 | | `ak web` | 打开本地网页配置台 |
 | `dev` | `ak cd` | 进入当前项目根目录 |
 | | `ak devices` | 设备列表 |
-| | `ak project add [路径]` | 登记项目（自动探测包名、Activity、模块） |
-| | `ak project list` | 列出项目 |
-| | `ak project show [id]` | 查看项目配置 |
-| | `ak project use <id>` | 设为默认项目 |
-| | `ak project remove <id>` | 删除项目配置 |
-| | `ak use <id>` | 同 `project use` |
 | | `ak status` | 当前项目 / 设备 / 引擎 / APK |
 | | `ak doctor` | 环境逐项诊断 |
+
+不需要手动登记项目：cd 到项目目录执行任意命令时会自动识别并登记。项目管理子命令（`ak project …`、`ak use`）暂时不在文档和网页里露出，功能仍然可用。
 
 ### 构建 · 安装 · 卸载 · 部署
 
@@ -205,7 +201,7 @@ ak unset --purge       # 连配置和项目列表一起删除
 
 ```bash
 go build -o bin/android-kit .
-./scripts/build-release.sh 0.2.15
+./scripts/build-release.sh 0.2.16
 ```
 
 推送 `v*` tag 会触发 GitHub Actions 构建 macOS / Linux / Windows 产物并上传 Release。

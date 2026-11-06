@@ -316,20 +316,17 @@ details.adv .form{margin-top:12px}
         </div>
       </section>
 
-      <section class="card tablecard">
-        <div class="card-head">项目管理</div>
-        <table>
-          <thead>
-            <tr>
-              <th class="c-name">名称</th>
-              <th class="c-ak">ak 命令</th>
-              <th class="c-alias">快捷键</th>
-              <th class="c-ops">操作</th>
-              <th class="c-actual">实际命令（点击复制）</th>
-            </tr>
-          </thead>
-          <tbody id="tbody-project-admin"></tbody>
-        </table>
+      <section class="card pane-card">
+        <div class="card-head">工作方式</div>
+        <div class="body">
+          <div class="kv">
+            <div class="k">目录即项目</div><div class="v">cd 到项目目录执行 <code>ak</code> 命令，自动识别并登记</div>
+            <div class="k">命令作用域</div><div class="v">所有命令只针对当前目录的项目生效</div>
+            <div class="k">切换项目</div><div class="v">cd 到另一个项目目录即可，无需切换命令</div>
+            <div class="k">识别规则</div><div class="v">目录名作名称，包名/模块/变体从 Gradle 与 Manifest 读取</div>
+          </div>
+          <div class="note">已经在项目目录里运行时，上方「实际命令」展示的就是该目录对应的命令。</div>
+        </div>
       </section>
     </div>
 
@@ -433,9 +430,8 @@ function toggleTheme() {
 applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
 
 const PROJECT_GROUP = '项目';
-const PROJECT_ADMIN = '项目管理';
 const COMMAND_GROUPS = ['构建 · 安装 · 卸载 · 部署','启动 · 杀进程 · 重启','清数据 · 截图 · UI 树 · 文本 · 存储路径','其他'];
-const GROUPS = [PROJECT_GROUP, PROJECT_ADMIN, ...COMMAND_GROUPS];
+const GROUPS = [PROJECT_GROUP, ...COMMAND_GROUPS];
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
@@ -550,10 +546,8 @@ function render() {
 function renderTable() {
   const all = rows.map((r, i) => ({r, i}));
   const projectRows = all.filter(x => x.r.group === PROJECT_GROUP);
-  const adminRows = all.filter(x => x.r.group === PROJECT_ADMIN);
-  const commandRows = all.filter(x => x.r.group !== PROJECT_GROUP && x.r.group !== PROJECT_ADMIN);
+  const commandRows = all.filter(x => x.r.group !== PROJECT_GROUP);
   $('#tbody-project').innerHTML = renderGroupRows(projectRows, [PROJECT_GROUP]);
-  $('#tbody-project-admin').innerHTML = renderGroupRows(adminRows, [PROJECT_ADMIN], false);
   $('#tbody-commands').innerHTML = renderGroupRows(commandRows, COMMAND_GROUPS);
 }
 

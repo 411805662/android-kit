@@ -75,6 +75,8 @@ type CommandInfo struct {
 	Run       string   `json:"run"`
 	Aliases   []string `json:"aliases"`
 	Examples  []string `json:"examples"`
+	// Hidden 的命令仍然可用，只是暂时不在网页配置台里展示。
+	Hidden bool `json:"hidden,omitempty"`
 }
 
 type CustomAlias struct {
@@ -120,12 +122,24 @@ func (a *App) webState() WebState {
 		Paths:       a.Paths,
 		Runtime:     rt,
 		Devices:     a.Paths.Devices(),
-		Commands:    a.commandCatalog(proj, engine),
+		Commands:    visibleCommands(a.commandCatalog(proj, engine)),
 		Custom:      a.customAliases(),
 		ProjectDirs: dirs,
 		Artifacts:   a.projectArtifacts(""),
 		Display:     a.displayInfo(""),
 	}
+}
+
+// visibleCommands 去掉暂时不展示的命令，CLI 侧不受影响。
+func visibleCommands(items []CommandInfo) []CommandInfo {
+	out := make([]CommandInfo, 0, len(items))
+	for _, item := range items {
+		if item.Hidden {
+			continue
+		}
+		out = append(out, item)
+	}
+	return out
 }
 
 func (a *App) customAliases() []CustomAlias {
@@ -217,12 +231,13 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 		{ID: "status", Target: "status", Group: groupProject, Title: "状态", Desc: "项目、设备、引擎、APK", Command: "ak status", Engine: "-", Available: true, Runnable: true, Run: "status"},
 		{ID: "doctor", Target: "doctor", Group: groupProject, Title: "环境诊断", Desc: "逐项检查 adb / CLI / Java / 项目", Command: "ak doctor", Engine: "-", Available: true, Runnable: true, Run: "doctor"},
 
-		{ID: "project-add", Target: "project add", Group: groupProjectAdmin, Title: "登记项目", Desc: "自动探测包名、Activity、模块、APK", Command: "ak project add <path>", Engine: "-", Available: true, Runnable: false},
-		{ID: "project-list", Target: "project list", Group: groupProjectAdmin, Title: "项目列表", Desc: "列出已登记项目", Command: "ak project list", Engine: "-", Available: true, Runnable: true, Run: "project list"},
-		{ID: "project-show", Target: "project show", Group: groupProjectAdmin, Title: "查看项目", Desc: "显示项目配置", Command: "ak project show <id>", Engine: "-", Available: true, Runnable: false},
-		{ID: "project-use", Target: "project use", Group: groupProjectAdmin, Title: "切换项目", Desc: "设为默认项目", Command: "ak project use <id>", Engine: "-", Available: true, Runnable: false},
-		{ID: "project-remove", Target: "project remove", Group: groupProjectAdmin, Title: "删除项目", Desc: "删除项目配置，不删文件", Command: "ak project remove <id>", Engine: "-", Available: true, Runnable: false},
-		{ID: "use", Target: "use", Group: groupProjectAdmin, Title: "切换项目（简写）", Desc: "同 ak project use", Command: "ak use <id>", Engine: "-", Available: true, Runnable: false},
+		// 项目管理工作流暂时隐藏（CLI 仍然可用），cd 到项目目录即自动生效。
+		{ID: "project-add", Target: "project add", Group: groupProjectAdmin, Title: "登记项目", Desc: "自动探测包名、模块、APK", Command: "ak project add <path>", Engine: "-", Available: true, Runnable: false, Hidden: true},
+		{ID: "project-list", Target: "project list", Group: groupProjectAdmin, Title: "项目列表", Desc: "列出已登记项目", Command: "ak project list", Engine: "-", Available: true, Runnable: true, Run: "project list", Hidden: true},
+		{ID: "project-show", Target: "project show", Group: groupProjectAdmin, Title: "查看项目", Desc: "显示项目配置", Command: "ak project show <id>", Engine: "-", Available: true, Runnable: false, Hidden: true},
+		{ID: "project-use", Target: "project use", Group: groupProjectAdmin, Title: "切换项目", Desc: "设为默认项目", Command: "ak project use <id>", Engine: "-", Available: true, Runnable: false, Hidden: true},
+		{ID: "project-remove", Target: "project remove", Group: groupProjectAdmin, Title: "删除项目", Desc: "删除项目配置，不删文件", Command: "ak project remove <id>", Engine: "-", Available: true, Runnable: false, Hidden: true},
+		{ID: "use", Target: "use", Group: groupProjectAdmin, Title: "切换项目（简写）", Desc: "同 ak project use", Command: "ak use <id>", Engine: "-", Available: true, Runnable: false, Hidden: true},
 
 		{ID: "build", Target: "build", Group: groupDeploy, Title: "构建 Debug", Desc: "编译当前模块的 debug 变体", Command: buildCmd, Engine: engine, Available: true, Runnable: true, Run: "build"},
 		{ID: "build-clean", Target: "build --clean", Group: groupDeploy, Title: "清理后构建", Desc: "先 clean 再编译，解决缓存问题", Command: cleanCmd, Engine: engine, Available: true, Runnable: true, Run: "build --clean"},

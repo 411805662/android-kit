@@ -1,0 +1,39 @@
+README.md
+  s_62becc3ae9a79b::t_b67f6786027209 119,123
+  s_62becc3ae9a79b::t_43d8318a339cc7 217-218
+  s_62becc3ae9a79b::t_ec7e0b3f21a120 271
+web.go
+  s_62becc3ae9a79b::t_550c4da441ad02 231-234,269
+  s_62becc3ae9a79b::t_2dc8c5010d6bf0 240-243
+commands.go
+  s_62becc3ae9a79b::t_e7982e1e7694fc 233-244
+  s_62becc3ae9a79b::t_c5d908f406df18 318-322
+  s_62becc3ae9a79b::t_8549c8bb2ec78e 196-208
+web/index.html
+  s_62becc3ae9a79b::t_62b4e60df2797a 767
+  s_62becc3ae9a79b::t_90cf70cb568880 270-271,287-288
+  s_62becc3ae9a79b::t_5875b8e99583d8 776-778,783
+  s_62becc3ae9a79b::t_bd1e084d823a33 779-782,784-792
+  s_62becc3ae9a79b::t_e4aeacd294c7fe 185-186
+  s_62becc3ae9a79b::t_3491be2791576c 104,106
+  s_62becc3ae9a79b::t_a3273474f64c64 102-103,105
+  s_62becc3ae9a79b::t_1c61be36f24c86 285-286,289-305
+version.go
+  s_62becc3ae9a79b::t_707994dd8cc17c 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b888ec19253004ce6c4c3def67262dde689b3705",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

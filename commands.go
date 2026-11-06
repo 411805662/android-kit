@@ -166,12 +166,55 @@ func gradleTask(module, variant string) string {
 	return module + ":assemble" + variant
 }
 
+// gradleInstallTask 是 Gradle 自带的安装任务，例如 :app:installDebug。
+// 它依赖对应的 assemble 任务，能自己找对 APK（多 flavor / split 也不会装错），
+// 并且直接走设备安装，比「先 build 再 adb install」少一次 Gradle 配置。
+func gradleInstallTask(module, variant string) string {
+	if variant == "" {
+		variant = "debug"
+	}
+	variant = strings.ToUpper(variant[:1]) + variant[1:]
+	if module == "" || module == ":" {
+		return "install" + variant
+	}
+	return module + ":install" + variant
+}
+
+// gradleProjectRef 把配置里的模块名转成官方 CLI 认的 Gradle 项目路径（:app）。
+// `android run` 收的是「项目路径」而不是任务名；返回空串表示让它自己从当前目录解析。
+func gradleProjectRef(module string) string {
+	module = strings.TrimSpace(module)
+	if module == "" || module == ":" {
+		return ""
+	}
+	if !strings.HasPrefix(module, ":") {
+		module = ":" + module
+	}
+	return module
+}
+
 func (a *App) gradle(proj *Project, tasks ...string) error {
 	wrapper := a.Paths.GradleWrapper(proj)
 	if wrapper == "" {
 		return fmt.Errorf("项目里找不到 gradlew: %s", proj.Root)
 	}
 	return runStream(proj.Root, proj.EnvList(), wrapper, tasks...)
+}
+
+// gradleInstall 跑 install<Variant>，并把设备固定到当前选中的 serial，
+// 避免 Gradle 默认往所有已连接设备都装一份。
+func (a *App) gradleInstall(proj *Project) error {
+	wrapper := a.Paths.GradleWrapper(proj)
+	if wrapper == "" {
+		return fmt.Errorf("项目里找不到 gradlew: %s", proj.Root)
+	}
+	env := proj.EnvList()
+	if serial := a.device(proj); serial != "" {
+		env = append(env, "ANDROID_SERIAL="+serial)
+	}
+	task := gradleInstallTask(proj.Module, proj.Variant)
+	fmt.Fprintf(os.Stderr, "→ ./gradlew %s\n", task)
+	return runStream(proj.Root, env, wrapper, task)
 }
 
 func (a *App) build(proj *Project, clean bool, extra []string) error {
@@ -233,10 +276,21 @@ func (a *App) cmdBuild(args []string) error {
 	return a.build(proj, *clean, fs.Args())
 }
 
-func (a *App) installAPK(proj *Project, apk string) error {
+// installAPK 把应用装到设备上。
+// apk 为空且 allowBuild 为真时走 Gradle 自带的 install<Variant> 任务：
+// 它会先 assemble 再安装，能自己找对 APK（多 flavor / split 也不会装错），
+// 也不会出现「装了上一次构建的旧包」这种情况。
+// 指定了 apk 就只安装那个文件（官方 CLI 可用时走 delta install）。
+func (a *App) installAPK(proj *Project, apk string, allowBuild bool) error {
 	engine, err := a.engine()
 	if err != nil {
 		return err
+	}
+	if apk == "" && allowBuild && a.Paths.GradleWrapper(proj) != "" {
+		if a.device(proj) == "" {
+			return fmt.Errorf("没有连接的设备，先插上手机或启动模拟器（ak devices 查看）")
+		}
+		return a.gradleInstall(proj)
 	}
 	if apk == "" && engine == "android" {
 		var err error
@@ -280,7 +334,8 @@ func (a *App) cmdInstall(args []string) error {
 			path = filepath.Join(proj.Root, path)
 		}
 	}
-	return a.installAPK(proj, path)
+	// 指定了 APK 就只装这个文件；没指定时让 Gradle 构建并安装当前变体
+	return a.installAPK(proj, path, path == "")
 }
 
 func (a *App) startApp(proj *Project) error {
@@ -331,14 +386,13 @@ func (a *App) cmdRun(args []string) error {
 		return err
 	}
 	if engine == "android" && !*noBuild {
-		if err := a.build(proj, false, nil); err != nil {
-			return err
+		// 官方 CLI 的 run 一步完成「构建 + delta 安装 + 启动」，比「先 build 再
+		// 装 APK」快很多；传 Gradle 模块引用（:app）而不是 APK 路径，多模块 /
+		// 动态特性 / ABI 分包的项目也不会装错或装到旧包。
+		cmdArgs := []string{"run"}
+		if ref := gradleProjectRef(proj.Module); ref != "" {
+			cmdArgs = append(cmdArgs, ref)
 		}
-		apk, err := a.Store.APK(proj)
-		if err != nil {
-			return err
-		}
-		cmdArgs := []string{"run", apk}
 		if dev := a.device(proj); dev != "" {
 			cmdArgs = append(cmdArgs, "--device", dev)
 		}
@@ -346,11 +400,19 @@ func (a *App) cmdRun(args []string) error {
 		return runStream(proj.Root, proj.EnvList(), a.androidPath(), cmdArgs...)
 	}
 	if !*noBuild {
+		// 走 gradlew 的 install<Variant> 时它自己会先 assemble，
+		// 这里不再单独 build，省掉一次 Gradle 配置。
+		if a.Paths.GradleWrapper(proj) != "" {
+			if err := a.installAPK(proj, "", true); err != nil {
+				return err
+			}
+			return a.startApp(proj)
+		}
 		if err := a.build(proj, false, nil); err != nil {
 			return err
 		}
 	}
-	if err := a.installAPK(proj, ""); err != nil {
+	if err := a.installAPK(proj, "", false); err != nil {
 		return err
 	}
 	return a.startApp(proj)

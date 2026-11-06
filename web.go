@@ -209,18 +209,32 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 	task := mod + ":assemble" + strings.ToUpper(variant[:1]) + variant[1:]
 	gradleBuild := "./gradlew " + gradleTask(module, variant)
 	gradleClean := "./gradlew clean " + gradleTask(module, variant)
+	gradleInstall := "./gradlew " + gradleInstallTask(module, variant)
+	hasWrapper := proj != nil && a.Paths.GradleWrapper(proj) != ""
 	buildCmd := gradleBuild
 	cleanCmd := gradleClean
-	installCmd := "adb install -r -t -d " + apk
+	// 有 gradlew 时用 Gradle 自带的安装任务，顺带构建且不会装错变体
+	installCmd := gradleInstall
+	if !hasWrapper {
+		installCmd = "adb install -r -t -d " + apk
+	}
 	startCmd := "adb shell am start -n $(adb shell cmd package resolve-activity --brief -c android.intent.category.LAUNCHER " + pkg + " | tail -1)"
 	runCmd := gradleBuild + " && " + installCmd + " && " + startCmd
+	if hasWrapper {
+		runCmd = gradleInstall + " && " + startCmd
+	}
+	runDesc := "install<Variant> + am start，日常部署一条命令"
 	layoutCmd := "adb shell uiautomator dump /sdcard/android-kit-ui.xml && adb exec-out cat /sdcard/android-kit-ui.xml"
 	shotCmd := "adb exec-out screencap -p > " + root + "/android-kit/screenshots/<time>.png"
 	if engine == "android" {
 		buildCmd = "android build " + task
 		cleanCmd = "android build " + mod + ":clean && android build " + task
-		installCmd = "android install " + apk + devFlag
-		runCmd = "android run " + apk + devFlag
+		if !hasWrapper {
+			installCmd = "android install " + apk + devFlag
+		}
+		// 官方 CLI 收 Gradle 项目路径（:app），一步完成构建 + delta 安装 + 启动
+		runCmd = strings.TrimRight("android run "+gradleProjectRef(module), " ") + devFlag
+		runDesc = "android run：构建 + delta 安装 + 启动一步到位，只推差异，快很多"
 		layoutCmd = "android layout -p" + devFlag
 		shotCmd = "android screen capture --output " + root + "/android-kit/screenshots/<time>.png" + devFlag
 	}
@@ -241,9 +255,9 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 
 		{ID: "build", Target: "build", Group: groupDeploy, Title: "构建 Debug", Desc: "编译当前模块的 debug 变体", Command: buildCmd, Engine: engine, Available: true, Runnable: true, Run: "build"},
 		{ID: "build-clean", Target: "build --clean", Group: groupDeploy, Title: "清理后构建", Desc: "先 clean 再编译，解决缓存问题", Command: cleanCmd, Engine: engine, Available: true, Runnable: true, Run: "build --clean"},
-		{ID: "install", Target: "install", Group: groupDeploy, Title: "安装 APK", Desc: "自动找最新 APK；官方 CLI 支持 delta install", Command: installCmd, Engine: engine, Available: true, Runnable: true, Run: "install"},
+		{ID: "install", Target: "install", Group: groupDeploy, Title: "安装 APK", Desc: "gradlew install<Variant>：构建 + 安装一步到位", Command: installCmd, Engine: engine, Available: true, Runnable: true, Run: "install"},
 		{ID: "uninstall", Target: "uninstall", Group: groupDeploy, Title: "卸载 App", Desc: "卸载手机上的应用；卸载本工具用 ak unset", Command: "adb uninstall " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "uninstall"},
-		{ID: "run", Target: "run", Group: groupDeploy, Title: "构建 + 安装 + 启动", Desc: "一条命令完成日常部署", Command: runCmd, Engine: engine, Available: true, Runnable: true, Run: "run"},
+		{ID: "run", Target: "run", Group: groupDeploy, Title: "构建 + 安装 + 启动", Desc: runDesc, Command: runCmd, Engine: engine, Available: true, Runnable: true, Run: "run"},
 
 		{ID: "open", Target: "open", Group: groupApp, Title: "启动应用", Desc: "启动 launcher 默认 Activity，不用配 Activity", Command: startCmd, Engine: "adb", Available: true, Runnable: true, Run: "open"},
 		{ID: "stop", Target: "stop", Group: groupApp, Title: "杀进程", Desc: "force-stop 当前包名", Command: "adb shell am force-stop " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "stop"},

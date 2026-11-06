@@ -87,11 +87,15 @@ ak -p appb run           # 也可以临时指定项目
 
 | 快捷键 | 命令 | 作用 |
 |---|---|---|
-| `b` | `ak build` | 构建 Debug |
-| `cb` | `ak build --clean` | 清理后构建 |
-| `in` | `ak install` | 安装 APK |
+| `b` | `ak build` | 构建 Debug（`assembleDebug`） |
+| `cb` | `ak build --clean` | 清理后构建（`clean` + `assembleDebug`） |
+| `in` | `ak install` | 构建并安装（Gradle `install<Variant>`，如 `:app:installDebug`） |
 | `un` | `ak uninstall` | 卸载手机上的 App |
-| `bio` | `ak run` | 构建 + 安装 + 启动 |
+| `bio` | `ak run` | 构建 + 安装 + 启动（官方 CLI `android run`，delta 安装只推差异） |
+
+安装优先走 Gradle 自带的 `install<Variant>` 任务：它会先 `assemble` 再安装，自动找对 APK（多 flavor / split 也不会装错），比「先 build 再 `adb install`」少一次 Gradle 配置。指定了 APK（`ak install --apk <文件>`）时只安装该文件，不再构建。
+
+`ak run` 走官方 CLI 的 `android run <模块>`：一条命令完成构建 + delta 安装 + 启动，只传输差异部分（大项目通常从几百 MB 降到几 MB）。传模块引用而不是 APK 路径，多模块 / 动态特性 / ABI 分包的项目也不会装错或装到旧包。
 
 ### 启动 · 杀进程 · 重启
 
@@ -203,7 +207,7 @@ ak unset --purge       # 连配置和项目列表一起删除
 
 ```bash
 go build -o bin/android-kit .
-./scripts/build-release.sh 0.2.17
+./scripts/build-release.sh 0.2.18
 ```
 
 推送 `v*` tag 会触发 GitHub Actions 构建 macOS / Linux / Windows 产物并上传 Release。

@@ -83,6 +83,8 @@ ak -p appb run           # 也可以临时指定项目
 
 不需要手动登记项目：cd 到项目目录执行任意命令时会自动识别并登记。项目管理子命令（`ak project …`、`ak use`）暂时不在文档和网页里露出，功能仍然可用。
 
+工程放在仓库子目录里（如 `<repo>/android/settings.gradle`）也能识别：当前目录下只有一个 Gradle 工程时会自动用它，并用仓库目录名作为项目名。
+
 ### 多项目与目录快捷
 
 cd 到哪个项目，`ak` 就作用于哪个项目。想少打几个字就建目录快捷：
@@ -228,7 +230,7 @@ ak unset --purge       # 连配置和项目列表一起删除
 
 ```bash
 go build -o bin/android-kit .
-./scripts/build-release.sh 0.2.19
+./scripts/build-release.sh 0.2.20
 ```
 
 推送 `v*` tag 会触发 GitHub Actions 构建 macOS / Linux / Windows 产物并上传 Release。

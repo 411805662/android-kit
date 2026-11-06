@@ -282,7 +282,7 @@ func (s *ProjectStore) autoRegister(start string) *Project {
 	if os.Getenv("AK_NO_AUTO_REGISTER") != "" {
 		return nil
 	}
-	root := findGradleRoot(start)
+	root, hint := findAndroidRoot(start)
 	if root == "" {
 		return nil
 	}
@@ -290,6 +290,11 @@ func (s *ProjectStore) autoRegister(start string) *Project {
 	if err != nil || proj == nil || proj.Package == "" {
 		// 没有包名的多半不是 Android 应用工程，不自动登记
 		return nil
+	}
+	// 工程在 repo/android 这种子目录里时，用仓库目录名当项目名
+	if hint != "" {
+		proj.Name = hint
+		proj.ID = slug(hint)
 	}
 	if existing := s.Get(proj.ID); existing != nil {
 		// 目录同名但不是同一个工程，用路径后缀区分
@@ -380,7 +385,7 @@ func DetectProject(input string) (*Project, error) {
 	if err != nil {
 		return nil, err
 	}
-	root := findGradleRoot(abs)
+	root, nameHint := findAndroidRoot(abs)
 	if root == "" {
 		return nil, fmt.Errorf("no settings.gradle(.kts) found above %s", abs)
 	}
@@ -390,6 +395,9 @@ func DetectProject(input string) (*Project, error) {
 		Module:  ":app",
 		Variant: "debug",
 		Env:     map[string]string{},
+	}
+	if nameHint != "" {
+		proj.Name = nameHint
 	}
 	proj.ID = slug(proj.Name)
 	if isDir(filepath.Join(root, "app")) {
@@ -431,6 +439,40 @@ func findGradleRoot(start string) string {
 		}
 		dir = parent
 	}
+}
+
+// findAndroidRoot 先用常规的「向上找 settings.gradle」；找不到时再看当前目录，
+// 如果只有一个子目录是 Gradle 工程（android/、app/ 这类常见仓库布局），就用它，
+// 并把上一级目录名当作项目名。多个子目录都像工程时不做猜测。
+func findAndroidRoot(start string) (root, nameHint string) {
+	if r := findGradleRoot(start); r != "" {
+		return r, ""
+	}
+	dir := start
+	if !isDir(dir) {
+		dir = filepath.Dir(dir)
+	}
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return "", ""
+	}
+	var hits []string
+	for _, e := range entries {
+		if !e.IsDir() || strings.HasPrefix(e.Name(), ".") {
+			continue
+		}
+		sub := filepath.Join(dir, e.Name())
+		for _, name := range []string{"settings.gradle", "settings.gradle.kts"} {
+			if exists(filepath.Join(sub, name)) {
+				hits = append(hits, sub)
+				break
+			}
+		}
+	}
+	if len(hits) != 1 {
+		return "", ""
+	}
+	return hits[0], filepath.Base(dir)
 }
 
 func detectModules(root string) []string {

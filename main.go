@@ -136,6 +136,18 @@ func main() {
 		err = app.cmdLayout(rest)
 	case "screenshot", "ss":
 		err = app.cmdScreenshot(rest)
+	case "ls", "files":
+		err = app.cmdLs(rest)
+	case "tree":
+		err = app.cmdTree(rest)
+	case "cat":
+		err = app.cmdCat(rest)
+	case "sp", "prefs":
+		err = app.cmdSP(rest)
+	case "dump", "pull":
+		err = app.cmdDump(rest)
+	case "push":
+		err = app.cmdPush(rest)
 	case "tap":
 		err = app.cmdTap(rest)
 	case "text":
@@ -191,6 +203,7 @@ func printHelp() {
   un      卸载应用
   ss      截图
   ui      UI 树
+  lgc     应用日志
 
 项目
   快捷键  命令                        说明
@@ -202,8 +215,10 @@ func printHelp() {
 
   目录即项目：cd 到项目目录直接执行命令，未登记的目录会自动识别并登记，
   包名、模块、APK 路径都从目录内容解析，不需要先手动添加项目。
+  网页「项目」页可以增删项目、重新识别，并把某个项目设为全局默认
+  （当前目录不属于任何项目时回退到它）。
 
-构建 · 安装 · 卸载 · 部署
+构建 · 安装
   快捷键  命令                        说明
   b       ak build                    构建 Debug（官方 CLI 优先，可回退 gradle）
   cb      ak build --clean            清理后构建
@@ -211,27 +226,41 @@ func printHelp() {
   un      ak uninstall                卸载手机上的 App
   bio     ak run                      构建 + 安装 + 启动
 
-启动 · 杀进程 · 重启
+应用控制
   快捷键  命令                        说明
   o       ak open                     启动应用
   k       ak stop                     杀进程
   ko      ak restart                  重启应用
-
-清数据 · 截图 · UI 树 · 文本 · 存储路径
-  快捷键  命令                        说明
   c       ak clear                    清除应用数据
+
+调试 · 截图 · UI
+  快捷键  命令                        说明
   ss      ak screenshot [-a]          截图到 <project>/android-kit/screenshots
   ui      ak layout -p                截图 + UI 树，输出 H5 对照链接
-  -       ak text "hello world"       输入文本
-  -       ak paths                    查看所有存储路径
-
-其他
-  快捷键  命令                        说明
   lgc     ak logcat [关键词]          当前应用日志；关键词模糊匹配 tag / message
+
+应用文件（默认操作 /data/data/<包名>，路径写相对值即可）
+  快捷键  命令                        说明
+  -       ak ls [目录]                列目录，修改时间最新在前
+  -       ak tree [目录] [-L 2]       目录树
+  -       ak cat <文件>               看文件内容，如 shared_prefs/x.xml
+  -       ak sp [名称]                列出 / 查看 SharedPreferences
+  -       ak dump <路径> [-o 本地]     文件或整个目录 dump 到 android-kit/dump
+  -       ak push <本地文件> [目标]    推文件进应用目录
+
+  外部目录加前缀 ext:，例如 ak ls ext:download
+
+设备输入
+  快捷键  命令                        说明
   -       ak tap 100 200              点击坐标
   -       ak tap "id=btn_login"       用选择器点击（需官方 android CLI）
   -       ak swipe 500 1500 500 500   滑动
   -       ak key 4                    发送按键
+  -       ak text "hello world"       输入文本
+
+其他
+  快捷键  命令                        说明
+  -       ak paths                    查看本工具所有存储路径
   -       ak preview list|render      Compose 预览
   -       ak analyze <apk>            APK 分析
   -       ak docs search <关键字>     官方文档检索

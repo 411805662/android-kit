@@ -158,9 +158,11 @@ func (a *App) customAliases() []CustomAlias {
 const (
 	groupProject      = "项目"
 	groupProjectAdmin = "项目管理"
-	groupDeploy       = "构建 · 安装 · 卸载 · 部署"
-	groupApp          = "启动 · 杀进程 · 重启"
-	groupDebug        = "清数据 · 截图 · UI 树 · 文本 · 存储路径"
+	groupDeploy       = "构建 · 安装"
+	groupApp          = "应用控制"
+	groupDebug        = "调试 · 截图 · UI"
+	groupFiles        = "应用文件"
+	groupInput        = "设备输入"
 	groupOther        = "其他"
 )
 
@@ -264,16 +266,22 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 		{ID: "stop", Target: "stop", Group: groupApp, Title: "杀进程", Desc: "force-stop 当前包名", Command: "adb shell am force-stop " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "stop"},
 		{ID: "restart", Target: "restart", Group: groupApp, Title: "重启应用", Desc: "杀进程后立即启动", Command: "adb shell am force-stop " + pkg + " && " + startCmd, Engine: "adb", Available: true, Runnable: true, Run: "restart"},
 
-		{ID: "clear", Target: "clear", Group: groupDebug, Title: "清除数据", Desc: "pm clear，登录态会丢失", Command: "adb shell pm clear " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "clear"},
+		{ID: "clear", Target: "clear", Group: groupApp, Title: "清除数据", Desc: "pm clear，登录态会丢失", Command: "adb shell pm clear " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "clear"},
 		{ID: "screenshot", Target: "screenshot", Group: groupDebug, Title: "截图", Desc: "保存到 android-kit/screenshots", Command: shotCmd, Engine: engine, Available: true, Runnable: true, Run: "screenshot"},
 		{ID: "layout", Target: "layout -p", Group: groupDebug, Title: "UI 树", Desc: "截图 + UI 树，输出 H5 对照链接", Command: layoutCmd, Engine: engine, Available: true, Runnable: true, Run: "layout -p"},
-		{ID: "text", Target: "text", Group: groupDebug, Title: "输入文本", Desc: "空格自动转 %s", Command: "adb shell input text <text>", Engine: "adb", Available: true, Runnable: false},
-		{ID: "paths", Target: "paths", Group: groupDebug, Title: "存储路径", Desc: "查看所有目录和文件位置", Command: "ak paths", Engine: "-", Available: true, Runnable: true, Run: "paths"},
+		{ID: "ls", Target: "ls", Group: groupFiles, Title: "列目录", Desc: "应用私有目录，按修改时间最新在前；相对路径基于 /data/data/" + pkg, Command: "ak ls [目录]", Engine: "adb", Available: true, Runnable: false},
+		{ID: "tree", Target: "tree", Group: groupFiles, Title: "目录树", Desc: "默认两层；ext: 前缀看外部目录", Command: "ak tree [目录] [-L 2]", Engine: "adb", Available: true, Runnable: false},
+		{ID: "cat", Target: "cat", Group: groupFiles, Title: "看文件内容", Desc: "直接 cat 应用内文件，如 shared_prefs 下的 xml", Command: "ak cat <文件>", Engine: "adb", Available: true, Runnable: false},
+		{ID: "sp", Target: "sp", Group: groupFiles, Title: "SharedPreferences", Desc: "不带参数列出全部；带名称直接看内容", Command: "ak sp [名称]", Engine: "adb", Available: true, Runnable: false},
+		{ID: "dump", Target: "dump", Group: groupFiles, Title: "dump 到本地", Desc: "文件或整个目录拉到 android-kit/dump", Command: "ak dump <应用内路径> [-o 本地路径]", Engine: "adb", Available: true, Runnable: false},
+		{ID: "push", Target: "push", Group: groupFiles, Title: "推文件进应用", Desc: "本地文件推进应用目录，缺省 files/<文件名>", Command: "ak push <本地文件> [目标]", Engine: "adb", Available: true, Runnable: false},
 
-		{ID: "logcat", Target: "logcat", Group: groupOther, Title: "应用日志", Desc: "默认只看当前应用；后接字符串模糊匹配 tag 或 message", Command: "adb logcat -v time --pid=$(adb shell pidof " + pkg + ") | grep -i <pattern>", Engine: "adb", Available: true, Runnable: false},
-		{ID: "tap", Target: "tap", Group: groupOther, Title: "点击", Desc: "坐标或选择器", Command: "adb shell input tap <x> <y>", Engine: "adb", Available: true, Runnable: false},
-		{ID: "swipe", Target: "swipe", Group: groupOther, Title: "滑动", Desc: "四个坐标 + 可选时长", Command: "adb shell input swipe <x1> <y1> <x2> <y2> [ms]", Engine: "adb", Available: true, Runnable: false},
-		{ID: "key", Target: "key", Group: groupOther, Title: "按键", Desc: "keyevent，如 4=返回 3=Home", Command: "adb shell input keyevent <code>", Engine: "adb", Available: true, Runnable: false},
+		{ID: "text", Target: "text", Group: groupInput, Title: "输入文本", Desc: "空格自动转 %s", Command: "adb shell input text <text>", Engine: "adb", Available: true, Runnable: false},
+		{ID: "paths", Target: "paths", Group: groupOther, Title: "存储路径", Desc: "查看所有目录和文件位置", Command: "ak paths", Engine: "-", Available: true, Runnable: true, Run: "paths"},
+		{ID: "logcat", Target: "logcat", Group: groupDebug, Title: "应用日志", Desc: "默认只看当前应用；后接字符串模糊匹配 tag 或 message", Command: "adb logcat -v time --pid=$(adb shell pidof " + pkg + ") | grep -i <pattern>", Engine: "adb", Available: true, Runnable: false},
+		{ID: "tap", Target: "tap", Group: groupInput, Title: "点击", Desc: "坐标或选择器", Command: "adb shell input tap <x> <y>", Engine: "adb", Available: true, Runnable: false},
+		{ID: "swipe", Target: "swipe", Group: groupInput, Title: "滑动", Desc: "四个坐标 + 可选时长", Command: "adb shell input swipe <x1> <y1> <x2> <y2> [ms]", Engine: "adb", Available: true, Runnable: false},
+		{ID: "key", Target: "key", Group: groupInput, Title: "按键", Desc: "keyevent，如 4=返回 3=Home", Command: "adb shell input keyevent <code>", Engine: "adb", Available: true, Runnable: false},
 		{ID: "preview", Target: "preview", Group: groupOther, Title: "Compose 预览", Desc: "无设备渲染 @Preview 为 PNG", Command: "android preview render --output " + root + "/android-kit/previews", Engine: "android", Available: engine == "android", Runnable: false},
 		{ID: "analyze", Target: "analyze", Group: groupOther, Title: "APK 分析", Desc: "DEX / R8 / keep 规则 / native 库", Command: "android analyze " + apk, Engine: "android", Available: engine == "android", Runnable: false},
 		{ID: "docs", Target: "docs", Group: groupOther, Title: "官方文档", Desc: "搜索 Android Knowledge Base", Command: "android docs search <query>", Engine: "android", Available: engine == "android", Runnable: false},

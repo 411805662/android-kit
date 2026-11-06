@@ -173,7 +173,6 @@ details .body{padding:0 16px 16px}
 .field input,.field select{background:var(--input-bg);border:1px solid var(--input-bd);border-radius:7px;padding:7px 9px;outline:none;width:100%}
 .field input:focus,.field select:focus{border-color:#4d6bd8}
 .field .hint{font-size:10.5px;color:var(--muted-2)}
-.p-root-field{grid-column:1/-1}
 .detected{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:11.5px;color:var(--muted);
   min-height:20px;align-items:center}
 .detected .d{display:inline-flex;gap:6px;align-items:baseline;min-width:0}
@@ -194,6 +193,24 @@ details.adv .form{margin-top:12px}
 .kv{display:grid;grid-template-columns:130px 1fr;gap:5px 12px;font-size:12px}
 .kv .k{color:var(--muted)}
 .kv .v{word-break:break-all}
+
+.plist{display:flex;flex-direction:column;gap:1px;margin:-4px -6px}
+.prow{display:flex;align-items:center;gap:14px;padding:9px 10px;border-radius:9px}
+.prow:hover{background:var(--row-hover)}
+.prow-main{flex:1;min-width:0}
+.prow-name{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:650}
+.prow-path{font-size:11px;color:var(--muted);word-break:break-all;margin-top:3px}
+.prow-meta{text-align:right;font-size:10.5px;color:var(--muted-2);line-height:1.65;
+  font-family:ui-monospace,Menlo,monospace;white-space:nowrap}
+.prow-acts{display:flex;gap:5px;opacity:0;transition:opacity .12s}
+.prow:hover .prow-acts,.prow:focus-within .prow-acts{opacity:1}
+@media (hover:none){.prow-acts{opacity:1}}
+.prow-acts .btn{font-size:10.5px;padding:3px 7px}
+.prow-acts .btn.solid{background:var(--btn-hover);border-color:var(--line-strong);color:var(--text-soft)}
+.padd{display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.padd input{flex:1;background:var(--input-bg);border:1px solid var(--input-bd);border-radius:7px;
+  padding:7px 9px;font-size:12px;outline:none;font-family:ui-monospace,Menlo,monospace}
+.padd input:focus{border-color:#4d6bd8}
 
 .drawer{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--panel);
   border-top:1px solid var(--line-strong);box-shadow:0 -12px 40px var(--shadow);transform:translateY(100%);
@@ -293,35 +310,14 @@ details.adv .form{margin-top:12px}
 
     <div class="split2">
       <section class="card pane-card">
-        <div class="card-head">项目设置 <span class="note">填目录就行，其余自动识别</span></div>
+        <div class="card-head">项目列表 <span class="note">cd 到目录执行 ak 会自动登记，包名只解析一次</span></div>
         <div class="body">
-          <div class="form">
-            <div class="field p-root-field">
-              <label>项目根目录</label>
-              <input id="p-root" placeholder="/Users/you/dev/Android/MyApp" spellcheck="false" autocomplete="off">
-            </div>
+          <div id="project-list" class="plist"></div>
+          <div class="padd">
+            <input id="p-new-root" placeholder="/path/to/android/project" spellcheck="false" autocomplete="off">
+            <button class="btn" onclick="addProjectByPath()">添加</button>
           </div>
-          <div class="detected" id="p-summary"></div>
-          <div class="actions">
-            <button class="btn primary" onclick="saveProject()">保存项目</button>
-            <button class="btn" onclick="reDetectProject()">重新识别</button>
-            <button class="btn" onclick="setDefaultProject()">设为默认</button>
-            <button class="btn danger" onclick="deleteProject()">删除项目</button>
-          </div>
-          <details class="adv">
-            <summary>高级（一般不用改）</summary>
-            <div class="form">
-              <div class="field"><label>项目 ID</label><input id="p-id" placeholder="my-app"></div>
-              <div class="field"><label>名称</label><input id="p-name" placeholder="My App"></div>
-              <div class="field"><label>包名</label><input id="p-package" placeholder="com.example.app"></div>
-              <div class="field"><label>启动 Activity（留空走 launcher 默认）</label><input id="p-activity" placeholder="留空即可"></div>
-              <div class="field"><label>Gradle 模块</label><input id="p-module" placeholder=":app"></div>
-              <div class="field"><label>构建变体</label><input id="p-variant" placeholder="debug"></div>
-              <div class="field"><label>APK glob</label><input id="p-apk" placeholder="app/build/outputs/apk/debug/*.apk"></div>
-              <div class="field"><label>默认设备 serial</label><input id="p-device" placeholder="留空自动选择"></div>
-            </div>
-            <div class="note">包名、模块、变体都会直接改变「实际命令」。启动 Activity 一般留空，<code>ak open</code> 会让设备自己解析 launcher 默认 Activity。</div>
-          </details>
+          <div class="note">只填项目根目录即可，名称、包名、模块自动识别。鼠标移到项目名后面可以设为全局默认。</div>
         </div>
       </section>
 
@@ -331,6 +327,7 @@ details.adv .form{margin-top:12px}
           <div class="kv">
             <div class="k">目录即项目</div><div class="v">cd 到项目目录执行 <code>ak</code> 命令，自动识别并登记</div>
             <div class="k">命令作用域</div><div class="v">所有命令只针对当前目录的项目生效</div>
+            <div class="k">全局默认</div><div class="v">当前目录不是任何项目时，回退到全局默认项目</div>
             <div class="k">切换项目</div><div class="v">cd 到另一个项目目录即可，无需切换命令</div>
             <div class="k">识别规则</div><div class="v">目录名作名称，包名/模块/变体从 Gradle 与 Manifest 读取</div>
           </div>
@@ -439,7 +436,7 @@ function toggleTheme() {
 applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
 
 const PROJECT_GROUP = '项目';
-const COMMAND_GROUPS = ['构建 · 安装 · 卸载 · 部署','启动 · 杀进程 · 重启','清数据 · 截图 · UI 树 · 文本 · 存储路径','其他'];
+const COMMAND_GROUPS = ['构建 · 安装','应用控制','调试 · 截图 · UI','应用文件','设备输入','其他'];
 const GROUPS = [PROJECT_GROUP, ...COMMAND_GROUPS];
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -712,7 +709,6 @@ async function saveAll() {
     cfg.ui.allow_run_from_web = $('#s-allowrun').checked;
     cfg.ui.open_browser = $('#s-openbrowser').checked;
     await api('/api/config', {method:'POST', body: JSON.stringify(cfg)});
-    if (S.current) await saveProject(true);
     toast('已保存，新终端或按一次回车生效');
     await load();
   } catch (e) {
@@ -732,128 +728,74 @@ async function enableRun() {
 }
 
 function renderProject() {
-  const p = S.current;
-  if (!p) { renderSummary(null); return; }
-  $('#p-id').value = p.id || '';
-  $('#p-name').value = p.name || '';
-  $('#p-root').value = p.root || '';
-  $('#p-package').value = p.package || '';
-  $('#p-activity').value = p.activity || '';
-  $('#p-module').value = p.module || ':app';
-  $('#p-variant').value = p.variant || 'debug';
-  $('#p-apk').value = p.apk_glob || '';
-  $('#p-device').value = p.device || '';
-  lastDetectedRoot = (p.root || '').trim();
-  renderSummary(p);
-}
-
-function renderSummary(p, state) {
-  const box = $('#p-summary');
-  if (!p || !p.root) {
-    box.innerHTML = '<span class="d">填一个项目根目录，包名和启动 Activity 会自动识别。</span>';
+  const curId = (S.current && S.current.id) || '';
+  const defId = (S.config && S.config.default_project) || '';
+  const rank = p => (p.id === curId ? 0 : (p.id === defId ? 1 : 2));
+  const list = (S.projects || []).slice().sort((a, b) =>
+    rank(a) - rank(b) || String(a.name || a.id).localeCompare(String(b.name || b.id)));
+  const box = $('#project-list');
+  if (!list.length) {
+    box.innerHTML = '<div class="note" style="margin:14px 4px">还没有登记项目。cd 到项目目录执行一次 ak 会自动登记。</div>';
     return;
   }
-  const bits = [
-    ['名称', p.name || '-'],
-    ['包名', p.package || '未识别'],
-    ['模块', p.module || ':app'],
-    ['变体', p.variant || 'debug']
-  ];
-  let html = bits.map(([k, v]) =>
-    `<span class="d">${esc(k)} <b>${esc(v)}</b></span>`).join('');
-  if (state === 'checking') html = '<span class="d">识别中…</span>';
-  if (state === 'ok') html += '<span class="d ok">✓ 已识别，点「保存项目」生效</span>';
-  if (state === 'fail') html += '<span class="d bad">✗ 没找到 settings.gradle，确认路径</span>';
-  box.innerHTML = html;
+  box.innerHTML = list.map(p => {
+    const tags = [];
+    if (p.id === curId) tags.push('<span class="tag green">当前</span>');
+    if (p.id === defId) tags.push('<span class="tag">全局默认</span>');
+    const acts = [];
+    if (p.id !== defId) acts.push(`<button class="btn xs solid" onclick="setGlobalDefault('${esc(p.id)}')">设为全局默认</button>`);
+    acts.push(`<button class="btn xs" onclick="redetectProject('${esc(p.id)}')">重新识别</button>`);
+    acts.push(`<button class="btn xs danger" onclick="removeProject('${esc(p.id)}')">移除</button>`);
+    return `<div class="prow">
+      <div class="prow-main">
+        <div class="prow-name">${esc(p.name || p.id)}${tags.join('')}<span class="prow-acts">${acts.join('')}</span></div>
+        <div class="prow-path">${esc(p.root)}</div>
+      </div>
+      <div class="prow-meta">${esc(p.package || '未识别包名')}<br>${esc(p.module || ':app')} · ${esc(p.variant || 'debug')}</div>
+    </div>`;
+  }).join('');
 }
 
-let detectTimer = null;
-let detectSeq = 0;
-let lastDetectedRoot = '';
-
-function scheduleDetect(delay) {
-  clearTimeout(detectTimer);
-  detectTimer = setTimeout(() => detectProject(true), delay == null ? 500 : delay);
-}
-
-async function detectProject(silent, force) {
-  const root = $('#p-root').value.trim();
-  if (!root) { renderSummary(null); return false; }
-  if (!force && root === lastDetectedRoot) return true;
-  const seq = ++detectSeq;
-  renderSummary({root, name: '…'}, 'checking');
+async function setGlobalDefault(id) {
   try {
-    const p = await api('/api/detect', {method:'POST', body: JSON.stringify({path: root})});
-    if (seq !== detectSeq) return false;
-    lastDetectedRoot = root;
-    $('#p-id').value = p.id || '';
-    $('#p-name').value = p.name || '';
-    $('#p-package').value = p.package || '';
-    $('#p-activity').value = p.activity || '';
-    $('#p-module').value = p.module || ':app';
-    $('#p-variant').value = p.variant || 'debug';
-    $('#p-apk').value = p.apk_glob || '';
-    renderSummary(p, 'ok');
-    return true;
-  } catch (e) {
-    if (seq !== detectSeq) return false;
-    renderSummary({root}, 'fail');
-    if (!silent) toast('识别失败: ' + e.message, true);
-    return false;
-  }
-}
-
-async function reDetectProject() {
-  const root = $('#p-root').value.trim();
-  if (!root) return toast('先填写项目根目录', true);
-  if (!await detectProject(true, true)) return;
-  try {
-    await api('/api/project', {method:'POST', body: JSON.stringify(projectFromForm())});
-    toast('已重新识别并保存');
-    await load();
-  } catch (e) { toast('保存失败: ' + e.message, true); }
-}
-
-function projectFromForm() {
-  return {
-    id: $('#p-id').value.trim(),
-    name: $('#p-name').value.trim(),
-    root: $('#p-root').value.trim(),
-    package: $('#p-package').value.trim(),
-    activity: $('#p-activity').value.trim(),
-    module: $('#p-module').value.trim() || ':app',
-    variant: $('#p-variant').value.trim() || 'debug',
-    apk_glob: $('#p-apk').value.trim(),
-    device: $('#p-device').value.trim(),
-    env: (S.current && S.current.env) || {}
-  };
-}
-
-async function saveProject(silent) {
-  const p = projectFromForm();
-  if (!p.root) { if (!silent) toast('请填写项目根目录', true); return; }
-  const r = await api('/api/project', {method:'POST', body: JSON.stringify(p)});
-  if (!silent) { toast('项目已保存'); await load(); }
-  return r;
-}
-
-async function setDefaultProject() {
-  try {
-    const id = $('#p-id').value.trim();
-    if (!id) return toast('先保存项目', true);
     await api('/api/project/default', {method:'POST', body: JSON.stringify({id})});
-    toast('默认项目已更新');
+    toast('已设为全局默认：不在任何项目目录时走它');
     await load();
   } catch (e) { toast('失败: ' + e.message, true); }
 }
 
-async function deleteProject() {
-  const id = $('#p-id').value.trim();
-  if (!id) return;
-  if (!confirm('删除项目配置 ' + id + '？不会删除项目文件。')) return;
+async function redetectProject(id) {
+  const p = (S.projects || []).find(x => x.id === id);
+  if (!p) return;
+  try {
+    const fresh = await api('/api/detect', {method:'POST', body: JSON.stringify({path: p.root})});
+    fresh.id = p.id;
+    fresh.name = p.name || fresh.name;
+    fresh.env = p.env || {};
+    await api('/api/project', {method:'POST', body: JSON.stringify(fresh)});
+    toast('已重新识别：' + (fresh.package || '未识别包名'));
+    await load();
+  } catch (e) { toast('识别失败: ' + e.message, true); }
+}
+
+async function addProjectByPath() {
+  const root = $('#p-new-root').value.trim();
+  if (!root) return toast('先填项目根目录', true);
+  try {
+    const p = await api('/api/detect', {method:'POST', body: JSON.stringify({path: root})});
+    await api('/api/project', {method:'POST', body: JSON.stringify(p)});
+    $('#p-new-root').value = '';
+    toast('已添加 ' + (p.name || p.id));
+    await load();
+  } catch (e) { toast('添加失败: ' + e.message, true); }
+}
+
+async function removeProject(id) {
+  const p = (S.projects || []).find(x => x.id === id);
+  if (!confirm('从列表移除 ' + id + '？只删配置，不动项目文件。下次在该目录执行 ak 会自动登记。')) return;
   try {
     await api('/api/project?id=' + encodeURIComponent(id), {method:'DELETE'});
-    toast('已删除');
+    toast('已移除 ' + ((p && p.name) || id));
     await load();
   } catch (e) { toast('失败: ' + e.message, true); }
 }
@@ -1128,8 +1070,7 @@ function renderRunOutput(text) {
 
 load();
 
-$('#p-root').addEventListener('input', () => scheduleDetect(600));
-$('#p-root').addEventListener('blur', () => scheduleDetect(0));
+$('#p-new-root').addEventListener('keydown', e => { if (e.key === 'Enter') addProjectByPath(); });
 </script>
 </body>
 </html>

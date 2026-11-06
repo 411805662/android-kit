@@ -151,9 +151,11 @@ func (a *App) addProject(args []string) error {
 	fmt.Printf("%s project %s\n", verb, proj.ID)
 	fmt.Printf("  root:     %s\n", proj.Root)
 	fmt.Printf("  package:  %s\n", orDash(proj.Package))
-	fmt.Printf("  activity: %s\n", orDash(proj.Activity))
 	fmt.Printf("  module:   %s (%s)\n", proj.Module, proj.Variant)
 	fmt.Printf("  apk_glob: %s\n", proj.APKGlob)
+	if proj.Activity != "" {
+		fmt.Printf("  activity: %s (可选回退，启动走 launcher 默认)\n", proj.Activity)
+	}
 	if a.Config.DefaultProject == proj.ID {
 		fmt.Printf("  default:  yes\n")
 	}

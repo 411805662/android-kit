@@ -22,7 +22,7 @@ ss       # 截图
 ui       # 截图 + UI 树，输出 H5 对照链接
 ```
 
-项目在哪个目录、包名是什么、Activity 叫什么，全部从配置里解析；换项目只改配置，命令本身不用动。底层优先调用官方 Android CLI，没有则回退 Gradle + adb。
+项目在哪个目录、包名是什么，全部从配置里解析；启动应用不需要知道 Activity，`ak open` 会让设备自己解析 launcher 默认 Activity。换项目只改配置，命令本身不用动。底层优先调用官方 Android CLI，没有则回退 Gradle + adb。
 
 `ak` 是完整命令入口，`ak web` 打开本地网页配置台。
 
@@ -51,10 +51,12 @@ irm https://cdn.jsdelivr.net/gh/411805662/android-kit@main/install.ps1 | iex
 ## 快速开始
 
 ```bash
-ak project add ~/dev/Android/MyApp --default   # 自动探测包名、Activity、模块、APK 路径
+ak project add ~/dev/Android/MyApp --default   # 给个目录就行，包名 / 模块 / APK 路径自动识别
 ak doctor                                      # 检查 adb / CLI / Java / 项目
 ak run                                         # 构建 + 安装 + 启动
 ```
+
+项目名默认取目录名，包名从 `build.gradle` / `AndroidManifest.xml` 读取，都不用填。
 
 多项目：
 
@@ -97,7 +99,7 @@ ak project list
 
 | 快捷键 | 命令 | 作用 |
 |---|---|---|
-| `o` | `ak open` | 启动应用 |
+| `o` | `ak open` | 启动应用（设备解析 launcher 默认 Activity，不用配 Activity） |
 | `k` | `ak stop` | 杀进程 |
 | `ko` | `ak restart` | 重启应用 |
 
@@ -152,6 +154,7 @@ ak web
 
 - 只监听 `127.0.0.1` 随机端口，带一次性 token（写入 `~/.android-kit/web.token`，0600）。
 - 三个 tab：**项目**（项目命令、项目设置、全局设置、存储路径）、**命令**（构建 / 启动 / 清数据 / 其他分组）、**UI 截图**（产物画廊）。
+- **项目设置只填项目根目录**，名称取目录名，包名 / 模块 / 变体自动识别后回显；其余参数收在「高级」里，一般不用动。
 - 表格列顺序统一为：名称 / ak 命令 / 快捷键 / 操作 / 实际命令。内置命令的实际命令由项目配置生成，只读；自定义行可自由编辑。
 - 表格底部可以加行：从还没用过的 ak 命令里挑，或选「自定义（空白）」自己写一条。
 - 每行可执行、复制 `ak` 命令、复制实际命令；执行结果在底部抽屉里显示。
@@ -202,7 +205,7 @@ ak unset --purge       # 连配置和项目列表一起删除
 
 ```bash
 go build -o bin/android-kit .
-./scripts/build-release.sh 0.2.14
+./scripts/build-release.sh 0.2.15
 ```
 
 推送 `v*` tag 会触发 GitHub Actions 构建 macOS / Linux / Windows 产物并上传 Release。

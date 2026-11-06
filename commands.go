@@ -116,6 +116,27 @@ func pickActivity(out, marker string) string {
 	return ""
 }
 
+// launcherActivity 让设备自己解析这个包的 launcher 默认 Activity，返回 com.pkg/.Act。
+// 这样项目配置里不需要写死 Activity，换 Activity、改包名都不影响启动。
+func (a *App) launcherActivity(proj *Project) string {
+	if proj == nil || proj.Package == "" {
+		return ""
+	}
+	out, err := a.adbCapture(proj, "shell", "cmd", "package", "resolve-activity", "--brief",
+		"-a", "android.intent.action.MAIN", "-c", "android.intent.category.LAUNCHER", proj.Package)
+	if err != nil {
+		return ""
+	}
+	for _, line := range strings.Split(out, "\n") {
+		m := reActivityRef.FindStringSubmatch(line)
+		if m == nil || m[1] != proj.Package {
+			continue
+		}
+		return normalizeActivityRef(m[1], m[2])
+	}
+	return ""
+}
+
 func normalizeActivityRef(pkg, act string) string {
 	if strings.HasPrefix(act, pkg+".") {
 		act = "." + strings.TrimPrefix(act, pkg+".")
@@ -266,6 +287,10 @@ func (a *App) startApp(proj *Project) error {
 	if proj.Package == "" {
 		return fmt.Errorf("项目缺少 package，请运行 ak project add")
 	}
+	// 优先让设备解析 launcher 默认 Activity，配置里不用写死
+	if ref := a.launcherActivity(proj); ref != "" {
+		return a.adb(proj, "shell", "am", "start", "-n", ref)
+	}
 	if proj.Activity != "" {
 		if err := a.adb(proj, "shell", "am", "start", "-n", proj.Package+"/"+proj.Activity); err != nil {
 			return err
@@ -273,6 +298,22 @@ func (a *App) startApp(proj *Project) error {
 		return nil
 	}
 	return a.adb(proj, "shell", "monkey", "-p", proj.Package, "-c", "android.intent.category.LAUNCHER", "1")
+}
+
+// launchTarget 描述 ak open 实际会启动什么，有设备时直接给出设备解析结果。
+func (a *App) launchTarget(proj *Project) string {
+	if proj == nil || proj.Package == "" {
+		return "-"
+	}
+	if a.device(proj) != "" {
+		if ref := a.launcherActivity(proj); ref != "" {
+			return ref + " (launcher 默认)"
+		}
+	}
+	if proj.Activity != "" {
+		return normalizeActivityRef(proj.Package, proj.Activity) + " (配置值)"
+	}
+	return "launcher 默认 Activity"
 }
 
 func (a *App) cmdRun(args []string) error {
@@ -298,9 +339,6 @@ func (a *App) cmdRun(args []string) error {
 			return err
 		}
 		cmdArgs := []string{"run", apk}
-		if proj.Activity != "" {
-			cmdArgs = append(cmdArgs, "--activity", proj.Activity)
-		}
 		if dev := a.device(proj); dev != "" {
 			cmdArgs = append(cmdArgs, "--device", dev)
 		}
@@ -860,7 +898,7 @@ func (a *App) cmdStatus(args []string) error {
 		fmt.Printf("项目:   %s (%s)\n", proj.Name, proj.ID)
 		fmt.Printf("路径:   %s\n", proj.Root)
 		fmt.Printf("包名:   %s\n", orDash(proj.Package))
-		fmt.Printf("Activity: %s\n", orDash(proj.Activity))
+		fmt.Printf("启动:   %s\n", a.launchTarget(proj))
 		fmt.Printf("模块:   %s   变体: %s\n", orDash(proj.Module), orDash(proj.Variant))
 		if apk, err := a.Store.APK(proj); err == nil {
 			fmt.Printf("APK:    %s\n", apk)
@@ -905,7 +943,8 @@ func (a *App) cmdDoctor(args []string) error {
 		add("项目目录", isDir(proj.Root), proj.Root, "ak project add <path> 重新登记")
 		add("gradlew", a.Paths.GradleWrapper(proj) != "", printable(a.Paths.GradleWrapper(proj)), "项目需要 Gradle Wrapper")
 		add("package", proj.Package != "", orDash(proj.Package), "编辑 "+a.Paths.ProjectsDir+"/"+proj.ID+".toml")
-		add("activity", proj.Activity != "", orDash(proj.Activity), "可留空，启动时自动用 monkey")
+		target := a.launchTarget(proj)
+		add("启动 Activity", target != "-", target, "留空即可，ak open 会解析 launcher 默认 Activity")
 		if _, err := a.Store.APK(proj); err == nil {
 			add("APK", true, "found", "")
 		} else {

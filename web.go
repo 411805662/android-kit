@@ -155,7 +155,6 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 	}
 	root := "<project>"
 	pkg := "<package>"
-	act := "<activity>"
 	module := ":app"
 	variant := "debug"
 	apk := "<apk>"
@@ -163,7 +162,6 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 	if proj != nil {
 		root = proj.Root
 		pkg = orDash(proj.Package)
-		act = orDash(proj.Activity)
 		module = proj.Module
 		variant = proj.Variant
 		dev = a.device(proj)
@@ -200,14 +198,15 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 	buildCmd := gradleBuild
 	cleanCmd := gradleClean
 	installCmd := "adb install -r -t -d " + apk
-	runCmd := gradleBuild + " && " + installCmd + " && adb shell am start -n " + pkg + "/" + act
+	startCmd := "adb shell am start -n $(adb shell cmd package resolve-activity --brief -c android.intent.category.LAUNCHER " + pkg + " | tail -1)"
+	runCmd := gradleBuild + " && " + installCmd + " && " + startCmd
 	layoutCmd := "adb shell uiautomator dump /sdcard/android-kit-ui.xml && adb exec-out cat /sdcard/android-kit-ui.xml"
 	shotCmd := "adb exec-out screencap -p > " + root + "/android-kit/screenshots/<time>.png"
 	if engine == "android" {
 		buildCmd = "android build " + task
 		cleanCmd = "android build " + mod + ":clean && android build " + task
 		installCmd = "android install " + apk + devFlag
-		runCmd = "android run " + apk + " --activity " + act + devFlag
+		runCmd = "android run " + apk + devFlag
 		layoutCmd = "android layout -p" + devFlag
 		shotCmd = "android screen capture --output " + root + "/android-kit/screenshots/<time>.png" + devFlag
 	}
@@ -231,9 +230,9 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 		{ID: "uninstall", Target: "uninstall", Group: groupDeploy, Title: "卸载 App", Desc: "卸载手机上的应用；卸载本工具用 ak unset", Command: "adb uninstall " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "uninstall"},
 		{ID: "run", Target: "run", Group: groupDeploy, Title: "构建 + 安装 + 启动", Desc: "一条命令完成日常部署", Command: runCmd, Engine: engine, Available: true, Runnable: true, Run: "run"},
 
-		{ID: "open", Target: "open", Group: groupApp, Title: "启动应用", Desc: "有 Activity 用 am start，否则用 monkey", Command: "adb shell am start -n " + pkg + "/" + act, Engine: "adb", Available: true, Runnable: true, Run: "open"},
+		{ID: "open", Target: "open", Group: groupApp, Title: "启动应用", Desc: "启动 launcher 默认 Activity，不用配 Activity", Command: startCmd, Engine: "adb", Available: true, Runnable: true, Run: "open"},
 		{ID: "stop", Target: "stop", Group: groupApp, Title: "杀进程", Desc: "force-stop 当前包名", Command: "adb shell am force-stop " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "stop"},
-		{ID: "restart", Target: "restart", Group: groupApp, Title: "重启应用", Desc: "杀进程后立即启动", Command: "adb shell am force-stop " + pkg + " && adb shell am start -n " + pkg + "/" + act, Engine: "adb", Available: true, Runnable: true, Run: "restart"},
+		{ID: "restart", Target: "restart", Group: groupApp, Title: "重启应用", Desc: "杀进程后立即启动", Command: "adb shell am force-stop " + pkg + " && " + startCmd, Engine: "adb", Available: true, Runnable: true, Run: "restart"},
 
 		{ID: "clear", Target: "clear", Group: groupDebug, Title: "清除数据", Desc: "pm clear，登录态会丢失", Command: "adb shell pm clear " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "clear"},
 		{ID: "screenshot", Target: "screenshot", Group: groupDebug, Title: "截图", Desc: "保存到 android-kit/screenshots", Command: shotCmd, Engine: engine, Available: true, Runnable: true, Run: "screenshot"},

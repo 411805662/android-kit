@@ -171,6 +171,21 @@ details .body{padding:0 16px 16px}
 .field input,.field select{background:var(--input-bg);border:1px solid var(--input-bd);border-radius:7px;padding:7px 9px;outline:none;width:100%}
 .field input:focus,.field select:focus{border-color:#4d6bd8}
 .field .hint{font-size:10.5px;color:var(--muted-2)}
+.p-root-field{grid-column:1/-1}
+.detected{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:11.5px;color:var(--muted);
+  min-height:20px;align-items:center}
+.detected .d{display:inline-flex;gap:6px;align-items:baseline;min-width:0}
+.detected .d b{font-weight:600;color:var(--text-soft);font-family:ui-monospace,Menlo,monospace;
+  word-break:break-all}
+.detected .bad{color:var(--danger)}
+.detected .ok{color:var(--green)}
+details.adv{margin-top:14px;border-top:1px solid var(--line-soft);padding-top:10px}
+details.adv summary{cursor:pointer;font-size:11.5px;color:var(--muted);list-style:none}
+details.adv summary::-webkit-details-marker{display:none}
+details.adv summary::before{content:"▸ ";}
+details.adv[open] summary::before{content:"▾ ";}
+details.adv summary:hover{color:var(--text-soft)}
+details.adv .form{margin-top:12px}
 .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center}
 .note{color:var(--muted);font-size:11.5px;line-height:1.7;margin-top:10px}
 .note b{color:var(--text-soft)}
@@ -270,26 +285,34 @@ details .body{padding:0 16px 16px}
 
     <div class="split2">
       <section class="card pane-card">
-        <div class="card-head">项目设置 <span class="note">影响实际命令</span></div>
+        <div class="card-head">项目设置 <span class="note">填目录就行，其余自动识别</span></div>
         <div class="body">
           <div class="form">
-            <div class="field"><label>项目 ID</label><input id="p-id" placeholder="my-app"></div>
-            <div class="field"><label>名称</label><input id="p-name" placeholder="My App"></div>
-            <div class="field"><label>项目根目录</label><input id="p-root" placeholder="/Users/you/dev/Android/MyApp"></div>
-            <div class="field"><label>包名</label><input id="p-package" placeholder="com.example.app"></div>
-            <div class="field"><label>启动 Activity</label><input id="p-activity" placeholder=".MainActivity"></div>
-            <div class="field"><label>Gradle 模块</label><input id="p-module" placeholder=":app"></div>
-            <div class="field"><label>构建变体</label><input id="p-variant" placeholder="debug"></div>
-            <div class="field"><label>APK glob</label><input id="p-apk" placeholder="app/build/outputs/apk/debug/*.apk"></div>
-            <div class="field"><label>默认设备 serial</label><input id="p-device" placeholder="留空自动选择"></div>
+            <div class="field p-root-field">
+              <label>项目根目录</label>
+              <input id="p-root" placeholder="/Users/you/dev/Android/MyApp" spellcheck="false" autocomplete="off">
+            </div>
           </div>
+          <div class="detected" id="p-summary"></div>
           <div class="actions">
-            <button class="btn" onclick="detectProject()">自动探测</button>
             <button class="btn primary" onclick="saveProject()">保存项目</button>
             <button class="btn" onclick="setDefaultProject()">设为默认</button>
             <button class="btn danger" onclick="deleteProject()">删除项目</button>
           </div>
-          <div class="note">包名、Activity、模块、变体都会直接改变「实际命令」。改完保存，表格立即刷新。</div>
+          <details class="adv">
+            <summary>高级（一般不用改）</summary>
+            <div class="form">
+              <div class="field"><label>项目 ID</label><input id="p-id" placeholder="my-app"></div>
+              <div class="field"><label>名称</label><input id="p-name" placeholder="My App"></div>
+              <div class="field"><label>包名</label><input id="p-package" placeholder="com.example.app"></div>
+              <div class="field"><label>启动 Activity（留空走 launcher 默认）</label><input id="p-activity" placeholder="留空即可"></div>
+              <div class="field"><label>Gradle 模块</label><input id="p-module" placeholder=":app"></div>
+              <div class="field"><label>构建变体</label><input id="p-variant" placeholder="debug"></div>
+              <div class="field"><label>APK glob</label><input id="p-apk" placeholder="app/build/outputs/apk/debug/*.apk"></div>
+              <div class="field"><label>默认设备 serial</label><input id="p-device" placeholder="留空自动选择"></div>
+            </div>
+            <div class="note">包名、模块、变体都会直接改变「实际命令」。启动 Activity 一般留空，<code>ak open</code> 会让设备自己解析 launcher 默认 Activity。</div>
+          </details>
         </div>
       </section>
 
@@ -714,7 +737,7 @@ async function switchProject(id) {
 
 function renderProject() {
   const p = S.current;
-  if (!p) return;
+  if (!p) { renderSummary(null); return; }
   $('#p-id').value = p.id || '';
   $('#p-name').value = p.name || '';
   $('#p-root').value = p.root || '';
@@ -724,6 +747,62 @@ function renderProject() {
   $('#p-variant').value = p.variant || 'debug';
   $('#p-apk').value = p.apk_glob || '';
   $('#p-device').value = p.device || '';
+  lastDetectedRoot = (p.root || '').trim();
+  renderSummary(p);
+}
+
+function renderSummary(p, state) {
+  const box = $('#p-summary');
+  if (!p || !p.root) {
+    box.innerHTML = '<span class="d">填一个项目根目录，包名和启动 Activity 会自动识别。</span>';
+    return;
+  }
+  const bits = [
+    ['名称', p.name || '-'],
+    ['包名', p.package || '未识别'],
+    ['模块', p.module || ':app'],
+    ['变体', p.variant || 'debug']
+  ];
+  let html = bits.map(([k, v]) =>
+    `<span class="d">${esc(k)} <b>${esc(v)}</b></span>`).join('');
+  if (state === 'checking') html = '<span class="d">识别中…</span>';
+  if (state === 'ok') html += '<span class="d ok">✓ 已识别，点「保存项目」生效</span>';
+  if (state === 'fail') html += '<span class="d bad">✗ 没找到 settings.gradle，确认路径</span>';
+  box.innerHTML = html;
+}
+
+let detectTimer = null;
+let detectSeq = 0;
+let lastDetectedRoot = '';
+
+function scheduleDetect(delay) {
+  clearTimeout(detectTimer);
+  detectTimer = setTimeout(() => detectProject(true), delay == null ? 500 : delay);
+}
+
+async function detectProject(silent) {
+  const root = $('#p-root').value.trim();
+  if (!root) { renderSummary(null); return; }
+  if (root === lastDetectedRoot) return;
+  const seq = ++detectSeq;
+  renderSummary({root, name: '…'}, 'checking');
+  try {
+    const p = await api('/api/detect', {method:'POST', body: JSON.stringify({path: root})});
+    if (seq !== detectSeq) return;
+    lastDetectedRoot = root;
+    $('#p-id').value = p.id || '';
+    $('#p-name').value = p.name || '';
+    $('#p-package').value = p.package || '';
+    $('#p-activity').value = p.activity || '';
+    $('#p-module').value = p.module || ':app';
+    $('#p-variant').value = p.variant || 'debug';
+    $('#p-apk').value = p.apk_glob || '';
+    renderSummary(p, 'ok');
+  } catch (e) {
+    if (seq !== detectSeq) return;
+    renderSummary({root}, 'fail');
+    if (!silent) toast('识别失败: ' + e.message, true);
+  }
 }
 
 function projectFromForm() {
@@ -747,22 +826,6 @@ async function saveProject(silent) {
   const r = await api('/api/project', {method:'POST', body: JSON.stringify(p)});
   if (!silent) { toast('项目已保存'); await load(); }
   return r;
-}
-
-async function detectProject() {
-  try {
-    const root = $('#p-root').value.trim();
-    if (!root) return toast('先填写项目根目录', true);
-    const p = await api('/api/detect', {method:'POST', body: JSON.stringify({path: root})});
-    $('#p-id').value = p.id || $('#p-id').value;
-    $('#p-name').value = p.name || $('#p-name').value;
-    $('#p-package').value = p.package || '';
-    $('#p-activity').value = p.activity || '';
-    $('#p-module').value = p.module || ':app';
-    $('#p-variant').value = p.variant || 'debug';
-    $('#p-apk').value = p.apk_glob || '';
-    toast('探测完成，确认后保存');
-  } catch (e) { toast('探测失败: ' + e.message, true); }
 }
 
 async function setDefaultProject() {
@@ -1046,6 +1109,9 @@ function renderRunOutput(text) {
 }
 
 load();
+
+$('#p-root').addEventListener('input', () => scheduleDetect(600));
+$('#p-root').addEventListener('blur', () => scheduleDetect(0));
 </script>
 </body>
 </html>

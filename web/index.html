@@ -282,18 +282,42 @@ details .body{padding:0 16px 16px}
 .artcard .thumbwrap img{display:block;width:100%;height:auto;background:var(--code-bg)}
 .artcard .thumbwrap.noimg{aspect-ratio:9/19.5}
 .artcard .thumbwrap.noimg::before{content:"无法预览";position:absolute;inset:0;display:grid;place-items:center;color:var(--muted-2);font-size:11.5px}
-.artcard .thumbbar{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-between;
-  align-items:center;gap:6px;padding:6px 8px;background:linear-gradient(180deg,transparent,#000000d0 55%)}
-.artcard .thumbbar .btn{text-decoration:none;padding:4px 10px;font-size:11.5px;border-radius:7px;
-  background:var(--surface)dd;border:1px solid var(--btn-bd-hi)}
-.artcard .thumbbar .btn.primary{background:linear-gradient(135deg,#6f8fff,#5b7cf0);border-color:#6f8fff;color:#fff}
+.artcard .thumbimg{cursor:zoom-in}
+.artcard .kindtag{position:absolute;top:8px;left:8px;z-index:2;padding:2px 8px;border-radius:999px;
+  background:#000000a8;border:1px solid #ffffff2b;color:#e8eaff;font-size:10.5px;letter-spacing:.4px;
+  pointer-events:none}
 .artcard .artdel{position:absolute;top:8px;right:8px;z-index:3;width:24px;height:24px;border-radius:50%;
   border:1px solid #ffffff26;background:#000000a8;color:var(--text);font-size:14px;line-height:1;
   display:grid;place-items:center;padding:0}
 .artcard .artdel:hover{background:var(--danger);border-color:var(--danger);color:#fff}
-.artcard .artmeta{padding:8px 10px 10px}
-.artcard .artmeta .nm{font-size:11.5px;word-break:break-all;color:var(--text-soft)}
-.artcard .artmeta .tm{font-size:10.5px;color:var(--muted);margin-top:3px}
+
+.apeek-mask{position:fixed;inset:0;z-index:44;background:#0000004d;opacity:0;pointer-events:none;
+  transition:opacity .22s ease}
+.apeek-mask.on{opacity:1;pointer-events:auto}
+.apeek{position:fixed;top:0;right:0;bottom:0;z-index:45;width:min(420px,92vw);
+  display:flex;flex-direction:column;background:var(--panel);border-left:1px solid var(--line-strong);
+  box-shadow:-24px 0 60px var(--shadow);transform:translateX(100%);transition:transform .24s ease}
+.apeek.on{transform:none}
+.apeek-head{display:flex;align-items:flex-start;gap:10px;padding:16px 18px 12px;border-bottom:1px solid var(--line)}
+.apeek-head b{font-size:14px}
+.apeek-sub{margin-top:3px;color:var(--muted);font-size:11px;word-break:break-all;line-height:1.5}
+.apeek-close{flex:none;width:28px;height:28px;border-radius:8px;border:1px solid var(--line);
+  background:var(--btn-bg);color:var(--muted);display:grid;place-items:center;font-size:13px}
+.apeek-close:hover{background:var(--btn-hover);color:var(--text)}
+.apeek-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 18px 0}
+.apeek-actions.single{grid-template-columns:1fr}
+.apeek-actions:empty{display:none}
+.apeek-btn{display:flex;align-items:center;justify-content:center;height:44px;border-radius:12px;
+  border:1px solid var(--btn-bd-hi);background:var(--btn-bg);color:var(--text);font-size:13.5px;
+  font-weight:650;text-decoration:none;letter-spacing:.2px;transition:.15s}
+.apeek-btn:hover{background:var(--btn-hover);border-color:var(--accent)}
+.apeek-btn.primary{background:linear-gradient(135deg,#7c9cff,#5b7cf0);border-color:#7c9cff;color:#fff}
+.apeek-btn.primary:hover{filter:brightness(1.06);border-color:#9db4ff}
+.apeek-body{flex:1;overflow:auto;padding:14px 18px 24px}
+.apeek-shot{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--code-bg)}
+.apeek-shot img{display:block;width:100%;height:auto}
+.apeek-shot .miss{display:grid;place-items:center;min-height:220px;color:var(--muted-2);font-size:12px}
+.apeek-hint{margin-top:10px;color:var(--muted);font-size:11px;text-align:center}
 .toast{position:fixed;right:20px;bottom:20px;background:var(--chip-bg);border:1px solid var(--line-strong);
   padding:10px 14px;border-radius:9px;box-shadow:0 12px 40px var(--shadow);opacity:0;transform:translateY(8px);
   transition:.2s;pointer-events:none;max-width:460px;font-size:12.5px;z-index:60}
@@ -425,7 +449,7 @@ details .body{padding:0 16px 16px}
   <div class="tabpane" id="pane-artifacts">
     <div class="actions" style="margin:0 0 12px">
       <button class="btn danger" onclick="clearArtifacts()">清空所有</button>
-      <span class="note" style="margin:0">显示顶栏所选项目的产物；点缩略图看大图，UI 树可打开 H5 对照或 JSON，右上角 × 删除单张。</span>
+      <span class="note" style="margin:0">显示顶栏所选项目的产物；点缩略图在右侧预览，UI 树可打开 H5 对照或 JSON，右上角 × 删除单张。</span>
       <span class="spacer"></span>
       <button class="btn" onclick="loadArtifacts()">刷新产物</button>
     </div>
@@ -433,6 +457,24 @@ details .body{padding:0 16px 16px}
   </div>
 
 </main>
+
+<div class="apeek-mask" id="apeek-mask" onclick="closePeek()"></div>
+<aside class="apeek" id="apeek" aria-hidden="true">
+  <div class="apeek-head">
+    <div style="min-width:0">
+      <b id="apeek-title">预览</b>
+      <div class="apeek-sub" id="apeek-sub"></div>
+    </div>
+    <div class="spacer"></div>
+    <button class="apeek-close" title="关闭" onclick="closePeek()">✕</button>
+  </div>
+  <div class="apeek-actions" id="apeek-actions"></div>
+  <div class="apeek-body">
+    <div class="apeek-shot"><img id="apeek-img" alt="预览"
+      onclick="if(this.dataset.href)window.open(this.dataset.href,'_blank','noopener')"></div>
+    <div class="apeek-hint" id="apeek-hint">点击图片可在新窗口打开原图</div>
+  </div>
+</aside>
 
 <div class="drawer" id="drawer">
   <div class="drawer-head">
@@ -720,6 +762,7 @@ function cmdRowHTML(r, i) {
 
 function showTab(tab) {
   activeTab = (tab === 'commands' || tab === 'artifacts') ? tab : 'project';
+  closePeek();
   $('#tab-project').classList.toggle('active', activeTab === 'project');
   $('#tab-commands').classList.toggle('active', activeTab === 'commands');
   $('#tab-artifacts').classList.toggle('active', activeTab === 'artifacts');
@@ -1151,6 +1194,9 @@ function pathTreeHTML(entries, home) {
   return lines.length ? lines.join('') : '<span class="lb">-</span>';
 }
 
+let ART_BY_PATH = new Map();
+let peekPath = '';
+
 async function loadArtifacts() {
   try {
     const state = await api('/api/artifacts');
@@ -1169,6 +1215,8 @@ function artifactURL(url) {
 function renderArtifacts() {
   // 截图 tab 跟随顶栏所选项目；没选就回退到全局默认
   const all = (S && S.groups) || [];
+  ART_BY_PATH = new Map();
+  all.forEach(g => (g.artifacts || []).forEach(it => ART_BY_PATH.set(it.path, it)));
   const curId = (S.current && S.current.id) || '';
   const defId = (S.config && S.config.default_project) || '';
   const target = curId || defId;
@@ -1201,31 +1249,17 @@ function renderArtifacts() {
 function artCard(item) {
   const isUI = item.kind === 'ui';
   const isJSON = isUI && /\.json$/i.test(item.name);
-  const isXML = isUI && /\.xml$/i.test(item.name);
   const thumbURL = artifactURL(item.shot_url || item.url);
-  const openURL = isJSON
-    ? artifactURL(item.viewer_url || ('/viewer?ui=' + encodeURIComponent(item.path) + (item.project_id ? '&project=' + encodeURIComponent(item.project_id) : '')))
-    : artifactURL(item.url);
-  const bar = isJSON
-    ? `<div class="thumbbar">
-        <a class="btn xs primary" href="${esc(openURL)}" target="_blank" rel="noopener">UI 树</a>
-        <a class="btn xs" href="${esc(artifactURL(item.url + '&pretty=1'))}" target="_blank" rel="noopener">JSON</a>
-      </div>`
-    : (isXML
-      ? `<div class="thumbbar"><span class="btn xs">XML</span><a class="btn xs" href="${esc(openURL)}" target="_blank" rel="noopener">打开</a></div>`
-      : '');
-  return `<div class="artcard">
-    <button class="artdel" title="删除" data-path="${esc(item.path)}" onclick="deleteArtifact(this.dataset.path)">×</button>
+  const tag = isUI ? `<span class="kindtag">${isJSON ? 'UI 树' : 'XML'}</span>` : '';
+  return `<div class="artcard" data-path="${esc(item.path)}" onclick="openPeekEl(this)" title="点击预览">
+    <button class="artdel" title="删除" data-path="${esc(item.path)}"
+      onclick="event.stopPropagation();deleteArtifact(this.dataset.path)">×</button>
+    ${tag}
     <div class="thumbwrap">
-      <a class="thumbimg" href="${esc(openURL)}" target="_blank" rel="noopener">
-        <img src="${esc(thumbURL)}" alt="${esc(item.name)}"
+      <div class="thumbimg">
+        <img src="${esc(thumbURL)}" alt="${esc(item.name)}" loading="lazy"
           onerror="this.closest('.thumbwrap').classList.add('noimg');this.remove()">
-      </a>
-      ${bar}
-    </div>
-    <div class="artmeta">
-      <div class="nm mono">${esc(item.name)}</div>
-      <div class="tm">${esc(fmtArtTime(item.mod_time))}</div>
+      </div>
     </div>
   </div>`;
 }
@@ -1238,10 +1272,70 @@ function fmtArtTime(value) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
+function openPeekEl(el) {
+  if (el && el.dataset) openPeek(el.dataset.path);
+}
+
+function openPeek(path) {
+  const item = ART_BY_PATH.get(path);
+  if (!item) return;
+  peekPath = path;
+  const isUI = item.kind === 'ui';
+  const isJSON = isUI && /\.json$/i.test(item.name);
+  const isXML = isUI && /\.xml$/i.test(item.name);
+  $('#apeek-title').textContent = isJSON ? 'UI 树' : (isXML ? 'XML' : '截图');
+  const bits = [item.name, fmtArtTime(item.mod_time)];
+  if (item.activity) bits.push(item.activity);
+  $('#apeek-sub').textContent = bits.filter(Boolean).join(' · ');
+
+  const shotURL = isUI ? (item.shot_url || '') : item.url;
+  const frame = $('.apeek-shot');
+  frame.querySelectorAll('.miss').forEach(el => el.remove());
+  const img = $('#apeek-img');
+  if (shotURL) {
+    img.style.display = '';
+    img.src = artifactURL(shotURL);
+    img.dataset.href = artifactURL(shotURL);
+    $('#apeek-hint').style.display = '';
+  } else {
+    img.style.display = 'none';
+    img.removeAttribute('src');
+    frame.insertAdjacentHTML('beforeend', '<div class="miss">这条 UI 树没有配对的截图</div>');
+    $('#apeek-hint').style.display = 'none';
+  }
+
+  const acts = [];
+  if (isJSON) {
+    const viewer = artifactURL(item.viewer_url || ('/viewer?ui=' + encodeURIComponent(item.path) +
+      (item.project_id ? '&project=' + encodeURIComponent(item.project_id) : '')));
+    acts.push(`<a class="apeek-btn primary" href="${esc(viewer)}" target="_blank" rel="noopener">UI 树</a>`);
+    acts.push(`<a class="apeek-btn" href="${esc(artifactURL(item.url + '&pretty=1'))}" target="_blank" rel="noopener">JSON</a>`);
+  } else if (isXML) {
+    acts.push(`<a class="apeek-btn primary" href="${esc(artifactURL(item.url))}" target="_blank" rel="noopener">打开 XML</a>`);
+  } else {
+    acts.push(`<a class="apeek-btn primary" href="${esc(artifactURL(item.url))}" target="_blank" rel="noopener">打开原图</a>`);
+  }
+  const bar = $('#apeek-actions');
+  bar.className = 'apeek-actions' + (acts.length === 1 ? ' single' : '');
+  bar.innerHTML = acts.join('');
+
+  $('#apeek').classList.add('on');
+  $('#apeek').setAttribute('aria-hidden', 'false');
+  $('#apeek-mask').classList.add('on');
+}
+
+function closePeek() {
+  peekPath = '';
+  $('#apeek').classList.remove('on');
+  $('#apeek').setAttribute('aria-hidden', 'true');
+  $('#apeek-mask').classList.remove('on');
+}
+
 async function deleteArtifact(path) {
   if (!path) return;
   try {
     await api('/api/artifact?path=' + encodeURIComponent(path), {method: 'DELETE'});
+    if (peekPath === path) closePeek();
     toast('已删除');
     loadArtifacts();
   } catch (e) { toast('删除失败: ' + e.message, true); }
@@ -1387,6 +1481,7 @@ function renderRunOutput(text) {
 load();
 
 $('#p-new-root').addEventListener('keydown', e => { if (e.key === 'Enter') addProjectByPath(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePeek(); });
 </script>
 </body>
 </html>

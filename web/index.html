@@ -100,10 +100,16 @@ main{max-width:1500px;margin:0 auto;padding:18px 22px}
 .tablecard{overflow:auto}
 .tablecard>table{min-width:920px}
 table.grid-table{table-layout:fixed}
-.w-name{width:200px}
+.w-name{width:170px}
 .w-ak{width:150px}
 .w-alias{width:160px}
-.w-ops{width:190px}
+.w-ops{width:200px}
+.drag-h{display:inline-block;margin-right:6px;color:var(--muted-2);cursor:grab;
+  user-select:none;font-size:10px;letter-spacing:-1px}
+.drag-h:hover{color:var(--text)}
+tr.row.dragging td{opacity:.4}
+tr.drag-over{border-top:2px solid var(--accent)}
+tr.drag-over td{background:var(--chip-bg)}
 table{width:100%;border-collapse:collapse}
 thead th{background:var(--surface);text-align:left;
   color:var(--muted);font-weight:600;font-size:11.5px;letter-spacing:.4px;
@@ -183,26 +189,42 @@ details .body{padding:0 16px 16px}
 
 .secgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 @media(max-width:900px){.secgrid{grid-template-columns:1fr}}
-.sec{border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+.sec{border:1px solid var(--line);border-radius:12px;background:var(--panel)}
 .sec-head{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface);
   border-bottom:1px solid var(--line);font-weight:700;font-size:12px;letter-spacing:.8px;color:var(--text-soft)}
+.sec-head{border-radius:11px 11px 0 0}
 .sec-head::before{content:"";width:3px;height:11px;border-radius:2px;background:var(--accent);flex:none}
-.sec-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 150px auto;gap:4px 12px;
+.sec-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 110px auto;gap:4px 12px;
   align-items:center;padding:9px 14px;border-bottom:1px solid var(--chip-bg)}
 .sec-row:last-child{border-bottom:0}
+.sec-row .c-name,.sec-row .c-ak,.sec-row .c-alias,.sec-row .c-ops{width:auto;min-width:0}
+.sec-row .c-name,.sec-row .c-ak,.sec-row .c-alias{overflow:hidden}
+.sec-row .c-name{white-space:nowrap}
+.sec-row .c-name b{white-space:nowrap}
+.sec-row .c-ak code{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sec-row .aliaswrap{width:100%}
-.sec-row input.alias{width:100%}
+.sec-row input.alias{width:100%;min-width:0}
 .sec-cmd{grid-column:1/-1}
 .sec-cmd input.cmd{width:100%}
-@media(max-width:700px){.sec-row{grid-template-columns:minmax(0,1fr) auto}
-  .sec-row .c-alias{grid-column:1/-1}
-  .sec-row .c-ak{grid-column:1/-1}}
+@media(max-width:1100px){.sec-row{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) 90px auto;gap:4px 8px}}
+@media(max-width:700px){
+  .sec-row{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(48px,64px) auto;gap:4px 6px;padding:8px 10px}
+  .sec-row .c-name b{font-size:12px}
+  .sec-row .c-ak code{font-size:11px}
+  .c-ops .btn.xs{padding:4px 7px;font-size:11px}
+}
 .copybtn{position:relative}
+.copybtn[data-tip]:hover::before{
+  content:"";position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%) rotate(45deg);
+  width:10px;height:10px;background:var(--panel2);
+  border-left:1px solid var(--line-strong);border-bottom:1px solid var(--line-strong);
+  z-index:59;pointer-events:none}
 .copybtn[data-tip]:hover::after{
-  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 9px);left:50%;transform:translateX(-50%);
   background:var(--panel2);border:1px solid var(--line-strong);color:var(--text-soft);
-  padding:6px 10px;border-radius:8px;font-size:11px;line-height:1.5;white-space:pre-wrap;
-  max-width:560px;z-index:30;box-shadow:0 8px 30px var(--shadow);
+  padding:6px 12px;border-radius:8px;font-size:11.5px;white-space:nowrap;
+  max-width:min(640px,calc(100vw - 32px));overflow:hidden;text-overflow:ellipsis;
+  z-index:60;box-shadow:0 8px 30px var(--shadow);
   font-family:ui-monospace,Menlo,monospace;pointer-events:none}
 .note{color:var(--muted);font-size:11.5px;line-height:1.7;margin-top:10px}
 .note b{color:var(--text-soft)}
@@ -211,7 +233,9 @@ details .body{padding:0 16px 16px}
 .kv .v{word-break:break-all}
 
 .palias{width:132px;flex:none}
-.palias input.alias{border-color:var(--input-bd);background:var(--input-bg);font-weight:600}
+.palias input.alias{border-color:transparent;background:transparent;font-weight:600}
+.palias:hover input.alias,.palias:focus-within input.alias{border-color:var(--input-bd);background:var(--input-bg)}
+.palias input.alias.dup{border-color:var(--danger-bd);background:var(--danger-bg);color:var(--danger-txt)}
 .palias input.alias::placeholder{font-weight:400}
 .palias:hover .x,.palias:focus-within .x{opacity:1;pointer-events:auto}
 .pname-sub{font-size:11px;color:var(--muted);margin-top:3px;
@@ -327,19 +351,19 @@ details .body{padding:0 16px 16px}
     </div>
 
     <div class="card tablecard" style="margin-top:14px">
-      <div class="card-head">项目列表 <span class="note">cd 到目录执行 ak 会自动登记，包名只解析一次</span></div>
+      <div class="card-head">项目列表 <span class="note">拖动手柄可调整顺序；cd 到目录执行 ak 会自动登记，包名只解析一次</span></div>
       <table class="grid-table">
         <colgroup><col class="w-name"><col class="w-ak"><col class="w-alias"><col class="w-ops"><col></colgroup>
         <thead>
           <tr>
             <th class="c-name">名称</th>
-            <th class="c-ak">ak 命令</th>
+            <th class="c-ak"></th>
             <th class="c-alias">快捷键</th>
             <th class="c-ops">操作</th>
             <th class="c-actual">实际命令（点击复制）</th>
           </tr>
         </thead>
-        <tbody id="project-list"></tbody>
+        <tbody id="project-list" ondragover="onProjDragOver(event)" ondrop="onProjDrop(event)"></tbody>
       </table>
       <div class="addbar">
         <span class="lbl">添加项目</span>
@@ -371,7 +395,7 @@ details .body{padding:0 16px 16px}
       </div>
     </details>
 
-    <details id="d-paths">
+    <details id="d-paths" open>
       <summary>存储路径</summary>
       <div class="body">
         <div class="note" style="margin:0 0 6px"><b>工具自身</b></div>
@@ -702,6 +726,7 @@ function showTab(tab) {
   $('#pane-artifacts').classList.toggle('active', activeTab === 'artifacts');
   if (location.hash !== '#' + activeTab) history.replaceState(null, '', '#' + activeTab);
   if (activeTab === 'artifacts') loadArtifacts();
+  document.querySelectorAll('.tablecard').forEach(el => { el.scrollLeft = 0; });
 }
 
 window.addEventListener('hashchange', () => {
@@ -829,13 +854,6 @@ async function saveAll() {
     cfg.aliases = cfg.aliases || {};
     cfg.aliases.items = collectItems();
     cfg.aliases.preset = 'custom';
-    cfg.prefer = $('#s-prefer').value;
-    cfg.android_cli = cfg.android_cli || {};
-    cfg.android_cli.min_version = $('#s-minver').value.trim() || '1.1.0';
-    cfg.android_cli.path = $('#s-clipath').value.trim();
-    cfg.ui = cfg.ui || {};
-    cfg.ui.allow_run_from_web = $('#s-allowrun').checked;
-    cfg.ui.open_browser = $('#s-openbrowser').checked;
     await api('/api/config', {method:'POST', body: JSON.stringify(cfg)});
     toast('已保存，新终端或按一次回车生效');
     await load();
@@ -855,12 +873,20 @@ async function enableRun() {
   } catch (e) { toast('失败: ' + e.message, true); }
 }
 
+// 项目列表顺序：优先用保存的顺序（网页端可拖拽调整），没有保存的排在后面按名称
+function projOrderList() {
+  const all = (S.projects || []).slice();
+  const order = S.order || [];
+  const byId = id => { const i = all.findIndex(p => p.id === id); return i >= 0 ? all.splice(i, 1)[0] : null; };
+  const sorted = order.map(byId).filter(Boolean);
+  const rest = all.slice().sort((a, b) => String(a.name || a.id).localeCompare(String(b.name || b.id)));
+  return sorted.concat(rest);
+}
+
 function renderProject() {
   const curId = (S.current && S.current.id) || '';
   const defId = (S.config && S.config.default_project) || '';
-  const rank = p => (p.id === curId ? 0 : (p.id === defId ? 1 : 2));
-  const list = (S.projects || []).slice().sort((a, b) =>
-    rank(a) - rank(b) || String(a.name || a.id).localeCompare(String(b.name || b.id)));
+  const list = projOrderList();
   const box = $('#project-list');
   if (!list.length) {
     box.innerHTML = '<tr><td colspan="5" style="padding:26px;text-align:center;color:var(--muted)">还没有登记项目。cd 到项目目录执行一次 ak 会自动登记。</td></tr>';
@@ -876,19 +902,115 @@ function renderProject() {
       : `<button class="btn xs op-default" title="不在任何项目目录时回退到它" onclick="setGlobalDefault('${esc(p.id)}')">设为默认</button>`);
     acts.push(`<button class="btn xs" title="重新识别包名 / 模块 / 变体" onclick="redetectProject('${esc(p.id)}')">重识别</button>`);
     acts.push(`<button class="btn xs danger" title="只删配置，不动项目文件" onclick="removeProject('${esc(p.id)}')">移除</button>`);
-    return `<tr class="row">
-      <td class="c-name"><div class="nm">${esc(p.name || p.id)}${tags.join('')}</div>
-        <div class="pname-sub" title="${esc(p.root)}">${esc(p.package || '未识别包名')}</div></td>
+    return `<tr class="row" draggable="true" data-pid="${esc(p.id)}"
+        ondragstart="onProjDragStart(event, '${esc(p.id)}')" ondragend="onProjDragEnd(event)">
+      <td class="c-name"><div class="nm"><span class="drag-h" title="拖动排序">⋮⋮</span>${esc(p.name || p.id)}${tags.join('')}</div>
+        <div class="pname-sub" title="包名">${esc(p.package || '包名未识别')}</div>
+        <div class="pname-sub" title="${esc(p.root)}">${esc(p.root)}</div></td>
       <td class="c-ak"></td>
       <td class="c-alias"><div class="aliaswrap palias">
         <input class="alias" value="${esc(names)}" placeholder="未设置" title="填了就是 cd 到该目录"
-          oninput="onProjectAlias('${esc(p.id)}', this.value, this)">
+          onfocus="onProjAliasFocus('${esc(p.id)}', this)"
+          onblur="onProjAliasBlur('${esc(p.id)}', this)"
+          oninput="this.classList.add('dirty')">
         ${names ? `<button class="x" title="清除快捷键" onclick="clearProjectAlias('${esc(p.id)}')">×</button>` : ''}
       </div></td>
       <td class="c-ops">${acts.join('')}</td>
       <td class="c-actual"><code class="actual" title="点击复制" onclick="copyText('cd ${esc(p.root)}')">cd ${esc(p.root)}</code></td>
     </tr>`;
   }).join('');
+}
+
+let projDragId = '';
+function onProjDragStart(e, id) {
+  projDragId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', id);
+  const tr = e.target.closest('tr');
+  if (tr) tr.classList.add('dragging');
+}
+function onProjDragEnd(e) {
+  const tr = e.target.closest('tr');
+  if (tr) tr.classList.remove('dragging');
+  document.querySelectorAll('#project-list tr.drag-over').forEach(t => t.classList.remove('drag-over'));
+  projDragId = '';
+}
+function onProjDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const tr = e.target.closest('tr');
+  if (!tr || !tr.dataset.pid) return;
+  const rect = tr.getBoundingClientRect();
+  const before = (e.clientY - rect.top) < rect.height / 2;
+  document.querySelectorAll('#project-list tr.drag-over').forEach(t => {
+    t.classList.remove('drag-over');
+    t.style.borderTop = '';
+  });
+  tr.classList.add('drag-over');
+  tr.style.borderTop = before ? '2px solid var(--accent)' : '';
+  tr.style.borderBottom = before ? '' : '2px solid var(--accent)';
+  tr.dataset.dropBefore = before ? '1' : '0';
+}
+function onProjDrop(e) {
+  e.preventDefault();
+  const target = e.target.closest('tr');
+  if (!target || !target.dataset.pid || target.dataset.pid === projDragId) {
+    document.querySelectorAll('#project-list tr.drag-over').forEach(t => { t.classList.remove('drag-over'); t.style.borderTop=''; t.style.borderBottom=''; });
+    return;
+  }
+  const before = target.dataset.dropBefore === '1';
+  const order = projOrderList().map(p => p.id);
+  const from = order.indexOf(projDragId);
+  if (from < 0) return;
+  order.splice(from, 1);
+  let to = order.indexOf(target.dataset.pid);
+  if (before === false) to += 1;
+  order.splice(to, 0, projDragId);
+  persistProjOrder(order);
+  document.querySelectorAll('#project-list tr.drag-over').forEach(t => { t.classList.remove('drag-over'); t.style.borderTop=''; t.style.borderBottom=''; });
+}
+async function persistProjOrder(order) {
+  try {
+    await api('/api/web-project/order', {method: 'POST', body: JSON.stringify({order})});
+    S.order = order;
+    renderProject();
+  } catch (e2) {
+    toast('顺序保存失败: ' + e2.message, true);
+    renderProject();
+  }
+}
+
+// 快捷键单元格：拾取焦点时做重复检查；失焦才提交
+function onProjAliasFocus(id, el) {
+  el.classList.remove('dup');
+  el.classList.remove('dirty');
+}
+function onProjAliasBlur(id, el) {
+  if (!el.classList.contains('dirty')) {
+    // 没改过，只是清掉标记
+    el.classList.remove('dup');
+    return;
+  }
+  const val = el.value;
+  const wanted = val.split(/[，,\s]+/).map(x => x.trim()).filter(Boolean);
+  const kept = [];
+  let dup = '';
+  wanted.forEach(n => {
+    const owner = aliasTakenBy(n, id);
+    if (owner) { dup = n; return; }
+    kept.push(n);
+  });
+  if (dup) {
+    // 只保留合法项，非法项标记
+    projAliases[id] = kept;
+    el.value = kept.join(', ');
+    el.classList.add('dup');
+    autosaveAliases(true);
+    toast('快捷键 ' + dup + ' 已被占用，已忽略', true);
+    return;
+  }
+  projAliases[id] = kept;
+  autosaveAliases();
 }
 
 async function setGlobalDefault(id) {
@@ -936,10 +1058,11 @@ async function removeProject(id) {
 }
 
 function renderSettings() {
-  const c = S.config;
+  const c = S.config || {};
+  const cli = c.android_cli || {};
   $('#s-prefer').value = c.prefer || 'auto';
-  $('#s-minver').value = (c.android_cli && c.android_cli.min_version) || '1.1.0';
-  $('#s-clipath').value = (c.android_cli && c.android_cli.path) || '';
+  $('#s-minver').value = cli.min_version || '1.1.0';
+  $('#s-clipath').value = cli.path || '';
   $('#s-allowrun').checked = !!(c.ui && c.ui.allow_run_from_web);
   $('#s-openbrowser').checked = !!(c.ui && c.ui.open_browser);
 }

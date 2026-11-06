@@ -87,6 +87,41 @@ func (a *App) setWebProject(id string) error {
 	return atomicWrite(a.Paths.WebProject, []byte(id+"\n"), 0o600)
 }
 
+// webProjectOrder 读网页端保存的项目列表顺序（每行一个项目 ID）。
+func (a *App) webProjectOrder() []string {
+	data, err := os.ReadFile(a.Paths.ProjectOrder)
+	if err != nil {
+		return nil
+	}
+	var ids []string
+	for _, line := range strings.Split(string(data), "\n") {
+		line = strings.TrimSpace(line)
+		if line != "" {
+			ids = append(ids, line)
+		}
+	}
+	return ids
+}
+
+// setWebProjectOrder 保存项目列表顺序；只认已登记的项目 ID，未登记的会被丢弃。
+func (a *App) setWebProjectOrder(ids []string) error {
+	known := map[string]bool{}
+	for _, p := range a.Store.List() {
+		if p != nil {
+			known[p.ID] = true
+		}
+	}
+	var b strings.Builder
+	for _, id := range ids {
+		if known[id] {
+			fmt.Fprintf(&b, "%s\n", id)
+		}
+	}
+	if b.String() == "" {
+		return os.Remove(a.Paths.ProjectOrder)
+	}
+	return atomicWrite(a.Paths.ProjectOrder, []byte(b.String()), 0o600)
+}
 func (a *App) projectArtifacts(projectID string) []ArtifactItem {
 	proj, err := a.webProject(projectID)
 	if err != nil || proj == nil {

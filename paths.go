@@ -10,25 +10,26 @@ import (
 // Paths holds every directory the tool owns. All of them can be overridden by
 // environment variables so a user can relocate any part of the installation.
 type Paths struct {
-	Home        string `json:"home"`
-	Binary      string `json:"binary"`
-	Shim        string `json:"shim"`
-	BinDir      string `json:"bin_dir"`
-	Root        string `json:"root"`
-	ConfigDir   string `json:"config_dir"`
-	DataDir     string `json:"data_dir"`
-	StateDir    string `json:"state_dir"`
-	CacheDir    string `json:"cache_dir"`
-	BackupDir   string `json:"backup_dir"`
-	ProjectsDir string `json:"projects_dir"`
-	Manifest    string `json:"manifest"`
-	WebToken    string `json:"web_token"`
-	WebURL      string `json:"web_url"`
-	WebProject  string `json:"web_project"`
-	UITheme     string `json:"ui_theme"`
-	Stamp       string `json:"stamp"`
-	LogsDir     string `json:"logs_dir"`
-	Artifacts   string `json:"artifacts"`
+	Home         string `json:"home"`
+	Binary       string `json:"binary"`
+	Shim         string `json:"shim"`
+	BinDir       string `json:"bin_dir"`
+	Root         string `json:"root"`
+	ConfigDir    string `json:"config_dir"`
+	DataDir      string `json:"data_dir"`
+	StateDir     string `json:"state_dir"`
+	CacheDir     string `json:"cache_dir"`
+	BackupDir    string `json:"backup_dir"`
+	ProjectsDir  string `json:"projects_dir"`
+	Manifest     string `json:"manifest"`
+	WebToken     string `json:"web_token"`
+	WebURL       string `json:"web_url"`
+	WebProject   string `json:"web_project"`
+	ProjectOrder string `json:"project_order"`
+	UITheme      string `json:"ui_theme"`
+	Stamp        string `json:"stamp"`
+	LogsDir      string `json:"logs_dir"`
+	Artifacts    string `json:"artifacts"`
 }
 
 func envOr(keys ...string) string {
@@ -111,6 +112,7 @@ func ResolvePaths() Paths {
 	p.WebToken = filepath.Join(p.StateDir, "web.token")
 	p.WebURL = filepath.Join(p.StateDir, "web.url")
 	p.WebProject = filepath.Join(p.StateDir, "web-project")
+	p.ProjectOrder = filepath.Join(p.StateDir, "project-order")
 	p.UITheme = filepath.Join(p.StateDir, "ui-theme")
 	p.Stamp = filepath.Join(p.StateDir, "reload.stamp")
 	p.LogsDir = filepath.Join(p.StateDir, "logs")

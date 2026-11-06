@@ -99,6 +99,7 @@ type WebState struct {
 	ProjectDirs map[string]string `json:"project_dirs"`
 	Artifacts   []ArtifactItem    `json:"artifacts"`
 	Display     DisplayInfo       `json:"display"`
+	Order       []string          `json:"order"`
 }
 
 func (a *App) webState() WebState {
@@ -133,6 +134,7 @@ func (a *App) webState() WebState {
 		ProjectDirs: dirs,
 		Artifacts:   a.projectArtifacts(curID),
 		Display:     a.displayInfo(curID),
+		Order:       a.webProjectOrder(),
 	}
 }
 
@@ -536,6 +538,24 @@ func (a *App) cmdWeb(args []string) error {
 		default:
 			http.Error(w, "method not allowed", 405)
 		}
+	}))
+	mux.HandleFunc("/api/web-project/order", auth(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "POST required", 405)
+			return
+		}
+		var body struct {
+			Order []string `json:"order"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+		if err := a.setWebProjectOrder(body.Order); err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+		writeHTTPJSON(w, map[string]any{"ok": true})
 	}))
 	mux.HandleFunc("/api/config", auth(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {

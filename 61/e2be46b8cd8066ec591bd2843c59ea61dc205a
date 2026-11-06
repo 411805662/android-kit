@@ -1,0 +1,31 @@
+README.md
+  s_62becc3ae9a79b::t_5f9f66a82b781f 61-62
+  s_62becc3ae9a79b::t_414e347baffa50 206
+version.go
+  s_62becc3ae9a79b::t_414e347baffa50 5
+web/index.html
+  s_62becc3ae9a79b::t_2fe71859dcbd8e 778,780-781,786,796,798,801,805-813
+  s_62becc3ae9a79b::t_9b7114011775b9 299
+  s_62becc3ae9a79b::t_a4948ff27014c7 814-815
+commands.go
+  s_62becc3ae9a79b::t_b117e917b650c8 867-871,876-882
+project.go
+  s_62becc3ae9a79b::t_efb4eb1b0ec29c 167,170,185-235
+  s_62becc3ae9a79b::t_bcb86fc122ab49 236
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "61e2be46b8cd8066ec591bd2843c59ea61dc205a",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

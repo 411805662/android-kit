@@ -101,7 +101,7 @@ main{max-width:1500px;margin:0 auto;padding:18px 22px}
 .tablecard>table{min-width:920px}
 table.grid-table{table-layout:fixed}
 .w-name{width:170px}
-.w-ak{width:150px}
+.w-ak{width:190px}
 .w-alias{width:160px}
 .w-ops{width:200px}
 .drag-h{display:inline-block;margin-right:6px;color:var(--muted-2);cursor:grab;
@@ -240,6 +240,8 @@ details .body{padding:0 16px 16px}
 .palias:hover .x,.palias:focus-within .x{opacity:1;pointer-events:auto}
 .pname-sub{font-size:11px;color:var(--muted);margin-top:3px;
   font-family:ui-monospace,Menlo,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.c-pkg{white-space:normal;word-break:break-all;line-height:1.45;
+  font-family:ui-monospace,Menlo,monospace;font-size:11px;color:var(--code-blue)}
 #project-list .c-ops{display:flex;gap:5px;align-items:center;white-space:nowrap}
 #project-list .c-ops .op-default{width:62px;flex:none;display:inline-flex;align-items:center;
   justify-content:center;margin:0;padding:4px 0;font-size:11.5px}
@@ -357,7 +359,7 @@ details .body{padding:0 16px 16px}
         <thead>
           <tr>
             <th class="c-name">名称</th>
-            <th class="c-ak"></th>
+            <th class="c-ak">包名</th>
             <th class="c-alias">快捷键</th>
             <th class="c-ops">操作</th>
             <th class="c-actual">实际命令（点击复制）</th>
@@ -902,12 +904,12 @@ function renderProject() {
       : `<button class="btn xs op-default" title="不在任何项目目录时回退到它" onclick="setGlobalDefault('${esc(p.id)}')">设为默认</button>`);
     acts.push(`<button class="btn xs" title="重新识别包名 / 模块 / 变体" onclick="redetectProject('${esc(p.id)}')">重识别</button>`);
     acts.push(`<button class="btn xs danger" title="只删配置，不动项目文件" onclick="removeProject('${esc(p.id)}')">移除</button>`);
-    return `<tr class="row" draggable="true" data-pid="${esc(p.id)}"
-        ondragstart="onProjDragStart(event, '${esc(p.id)}')" ondragend="onProjDragEnd(event)">
-      <td class="c-name"><div class="nm"><span class="drag-h" title="拖动排序">⋮⋮</span>${esc(p.name || p.id)}${tags.join('')}</div>
-        <div class="pname-sub" title="包名">${esc(p.package || '包名未识别')}</div>
-        <div class="pname-sub" title="${esc(p.root)}">${esc(p.root)}</div></td>
-      <td class="c-ak"></td>
+    return `<tr class="row" data-pid="${esc(p.id)}">
+      <td class="c-name" draggable="true" title="按住名称上下拖动排序"
+          ondragstart="onProjDragStart(event, '${esc(p.id)}')" ondragend="onProjDragEnd(event)">
+        <div class="nm"><span class="drag-h">⋮⋮</span>${esc(p.name || p.id)}${tags.join('')}</div>
+      </td>
+      <td class="c-ak c-pkg">${esc(p.package || '未识别')}</td>
       <td class="c-alias"><div class="aliaswrap palias">
         <input class="alias" value="${esc(names)}" placeholder="未设置" title="填了就是 cd 到该目录"
           onfocus="onProjAliasFocus('${esc(p.id)}', this)"

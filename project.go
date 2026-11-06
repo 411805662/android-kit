@@ -297,6 +297,10 @@ func (s *ProjectStore) autoRegister(start string) *Project {
 		proj.ID = slug(hint)
 	}
 	if existing := s.Get(proj.ID); existing != nil {
+		// 同一个工程（比如从仓库根目录进来，root 在子目录里）直接复用，别重复登记
+		if filepath.Clean(existing.Root) == filepath.Clean(root) {
+			return s.ensurePackage(existing)
+		}
 		// 目录同名但不是同一个工程，用路径后缀区分
 		proj.ID = proj.ID + "-" + shortHash(root)
 	}

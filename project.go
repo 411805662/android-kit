@@ -164,10 +164,10 @@ func (s *ProjectStore) Resolve(flag string) (*Project, error) {
 	}
 	if cwd, err := os.Getwd(); err == nil {
 		if p := s.findMarkerUpward(cwd); p != nil {
-			return p, nil
+			return s.ensurePackage(p), nil
 		}
 		if p := s.matchRootUpward(cwd); p != nil {
-			return p, nil
+			return s.ensurePackage(p), nil
 		}
 		if p := s.autoRegister(cwd); p != nil {
 			return p, nil
@@ -180,6 +180,58 @@ func (s *ProjectStore) Resolve(flag string) (*Project, error) {
 		}
 	}
 	return nil, errNoProject
+}
+
+// ensurePackage 补齐项目缺失的包名。正常流程第一次登记时就已经读好了，
+// 只有早期导入或 --no-detect 建出来的条目会走到这里，补一次之后就一直沿用。
+func (s *ProjectStore) ensurePackage(p *Project) *Project {
+	if p == nil || p.Package != "" {
+		return p
+	}
+	detected, err := DetectProject(p.Root)
+	if err != nil || detected == nil || detected.Package == "" {
+		return p
+	}
+	p.Package = detected.Package
+	if p.Activity == "" {
+		p.Activity = detected.Activity
+	}
+	if p.Module == "" || p.Module == ":" {
+		p.Module = detected.Module
+	}
+	if p.APKGlob == "" {
+		p.APKGlob = detected.APKGlob
+	}
+	if err := s.Save(p); err != nil {
+		return p
+	}
+	fmt.Fprintf(os.Stderr, "ak: 已补全项目 %s 的包名 → %s\n", p.ID, p.Package)
+	return p
+}
+
+// Refresh 重新探测项目并更新缓存下来的包名等字段。
+func (s *ProjectStore) Refresh(p *Project) (*Project, error) {
+	if p == nil {
+		return nil, errNoProject
+	}
+	detected, err := DetectProject(p.Root)
+	if err != nil {
+		return nil, err
+	}
+	if detected.Package != "" {
+		p.Package = detected.Package
+	}
+	p.Activity = detected.Activity
+	if detected.Module != "" {
+		p.Module = detected.Module
+	}
+	if detected.APKGlob != "" {
+		p.APKGlob = detected.APKGlob
+	}
+	if err := s.Save(p); err != nil {
+		return nil, err
+	}
+	return p, nil
 }
 
 func (s *ProjectStore) findMarkerUpward(start string) *Project {

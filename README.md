@@ -58,6 +58,8 @@ ak run                   # 构建 + 安装 + 启动
 
 项目名取目录名，包名从 `build.gradle` / `AndroidManifest.xml` 读取，都不用填。多个项目之间切换就是 cd 到另一个目录，`ak status` 随时能看到当前生效的是哪个项目。
 
+包名只在第一次登记时读一次，之后记在 `~/.android-kit/projects/<id>.toml` 里直接用，日常命令不再扫 Gradle 文件。改了 `applicationId` 之后用 `ak status --refresh`（或网页上的「重新识别」）刷新一次即可。
+
 多项目：
 
 ```bash
@@ -201,7 +203,7 @@ ak unset --purge       # 连配置和项目列表一起删除
 
 ```bash
 go build -o bin/android-kit .
-./scripts/build-release.sh 0.2.16
+./scripts/build-release.sh 0.2.17
 ```
 
 推送 `v*` tag 会触发 GitHub Actions 构建 macOS / Linux / Windows 产物并上传 Release。

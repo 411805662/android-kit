@@ -864,9 +864,21 @@ func (a *App) cmdDevices(args []string) error {
 }
 
 func (a *App) cmdStatus(args []string) error {
+	fs := flag.NewFlagSet("status", flag.ContinueOnError)
+	refresh := fs.Bool("refresh", false, "重新探测项目，刷新缓存的包名 / 模块 / APK 路径")
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
 	proj, err := a.project(false)
 	if err != nil {
 		return err
+	}
+	if *refresh && proj != nil {
+		updated, err := a.Store.Refresh(proj)
+		if err != nil {
+			return err
+		}
+		proj = updated
 	}
 	rt := detectRuntime(a.Paths, a.Config)
 	engine := "legacy"

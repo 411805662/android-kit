@@ -1,0 +1,26 @@
+README.md
+  s_62becc3ae9a79b::t_02087ce96930b0 220
+  s_62becc3ae9a79b::t_385f70303a254b 272
+web/index.html
+  s_62becc3ae9a79b::t_44fcc444e8ce9a 191-194
+  s_62becc3ae9a79b::t_1453386e2020fb 872-897,899-906
+  s_62becc3ae9a79b::t_80c3e884819149 402,405-406
+version.go
+  s_62becc3ae9a79b::t_b735c5e00d7a19 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "aee745ee785b301196d51fe0f3c2e1c237c2fceb",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

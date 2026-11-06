@@ -51,7 +51,40 @@ func (a *App) webProject(projectID string) (*Project, error) {
 			return proj, nil
 		}
 	}
+	if proj, ok := a.webCurrentProject(); ok {
+		return proj, nil
+	}
 	return a.project(false)
+}
+
+// webCurrentProject 网页端选择的当前项目。只在网页选过项目（或明确取消选择）后生效，
+// 这样终端里的 cd 解析优先级不变，网页切换项目不会污染 CLI 行为。
+func (a *App) webCurrentProject() (*Project, bool) {
+	data, err := os.ReadFile(a.Paths.WebProject)
+	if err != nil {
+		return nil, false
+	}
+	id := strings.TrimSpace(string(data))
+	if id == "" {
+		return nil, false
+	}
+	return a.Store.Get(id), true
+}
+
+// setWebProject 写入网页端当前项目；空值表示取消选择，回到终端解析结果。
+func (a *App) setWebProject(id string) error {
+	id = strings.TrimSpace(id)
+	if id == "" {
+		err := os.Remove(a.Paths.WebProject)
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+		return nil
+	}
+	if a.Store.Get(id) == nil {
+		return fmt.Errorf("project %q is not registered", id)
+	}
+	return atomicWrite(a.Paths.WebProject, []byte(id+"\n"), 0o600)
 }
 
 func (a *App) projectArtifacts(projectID string) []ArtifactItem {
@@ -127,7 +160,7 @@ type ArtifactGroup struct {
 
 // allArtifacts 按项目分组返回所有产物，当前项目排最前。
 func (a *App) allArtifacts() []ArtifactGroup {
-	current, _ := a.project(false)
+	current, _ := a.webProject("")
 	groups := make([]ArtifactGroup, 0, len(a.Store.List())+1)
 	for _, p := range a.Store.List() {
 		if p == nil || p.Root == "" {
@@ -310,13 +343,22 @@ func (a *App) clearArtifacts(w http.ResponseWriter, r *http.Request) {
 		Project string `json:"project"`
 	}
 	_ = json.NewDecoder(r.Body).Decode(&body)
-	dirs := []string{filepath.Join(a.Paths.Artifacts, "ui")}
-	for _, proj := range a.Store.List() {
-		if proj == nil || proj.Root == "" {
-			continue
+	var dirs []string
+	if body.Project != "" {
+		// 只清指定项目的产物（共享 ui 目录不动）
+		if proj := a.Store.Get(body.Project); proj != nil {
+			_, visible := a.artifactDirs(proj)
+			dirs = []string{filepath.Join(visible, "screenshots"), a.uiDir(proj)}
 		}
-		_, visible := a.artifactDirs(proj)
-		dirs = append(dirs, filepath.Join(visible, "screenshots"), a.uiDir(proj))
+	} else {
+		dirs = []string{filepath.Join(a.Paths.Artifacts, "ui")}
+		for _, proj := range a.Store.List() {
+			if proj == nil || proj.Root == "" {
+				continue
+			}
+			_, visible := a.artifactDirs(proj)
+			dirs = append(dirs, filepath.Join(visible, "screenshots"), a.uiDir(proj))
+		}
 	}
 	removed := 0
 	for _, dir := range dirs {

@@ -130,6 +130,8 @@ func main() {
 		err = app.cmdClear(rest)
 	case "uninstall", "app-uninstall", "un":
 		err = app.cmdAppUninstall(rest)
+	case "proxy", "px":
+		err = app.cmdProxy(rest)
 	case "logcat", "lgc":
 		err = app.cmdLogcat(rest)
 	case "layout", "ui-dump":

@@ -116,27 +116,6 @@ func pickActivity(out, marker string) string {
 	return ""
 }
 
-// launcherActivity 让设备自己解析这个包的 launcher 默认 Activity，返回 com.pkg/.Act。
-// 这样项目配置里不需要写死 Activity，换 Activity、改包名都不影响启动。
-func (a *App) launcherActivity(proj *Project) string {
-	if proj == nil || proj.Package == "" {
-		return ""
-	}
-	out, err := a.adbCapture(proj, "shell", "cmd", "package", "resolve-activity", "--brief",
-		"-a", "android.intent.action.MAIN", "-c", "android.intent.category.LAUNCHER", proj.Package)
-	if err != nil {
-		return ""
-	}
-	for _, line := range strings.Split(out, "\n") {
-		m := reActivityRef.FindStringSubmatch(line)
-		if m == nil || m[1] != proj.Package {
-			continue
-		}
-		return normalizeActivityRef(m[1], m[2])
-	}
-	return ""
-}
-
 func normalizeActivityRef(pkg, act string) string {
 	if strings.HasPrefix(act, pkg+".") {
 		act = "." + strings.TrimPrefix(act, pkg+".")
@@ -372,33 +351,23 @@ func (a *App) startApp(proj *Project) error {
 	if proj.Package == "" {
 		return fmt.Errorf("项目缺少 package，请运行 ak project add")
 	}
-	// 优先让设备解析 launcher 默认 Activity，配置里不用写死
-	if ref := a.launcherActivity(proj); ref != "" {
-		return a.adb(proj, "shell", "am", "start", "-n", ref)
-	}
-	if proj.Activity != "" {
-		if err := a.adb(proj, "shell", "am", "start", "-n", proj.Package+"/"+proj.Activity); err != nil {
-			return err
-		}
+	// monkey 一条命令就能拉起 launcher 默认 Activity，不用先解析
+	err := a.adb(proj, "shell", "monkey", "-p", proj.Package, "1")
+	if err == nil {
 		return nil
 	}
-	return a.adb(proj, "shell", "monkey", "-p", proj.Package, "-c", "android.intent.category.LAUNCHER", "1")
+	if proj.Activity != "" {
+		return a.adb(proj, "shell", "am", "start", "-n", proj.Package+"/"+proj.Activity)
+	}
+	return err
 }
 
-// launchTarget 描述 ak open 实际会启动什么，有设备时直接给出设备解析结果。
+// launchTarget 描述 ak open 实际会启动什么。
 func (a *App) launchTarget(proj *Project) string {
 	if proj == nil || proj.Package == "" {
 		return "-"
 	}
-	if a.device(proj) != "" {
-		if ref := a.launcherActivity(proj); ref != "" {
-			return ref + " (launcher 默认)"
-		}
-	}
-	if proj.Activity != "" {
-		return normalizeActivityRef(proj.Package, proj.Activity) + " (配置值)"
-	}
-	return "launcher 默认 Activity"
+	return "monkey -p " + proj.Package + " 1 (launcher 默认 Activity)"
 }
 
 func (a *App) cmdRun(args []string) error {
@@ -489,6 +458,85 @@ func (a *App) cmdAppUninstall(args []string) error {
 		return err
 	}
 	return a.adb(proj, "uninstall", proj.Package)
+}
+
+// localIPv4 返回本机第一个非回环 IPv4，用于把手机代理指向电脑。
+func localIPv4() string {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return "127.0.0.1"
+	}
+	for _, iface := range ifaces {
+		if iface.Flags&net.FlagUp == 0 || iface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+		addrs, err := iface.Addrs()
+		if err != nil {
+			continue
+		}
+		for _, addr := range addrs {
+			ipnet, ok := addr.(*net.IPNet)
+			if !ok {
+				continue
+			}
+			ip := ipnet.IP.To4()
+			if ip == nil || ip.IsLoopback() || ip.IsLinkLocalUnicast() {
+				continue
+			}
+			return ip.String()
+		}
+	}
+	return "127.0.0.1"
+}
+
+// cmdProxy 开关手机上的全局 HTTP 代理，等价于 px on / px off。
+func (a *App) cmdProxy(args []string) error {
+	fs := flag.NewFlagSet("proxy", flag.ContinueOnError)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	rest := fs.Args()
+	sub := "status"
+	if len(rest) > 0 {
+		sub = strings.ToLower(strings.TrimSpace(rest[0]))
+	}
+	proj, _ := a.project(false)
+	switch sub {
+	case "on", "set":
+		port := "8888"
+		if len(rest) > 1 && strings.TrimSpace(rest[1]) != "" {
+			port = strings.TrimSpace(rest[1])
+		}
+		addr := localIPv4() + ":" + port
+		if err := a.adb(proj, "shell", "settings", "put", "global", "http_proxy", addr); err != nil {
+			return err
+		}
+		fmt.Printf("代理已开启: %s\n", addr)
+		fmt.Println("关闭: ak proxy off")
+		return nil
+	case "off", "clear":
+		// http_proxy 是 Android 实际使用的设置，https_proxy 顺手清掉旧脚本可能留下的残留。
+		if err := a.adb(proj, "shell", "settings", "put", "global", "http_proxy", ":0"); err != nil {
+			return err
+		}
+		_ = a.adb(proj, "shell", "settings", "put", "global", "https_proxy", ":0")
+		fmt.Println("代理已关闭")
+		return nil
+	case "status", "get":
+		out, err := a.adbCapture(proj, "shell", "settings", "get", "global", "http_proxy")
+		if err != nil {
+			return err
+		}
+		v := strings.TrimSpace(out)
+		if v == "" || v == "null" || v == ":0" {
+			fmt.Println("代理: 未设置")
+			return nil
+		}
+		fmt.Printf("代理: %s\n", v)
+		return nil
+	default:
+		return fmt.Errorf("用法: ak proxy on [端口] | ak proxy off | ak proxy status")
+	}
 }
 
 func (a *App) cmdLogcat(args []string) error {

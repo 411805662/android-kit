@@ -109,8 +109,12 @@ thead th{background:var(--surface);text-align:left;
   color:var(--muted);font-weight:600;font-size:11.5px;letter-spacing:.4px;
   padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
 tbody td{padding:8px 12px;border-bottom:1px solid var(--chip-bg);vertical-align:middle}
-tr.grp td{background:var(--surface);color:var(--muted-2);font-size:11.5px;font-weight:700;
-  letter-spacing:.6px;padding:7px 12px;border-bottom:1px solid var(--btn-hover)}
+tr.grp-gap td{height:18px;padding:0;border:0;background:transparent}
+tr.grp td{background:var(--surface);color:var(--text-soft);font-size:11.5px;font-weight:700;
+  letter-spacing:.8px;padding:10px 12px;border-top:1px solid var(--line-strong);
+  border-bottom:1px solid var(--line)}
+tr.grp .grpbar{display:inline-block;width:3px;height:11px;border-radius:2px;background:var(--accent);
+  margin-right:8px;vertical-align:-1px}
 tr.row:hover td{background:var(--row-hover)}
 .c-name{width:210px}
 .c-name .nm{font-weight:600}
@@ -172,6 +176,34 @@ details .body{padding:0 16px 16px}
 .artpick:hover{border-color:var(--btn-bd-hi);background-color:var(--btn-hover)}
 .artpick:focus{border-color:#6f8fff}
 .artpick:disabled{opacity:.5;cursor:default}
+.topsel{display:flex;align-items:center;gap:8px}
+.topsel label{color:var(--muted);font-size:12px}
+.toppick{min-width:170px;max-width:240px}
+.toppick option{max-width:220px}
+
+.secgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media(max-width:900px){.secgrid{grid-template-columns:1fr}}
+.sec{border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+.sec-head{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--surface);
+  border-bottom:1px solid var(--line);font-weight:700;font-size:12px;letter-spacing:.8px;color:var(--text-soft)}
+.sec-head::before{content:"";width:3px;height:11px;border-radius:2px;background:var(--accent);flex:none}
+.sec-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 150px auto;gap:4px 12px;
+  align-items:center;padding:9px 14px;border-bottom:1px solid var(--chip-bg)}
+.sec-row:last-child{border-bottom:0}
+.sec-row .aliaswrap{width:100%}
+.sec-row input.alias{width:100%}
+.sec-cmd{grid-column:1/-1}
+.sec-cmd input.cmd{width:100%}
+@media(max-width:700px){.sec-row{grid-template-columns:minmax(0,1fr) auto}
+  .sec-row .c-alias{grid-column:1/-1}
+  .sec-row .c-ak{grid-column:1/-1}}
+.copybtn{position:relative}
+.copybtn[data-tip]:hover::after{
+  content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);
+  background:var(--panel2);border:1px solid var(--line-strong);color:var(--text-soft);
+  padding:6px 10px;border-radius:8px;font-size:11px;line-height:1.5;white-space:pre-wrap;
+  max-width:560px;z-index:30;box-shadow:0 8px 30px var(--shadow);
+  font-family:ui-monospace,Menlo,monospace;pointer-events:none}
 .note{color:var(--muted);font-size:11.5px;line-height:1.7;margin-top:10px}
 .note b{color:var(--text-soft)}
 .kv{display:grid;grid-template-columns:130px 1fr;gap:5px 12px;font-size:12px}
@@ -184,6 +216,13 @@ details .body{padding:0 16px 16px}
 .palias:hover .x,.palias:focus-within .x{opacity:1;pointer-events:auto}
 .pname-sub{font-size:11px;color:var(--muted);margin-top:3px;
   font-family:ui-monospace,Menlo,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#project-list .c-ops{display:flex;gap:5px;align-items:center;white-space:nowrap}
+#project-list .c-ops .op-default{width:62px;flex:none;display:inline-flex;align-items:center;
+  justify-content:center;margin:0;padding:4px 0;font-size:11.5px}
+.tree{font-family:ui-monospace,Menlo,monospace;font-size:11.5px;line-height:1.8;
+  white-space:pre;overflow-x:auto;color:var(--text-soft)}
+.tree .lb{color:var(--muted);font-family:inherit;margin-left:10px}
+.tree .leaf{color:var(--code-blue)}
 
 .drawer{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--panel);
   border-top:1px solid var(--line-strong);box-shadow:0 -12px 40px var(--shadow);transform:translateY(100%);
@@ -243,6 +282,11 @@ details .body{padding:0 16px 16px}
     <div class="logo">ak</div>
     <div><b>android-kit</b><small id="ver">local</small></div>
   </div>
+    <div class="topsel">
+      <label for="proj-pick">项目</label>
+      <select id="proj-pick" class="artpick toppick" onchange="onProjPick(this.value)"
+        title="切换网页当前项目：命令 tab 和 UI 截图 tab 都跟着更新"></select>
+    </div>
   <div class="meta">
     <span class="pill"><span class="dot" id="dev-dot"></span><span id="dev-label">检测中…</span></span>
     <span class="pill" id="engine-pill">engine: -</span>
@@ -272,7 +316,7 @@ details .body{padding:0 16px 16px}
         <thead>
           <tr>
             <th class="c-name">名称</th>
-            <th class="c-ak">ak 命令</th>
+            <th class="c-ak"></th>
             <th class="c-alias">快捷键</th>
             <th class="c-ops">操作</th>
             <th class="c-actual">实际命令（点击复制）</th>
@@ -330,28 +374,18 @@ details .body{padding:0 16px 16px}
     <details id="d-paths">
       <summary>存储路径</summary>
       <div class="body">
-        <div class="kv" id="paths-global"></div>
+        <div class="note" style="margin:0 0 6px"><b>工具自身</b></div>
+        <div class="tree" id="paths-global"></div>
         <div class="note" style="margin:14px 0 6px"><b>项目内生成物</b></div>
-        <div class="kv" id="paths-project"></div>
+        <div class="tree" id="paths-project"></div>
         <div class="note">可用环境变量覆盖：<span class="mono">ANDROID_KIT_HOME</span>、<span class="mono">ANDROID_KIT_CONFIG_DIR</span>、<span class="mono">ANDROID_KIT_DATA_DIR</span>、<span class="mono">ANDROID_KIT_STATE_DIR</span>、<span class="mono">ANDROID_KIT_CACHE_DIR</span>、<span class="mono">ANDROID_KIT_BIN_DIR</span>。</div>
       </div>
     </details>
   </div>
 
   <div class="tabpane" id="pane-commands">
-    <div class="card tablecard">
-      <table>
-        <thead>
-          <tr>
-            <th class="c-name">名称</th>
-            <th class="c-ak">ak 命令</th>
-            <th class="c-alias">快捷键</th>
-            <th class="c-ops">操作</th>
-            <th class="c-actual">实际命令（点击复制）</th>
-          </tr>
-        </thead>
-        <tbody id="tbody-commands"></tbody>
-      </table>
+    <div class="secgrid" id="cmd-grid"></div>
+    <div class="card" style="margin-top:14px">
       <div class="addbar">
         <span class="lbl">添加一行</span>
         <select id="add-target" onchange="onAddTarget()"></select>
@@ -364,9 +398,8 @@ details .body{padding:0 16px 16px}
 
   <div class="tabpane" id="pane-artifacts">
     <div class="actions" style="margin:0 0 12px">
-      <select id="art-project" class="artpick" onchange="onArtProject(this.value)" title="选择要查看的项目"></select>
       <button class="btn danger" onclick="clearArtifacts()">清空所有</button>
-      <span class="note" style="margin:0">点缩略图看大图；UI 树缩略图底部可打开 H5 对照或 JSON；右上角 × 直接删除。</span>
+      <span class="note" style="margin:0">显示顶栏所选项目的产物；点缩略图看大图，UI 树可打开 H5 对照或 JSON，右上角 × 删除单张。</span>
       <span class="spacer"></span>
       <button class="btn" onclick="loadArtifacts()">刷新产物</button>
     </div>
@@ -407,7 +440,7 @@ function toggleTheme() {
 applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
 
 const PROJECT_GROUP = '项目';
-const COMMAND_GROUPS = ['构建 · 安装','应用控制','调试 · 截图 · UI','应用文件','设备输入','其他'];
+const COMMAND_GROUPS = ['构建 · 安装','应用控制','调试 · 截图 · UI','网络代理','应用文件','设备输入','其他'];
 const GROUPS = [PROJECT_GROUP, ...COMMAND_GROUPS];
 const $ = s => document.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -566,7 +599,8 @@ function render() {
       : (S.current && (S.projects || []).length ? 'commands' : 'project');
   }
   showTab(activeTab);
-  renderTable();
+  renderProjPick();
+  renderCommands();
   renderAddOptions();
   renderProject();
   renderSettings();
@@ -574,23 +608,88 @@ function render() {
   renderArtifacts();
 }
 
-function renderTable() {
+function renderProjPick() {
+  const sel = $('#proj-pick');
+  if (!sel) return;
+  const cur = (S.current && S.current.id) || '';
+  const opts = (S.projects || []).slice().sort((a, b) =>
+    String(a.name || a.id).localeCompare(String(b.name || b.id)));
+  sel.innerHTML =
+    `<option value=""${!cur ? ' selected' : ''}>不指定（按终端解析）</option>` +
+    opts.map(p => `<option value="${esc(p.id)}"${p.id === cur ? ' selected' : ''}>${esc(p.name || p.id)}</option>`).join('');
+}
+
+async function onProjPick(id) {
+  try {
+    await api('/api/web-project', {method:'POST', body: JSON.stringify({id})});
+    toast(id ? '已切换到 ' + id + '，命令和截图已更新' : '已取消指定，按终端解析');
+    await load();
+  } catch (e) { toast('切换失败: ' + e.message, true); }
+}
+
+function renderCommands() {
   const all = rows.map((r, i) => ({r, i}));
   const projectRows = all.filter(x => x.r.group === PROJECT_GROUP);
   const commandRows = all.filter(x => x.r.group !== PROJECT_GROUP);
   $('#tbody-project').innerHTML = renderGroupRows(projectRows, [PROJECT_GROUP]);
-  $('#tbody-commands').innerHTML = renderGroupRows(commandRows, COMMAND_GROUPS);
+  renderCommandGrid(commandRows);
+}
+
+function renderCommandGrid(list) {
+  const grid = $('#cmd-grid');
+  let html = '';
+  COMMAND_GROUPS.forEach(g => {
+    const current = list.filter(x => x.r.group === g);
+    if (!current.length) return;
+    html += `<section class="sec"><div class="sec-head">${esc(g)}</div>`;
+    current.forEach(({r, i}) => { html += cmdRowHTML(r, i); });
+    html += '</section>';
+  });
+  grid.innerHTML = html || '<div class="empty">没有命令</div>';
 }
 
 function renderGroupRows(list, groups, showHeader = true) {
   let html = '';
+  let first = true;
   groups.forEach(g => {
     const current = list.filter(x => x.r.group === g);
     if (!current.length) return;
-    if (showHeader) html += `<tr class="grp"><td colspan="5">${esc(g)}</td></tr>`;
+    if (showHeader) {
+      // 每个模块之间留一条空白带，让分组的边界一眼可见
+      if (!first) html += '<tr class="grp-gap"><td colspan="5"></td></tr>';
+      html += `<tr class="grp"><td colspan="5"><span class="grpbar"></span>${esc(g)}</td></tr>`;
+    }
+    first = false;
     current.forEach(({r, i}) => { html += rowHTML(r, i); });
   });
   return html || '<tr><td colspan="5" style="padding:30px;text-align:center;color:var(--muted)">没有命令</td></tr>';
+}
+
+// 命令 tab 的卡片式行：名称 / ak 命令 / 快捷键 / 操作；实际命令不再占列，hover「复制」时以气泡展示。
+function cmdRowHTML(r, i) {
+  const aliasVal = r.aliases.join(', ');
+  const clearBtn = r.kind === 'custom' ? '' :
+    `<button class="x" title="清除快捷键" onclick="clearAlias(${i})">×</button>`;
+  const tip = esc(r.actual || '（无实际命令）');
+  const ops = [];
+  if (r.runnable) ops.push(`<button class="btn xs primary" onclick="runRow(${i})">执行</button>`);
+  ops.push(`<button class="btn xs copybtn" data-tip="${tip}" onclick="copyRow(${i})" title="复制 ak 命令，悬停看实际命令">复制</button>`);
+  if (r.kind === 'custom') ops.push(`<button class="btn xs danger" onclick="delRow(${i})">删除</button>`);
+  const tag = r.kind === 'builtin' ? ''
+    : (r.kind === 'custom' ? `<span class="tag green">自定义</span>` : `<span class="tag warn">未识别</span>`);
+  const badge = r.badge ? `<span class="tag green">${esc(r.badge)}</span>` : '';
+  const cmdInput = r.kind === 'custom'
+    ? `<div class="sec-cmd"><input class="cmd" value="${esc(r.actual)}" placeholder="adb shell ..." oninput="onCmd(${i}, this.value)"></div>` : '';
+  return `<div class="sec-row">
+    <div class="c-name"><b>${esc(r.title)}</b>${badge}${tag}</div>
+    <div class="c-ak"><code class="ak">${esc(r.usage)}</code></div>
+    <div class="c-alias"><div class="aliaswrap">
+      <input class="alias" value="${esc(aliasVal)}" placeholder="未设置" oninput="onAlias(${i}, this.value)">
+      ${clearBtn}
+    </div></div>
+    <div class="c-ops">${ops.join('')}</div>
+    ${cmdInput}
+  </div>`;
 }
 
 function showTab(tab) {
@@ -652,13 +751,13 @@ function onCmd(i, value) {
 
 function clearAlias(i) {
   rows[i].aliases = [];
-  renderTable();
+  renderCommands();
   autosaveAliases();
 }
 
 function delRow(i) {
   rows.splice(i, 1);
-  renderTable();
+  renderCommands();
   renderAddOptions();
   autosaveAliases();
 }
@@ -702,7 +801,7 @@ function addRow() {
     r.aliases.push(alias);
   }
   $('#add-alias').value = '';
-  renderTable();
+  renderCommands();
   renderAddOptions();
   autosaveAliases();
 }
@@ -770,18 +869,17 @@ function renderProject() {
   box.innerHTML = list.map(p => {
     const tags = [];
     if (p.id === curId) tags.push('<span class="tag green">当前</span>');
-    if (p.id === defId) tags.push('<span class="tag">全局默认</span>');
     const names = (projAliases[p.id] || []).join(', ');
     const acts = [];
     acts.push(p.id === defId
-      ? `<button class="btn xs" disabled title="已经是全局默认">设为默认</button>`
-      : `<button class="btn xs" title="不在任何项目目录时回退到它" onclick="setGlobalDefault('${esc(p.id)}')">设为默认</button>`);
+      ? `<span class="op-default tag green" title="不在任何项目目录时回退到它">全局默认</span>`
+      : `<button class="btn xs op-default" title="不在任何项目目录时回退到它" onclick="setGlobalDefault('${esc(p.id)}')">设为默认</button>`);
     acts.push(`<button class="btn xs" title="重新识别包名 / 模块 / 变体" onclick="redetectProject('${esc(p.id)}')">重识别</button>`);
     acts.push(`<button class="btn xs danger" title="只删配置，不动项目文件" onclick="removeProject('${esc(p.id)}')">移除</button>`);
     return `<tr class="row">
       <td class="c-name"><div class="nm">${esc(p.name || p.id)}${tags.join('')}</div>
         <div class="pname-sub" title="${esc(p.root)}">${esc(p.package || '未识别包名')}</div></td>
-      <td class="c-ak"><code class="ak">cd</code></td>
+      <td class="c-ak"></td>
       <td class="c-alias"><div class="aliaswrap palias">
         <input class="alias" value="${esc(names)}" placeholder="未设置" title="填了就是 cd 到该目录"
           oninput="onProjectAlias('${esc(p.id)}', this.value, this)">
@@ -865,24 +963,67 @@ async function saveSettings() {
 function renderPaths() {
   const p = S.paths;
   const rowsG = [
-    ['二进制', p.binary], ['ak 入口', p.shim], ['根目录', p.root], ['配置目录', p.config_dir],
-    ['配置文件', p.config_dir + '/config.toml'], ['项目配置', p.projects_dir],
-    ['数据目录', p.data_dir], ['安装清单', p.manifest], ['备份', p.backup_dir],
-    ['状态目录', p.state_dir], ['Web token', p.web_token], ['日志', p.logs_dir],
-    ['缓存', p.cache_dir], ['全局产物', p.artifacts]
+    ['二进制', p.binary], ['ak 入口', p.shim], ['bin 目录', p.bin_dir],
+    ['全局根目录', p.root], ['配置目录', p.config_dir], ['配置文件', p.config_dir + '/config.toml'],
+    ['项目配置', p.projects_dir], ['数据目录', p.data_dir], ['安装清单', p.manifest],
+    ['备份', p.backup_dir], ['状态目录', p.state_dir], ['Web token', p.web_token],
+    ['日志', p.logs_dir], ['缓存', p.cache_dir], ['全局产物', p.artifacts]
   ];
-  $('#paths-global').innerHTML = rowsG.map(([k, v]) =>
-    `<div class="k">${esc(k)}</div><div class="v mono">${esc(v)}</div>`).join('');
+  $('#paths-global').innerHTML = pathTreeHTML(rowsG, p.home);
   const d = S.project_dirs || {};
   const rowsP = S.current ? [
-    ['全局产物', d.hidden], ['可见目录', d.visible],
-    ['UI dump', (d.hidden || '') + '/ui'], ['Trace', (d.hidden || '') + '/traces'],
-    ['Heap', (d.hidden || '') + '/heaps'], ['截图', (d.visible || '') + '/screenshots'],
-    ['Compose 预览', (d.visible || '') + '/previews'], ['报告', (d.visible || '') + '/reports']
+    ['可见目录', d.visible], ['截图', (d.visible || '') + '/screenshots'],
+    ['Compose 预览', (d.visible || '') + '/previews'], ['报告', (d.visible || '') + '/reports'],
+    ['dump', (d.visible || '') + '/dump'],
+    ['产物目录', d.hidden], ['UI 树', (d.hidden || '') + '/ui'],
+    ['Trace', (d.hidden || '') + '/traces'], ['Heap', (d.hidden || '') + '/heaps'],
+    ['日志', (d.hidden || '') + '/logs'], ['临时', (d.hidden || '') + '/tmp']
   ] : [];
   $('#paths-project').innerHTML = rowsP.length
-    ? rowsP.map(([k, v]) => `<div class="k">${esc(k)}</div><div class="v mono">${esc(v)}</div>`).join('')
-    : '<div class="k">-</div><div class="v">未选择项目</div>';
+    ? pathTreeHTML(rowsP, p.home)
+    : '<span class="lb">未选择项目</span>';
+}
+
+// pathTreeHTML 把「路径 + 用途」列表合并成一棵树：公共目录只出现一次，
+// 相同目录下的条目排在一起，省掉重复前缀。
+function pathTreeHTML(entries, home) {
+  const root = {children: new Map(), labels: []};
+  entries.forEach(([label, p]) => {
+    if (!p) return;
+    let disp = String(p);
+    if (home && disp.startsWith(home)) disp = '~' + disp.slice(home.length);
+    const parts = disp.split('/').filter(Boolean);
+    let node = root;
+    parts.forEach((part, i) => {
+      if (!node.children.has(part)) node.children.set(part, {children: new Map(), labels: []});
+      node = node.children.get(part);
+      if (i === parts.length - 1) node.labels.push(label);
+    });
+  });
+  const lines = [];
+  const walk = (node, prefix) => {
+    const kids = [...node.children.entries()].sort((a, b) => {
+      const aDir = a[1].children.size > 0, bDir = b[1].children.size > 0;
+      if (aDir !== bDir) return aDir ? -1 : 1;
+      return a[0].localeCompare(b[0]);
+    });
+    kids.forEach(([name, child], i) => {
+      const last = i === kids.length - 1;
+      // 只有一条子链、自己又没有用途说明的，合并成一行，避免绝对路径撑出十几层
+      let label = name, node = child;
+      while (node.labels.length === 0 && node.children.size === 1) {
+        const [ck, cv] = [...node.children.entries()][0];
+        label += '/' + ck;
+        node = cv;
+      }
+      const isDir = node.children.size > 0;
+      lines.push(`<div>${esc(prefix + (last ? '└── ' : '├── '))}<span class="${isDir ? '' : 'leaf'}">${esc(label)}${isDir ? '/' : ''}</span>` +
+        (node.labels.length ? `<span class="lb">${esc(node.labels.join(' · '))}</span>` : '') + '</div>');
+      walk(node, prefix + (last ? '    ' : '│   '));
+    });
+  };
+  walk(root, '');
+  return lines.length ? lines.join('') : '<span class="lb">-</span>';
 }
 
 async function loadArtifacts() {
@@ -900,44 +1041,23 @@ function artifactURL(url) {
   return url + (url.includes('?') ? '&' : '?') + 'token=' + encodeURIComponent(TOKEN);
 }
 
-const ART_PICK_KEY = 'ak.artProject';
-let artProject = localStorage.getItem(ART_PICK_KEY) || '';
-
-function renderArtProjectOptions() {
-  const sel = $('#art-project');
-  if (!sel) return;
-  // 只列真正有产物的项目
-  const groups = ((S && S.groups) || []).filter(g => (g.artifacts || []).length);
-  if (!groups.length) { sel.innerHTML = '<option>暂无产物</option>'; sel.disabled = true; return; }
-  sel.disabled = false;
-  const ids = groups.map(g => g.id);
-  if (!artProject || !ids.includes(artProject)) {
-    const def = (S.config && S.config.default_project) || '';
-    const cur = (S.current && S.current.id) || '';
-    artProject = ids.includes(def) ? def : (ids.includes(cur) ? cur : ids[0]);
-    localStorage.setItem(ART_PICK_KEY, artProject);
-  }
-  sel.innerHTML = groups.map(g =>
-    `<option value="${esc(g.id)}"${g.id === artProject ? ' selected' : ''}>${esc(g.name)}${g.legacy ? '（历史）' : ''}</option>`).join('');
-}
-
-function onArtProject(id) {
-  artProject = id;
-  localStorage.setItem(ART_PICK_KEY, id);
-  renderArtifacts();
-}
-
 function renderArtifacts() {
-  renderArtProjectOptions();
+  // 截图 tab 跟随顶栏所选项目；没选就回退到全局默认
   const all = (S && S.groups) || [];
-  const picked = all.filter(g => g.id === artProject);
-  if (picked.length && !picked[0].artifacts.length) {
-    $('#artifact-list').innerHTML = `<div class="empty">${esc(picked[0].name)} 还没有截图或 UI 树</div>`;
+  const curId = (S.current && S.current.id) || '';
+  const defId = (S.config && S.config.default_project) || '';
+  const target = curId || defId;
+  const picked = all.filter(g => g.id === target || (target === '' && g.legacy));
+  if (!picked.length) {
+    $('#artifact-list').innerHTML = '<div class="empty">还没有截图或 UI 树</div>';
     return;
   }
   const groups = picked.filter(g => (g.artifacts || []).length);
   if (!groups.length) {
-    $('#artifact-list').innerHTML = '<div class="empty">还没有截图或 UI 树</div>';
+    const name = target ? ((S.projects || []).find(p => p.id === target) || {}).name || target : '';
+    $('#artifact-list').innerHTML = name
+      ? `<div class="empty">${esc(name)} 还没有截图或 UI 树</div>`
+      : '<div class="empty">还没有截图或 UI 树</div>';
     return;
   }
   $('#artifact-list').innerHTML = groups.map(g => `
@@ -1003,7 +1123,7 @@ async function deleteArtifact(path) {
 }
 
 async function clearArtifacts() {
-  if (!confirm('清空全部截图和 UI 树？此操作不可恢复。')) return;
+  if (!confirm('清空所有项目的截图和 UI 树？此操作不可恢复。')) return;
   try {
     const res = await api('/api/artifacts/clear', {method: 'POST', body: JSON.stringify({})});
     toast('已清理 ' + (res.removed || 0) + ' 个文件');

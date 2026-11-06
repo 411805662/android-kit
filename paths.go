@@ -24,6 +24,7 @@ type Paths struct {
 	Manifest    string `json:"manifest"`
 	WebToken    string `json:"web_token"`
 	WebURL      string `json:"web_url"`
+	WebProject  string `json:"web_project"`
 	UITheme     string `json:"ui_theme"`
 	Stamp       string `json:"stamp"`
 	LogsDir     string `json:"logs_dir"`
@@ -109,6 +110,7 @@ func ResolvePaths() Paths {
 	p.Manifest = filepath.Join(p.DataDir, "install-manifest.json")
 	p.WebToken = filepath.Join(p.StateDir, "web.token")
 	p.WebURL = filepath.Join(p.StateDir, "web.url")
+	p.WebProject = filepath.Join(p.StateDir, "web-project")
 	p.UITheme = filepath.Join(p.StateDir, "ui-theme")
 	p.Stamp = filepath.Join(p.StateDir, "reload.stamp")
 	p.LogsDir = filepath.Join(p.StateDir, "logs")

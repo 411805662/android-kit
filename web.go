@@ -102,7 +102,7 @@ type WebState struct {
 }
 
 func (a *App) webState() WebState {
-	proj, _ := a.project(false)
+	proj, _ := a.webProject("")
 	rt := detectRuntime(a.Paths, a.Config)
 	engine := "legacy"
 	if rt.HasAndroidCLI() && versionAtLeast(rt.AndroidCLIversion, a.Config.AndroidCLI.MinVersion) {
@@ -116,6 +116,10 @@ func (a *App) webState() WebState {
 			dirs["visible"] = visible
 		}
 	}
+	curID := ""
+	if proj != nil {
+		curID = proj.ID
+	}
 	return WebState{
 		Version:     appVersion,
 		Config:      a.Config,
@@ -127,8 +131,8 @@ func (a *App) webState() WebState {
 		Commands:    visibleCommands(a.commandCatalog(proj, engine)),
 		Custom:      a.customAliases(),
 		ProjectDirs: dirs,
-		Artifacts:   a.projectArtifacts(""),
-		Display:     a.displayInfo(""),
+		Artifacts:   a.projectArtifacts(curID),
+		Display:     a.displayInfo(curID),
 	}
 }
 
@@ -161,6 +165,7 @@ const (
 	groupDeploy       = "构建 · 安装"
 	groupApp          = "应用控制"
 	groupDebug        = "调试 · 截图 · UI"
+	groupProxy        = "网络代理"
 	groupFiles        = "应用文件"
 	groupInput        = "设备输入"
 	groupOther        = "其他"
@@ -222,7 +227,7 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 	if !hasWrapper {
 		installCmd = "adb install -r -t -d " + apk
 	}
-	startCmd := "adb shell am start -n $(adb shell cmd package resolve-activity --brief -c android.intent.category.LAUNCHER " + pkg + " | tail -1)"
+	startCmd := "adb shell monkey -p " + pkg + " 1"
 	runCmd := gradleBuild + " && " + installCmd + " && " + startCmd
 	if hasWrapper {
 		runCmd = gradleInstall + " && " + startCmd
@@ -277,6 +282,9 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 		{ID: "clear", Target: "clear", Group: groupApp, Title: "清除数据", Desc: "pm clear，登录态会丢失", Command: "adb shell pm clear " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "clear"},
 		{ID: "screenshot", Target: "screenshot", Group: groupDebug, Title: "截图", Desc: "保存到 android-kit/screenshots", Command: shotCmd, Engine: engine, Available: true, Runnable: true, Run: "screenshot"},
 		{ID: "layout", Target: "layout -p", Group: groupDebug, Title: "UI 树", Desc: "截图 + UI 树，输出 H5 对照链接", Command: layoutCmd, Engine: engine, Available: true, Runnable: true, Run: "layout -p"},
+		{ID: "proxy-on", Target: "proxy on", Group: groupProxy, Title: "开启代理", Desc: "手机 HTTP 代理指向电脑，默认 8888；等价于 px on", Command: "adb shell settings put global http_proxy <本机IP>:8888", Engine: "adb", Available: true, Runnable: true, Run: "proxy on"},
+		{ID: "proxy-off", Target: "proxy off", Group: groupProxy, Title: "关闭代理", Desc: "清除手机代理，恢复直连；等价于 px off", Command: "adb shell settings put global http_proxy :0", Engine: "adb", Available: true, Runnable: true, Run: "proxy off"},
+		{ID: "proxy-status", Target: "proxy status", Group: groupProxy, Title: "查看代理", Desc: "显示手机当前的全局 HTTP 代理", Command: "adb shell settings get global http_proxy", Engine: "adb", Available: true, Runnable: true, Run: "proxy status"},
 		{ID: "ls", Target: "ls", Group: groupFiles, Title: "列目录", Desc: "应用私有目录，按修改时间最新在前；相对路径基于 /data/data/" + pkg, Command: "ak ls [目录]", Engine: "adb", Available: true, Runnable: false},
 		{ID: "tree", Target: "tree", Group: groupFiles, Title: "目录树", Desc: "默认两层；ext: 前缀看外部目录", Command: "ak tree [目录] [-L 2]", Engine: "adb", Available: true, Runnable: false},
 		{ID: "cat", Target: "cat", Group: groupFiles, Title: "看文件内容", Desc: "直接 cat 应用内文件，如 shared_prefs 下的 xml", Command: "ak cat <文件>", Engine: "adb", Available: true, Runnable: false},
@@ -503,6 +511,32 @@ func (a *App) cmdWeb(args []string) error {
 		a.reload()
 		writeHTTPJSON(w, map[string]any{"ok": true})
 	}))
+	mux.HandleFunc("/api/web-project", auth(func(w http.ResponseWriter, r *http.Request) {
+		switch r.Method {
+		case http.MethodPost:
+			var body struct {
+				ID string `json:"id"`
+			}
+			if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+				http.Error(w, err.Error(), 400)
+				return
+			}
+			if err := a.setWebProject(body.ID); err != nil {
+				http.Error(w, err.Error(), 400)
+				return
+			}
+			writeHTTPJSON(w, map[string]any{"ok": true, "id": body.ID})
+		case http.MethodGet:
+			proj, ok := a.webCurrentProject()
+			id := ""
+			if ok && proj != nil {
+				id = proj.ID
+			}
+			writeHTTPJSON(w, map[string]any{"id": id})
+		default:
+			http.Error(w, "method not allowed", 405)
+		}
+	}))
 	mux.HandleFunc("/api/config", auth(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "POST required", 405)
@@ -575,6 +609,7 @@ func (a *App) cmdWeb(args []string) error {
 			"build": true, "install": true, "run": true, "stop": true, "open": true,
 			"restart": true, "clear": true, "screenshot": true, "layout": true,
 			"uninstall": true, "logcat": true, "devices": true, "status": true,
+			"proxy":  true,
 			"doctor": true, "paths": true, "clean": true,
 		}
 		if !allowed[fields[0]] {
@@ -594,7 +629,7 @@ func (a *App) cmdWeb(args []string) error {
 		}
 		defer webRunMu.Unlock()
 
-		proj, _ := a.project(false)
+		proj, _ := a.webProject("")
 		args := fields
 		if proj != nil {
 			args = append([]string{"-p", proj.ID}, args...)

@@ -75,6 +75,8 @@ type CommandInfo struct {
 	Run       string   `json:"run"`
 	Aliases   []string `json:"aliases"`
 	Examples  []string `json:"examples"`
+	// Badge 是网页上名称后面的小标签，例如当前项目的「当前」。
+	Badge string `json:"badge,omitempty"`
 	// Hidden 的命令仍然可用，只是暂时不在网页配置台里展示。
 	Hidden bool `json:"hidden,omitempty"`
 }
@@ -240,7 +242,6 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 	}
 	items := []CommandInfo{
 		{ID: "web", Target: "web", Group: groupProject, Title: "网页配置台", Desc: "本地 127.0.0.1，token 保护", Command: "ak web", Engine: "-", Available: true, Runnable: false},
-		{ID: "cd", Target: "cd", Group: groupProject, Title: "进入当前项目目录", Desc: "跟随所在目录，cd 到当前项目根目录", Command: "cd " + root, Engine: "-", Available: true, Runnable: false},
 		{ID: "devices", Target: "devices", Group: groupProject, Title: "设备列表", Desc: "adb devices -l", Command: "adb devices -l", Engine: "adb", Available: true, Runnable: true, Run: "devices"},
 		{ID: "status", Target: "status", Group: groupProject, Title: "状态", Desc: "项目、设备、引擎、APK", Command: "ak status", Engine: "-", Available: true, Runnable: true, Run: "status"},
 		{ID: "doctor", Target: "doctor", Group: groupProject, Title: "环境诊断", Desc: "逐项检查 adb / CLI / Java / 项目", Command: "ak doctor", Engine: "-", Available: true, Runnable: true, Run: "doctor"},
@@ -279,10 +280,10 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 		{ID: "clean", Target: "clean", Group: groupOther, Title: "清理生成物", Desc: "默认清 tmp/logs", Command: "ak clean", Engine: "-", Available: true, Runnable: true, Run: "clean"},
 	}
 	// 每个已登记项目补一行「进入 <项目>」，在网页上直接给目录快捷起名（dev / dev2 …）
-	if switches := a.projectSwitchCommands(); len(switches) > 0 {
+	if switches := a.projectSwitchCommands(proj); len(switches) > 0 {
 		at := len(items)
 		for i, item := range items {
-			if item.ID == "cd" {
+			if item.ID == "web" {
 				at = i + 1
 				break
 			}
@@ -298,7 +299,7 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 
 // projectSwitchCommands 给每个已登记项目生成一条「切到该项目目录」的条目。
 // 它的 Target 是 `cd <项目>`，所以在网页快捷键列填个名字就等于定义了目录快捷。
-func (a *App) projectSwitchCommands() []CommandInfo {
+func (a *App) projectSwitchCommands(current *Project) []CommandInfo {
 	projects := a.Store.List()
 	out := make([]CommandInfo, 0, len(projects))
 	for _, p := range projects {
@@ -309,11 +310,15 @@ func (a *App) projectSwitchCommands() []CommandInfo {
 		if name == "" {
 			name = p.ID
 		}
-		out = append(out, CommandInfo{
+		item := CommandInfo{
 			ID: "cd-" + p.ID, Target: "cd " + p.ID, Group: groupProject,
 			Title: "进入 " + name, Desc: p.Root,
 			Command: "cd " + p.Root, Engine: "-", Available: true, Runnable: false,
-		})
+		}
+		if current != nil && current.ID == p.ID {
+			item.Badge = "当前"
+		}
+		out = append(out, item)
 	}
 	return out
 }
@@ -436,6 +441,7 @@ func (a *App) cmdWeb(args []string) error {
 		a.reload()
 		writeHTTPJSON(w, map[string]any{
 			"artifacts": a.projectArtifacts(r.URL.Query().Get("project")),
+			"groups":    a.allArtifacts(),
 			"display":   a.displayInfo(r.URL.Query().Get("project")),
 		})
 	}))

@@ -213,6 +213,13 @@ details.adv .form{margin-top:12px}
 .drawer pre a.runlink.primary{border-color:#4d6bd8;background:linear-gradient(135deg,#2a3a6b,#22304f);
   color:#dbe4ff;font-weight:600}
 .artifacts{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;padding:12px}
+.artgroup{margin-bottom:16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+.artgroup-head{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);
+  border-bottom:1px solid var(--line);font-size:12.5px}
+.artgroup-head .note{margin:0;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--muted);font-size:11px}
+.artgroup-head .cnt{color:var(--muted-2);font-size:11.5px}
+.empty{padding:30px;text-align:center;color:var(--muted)}
 .artcard{position:relative;border:1px solid var(--line);border-radius:11px;background:var(--panel);overflow:hidden}
 .artcard:hover{border-color:var(--btn-bd-hi)}
 .artcard .thumbwrap{position:relative;display:block;background:var(--code-bg)}
@@ -247,7 +254,6 @@ details.adv .form{margin-top:12px}
     <div><b>android-kit</b><small id="ver">local</small></div>
   </div>
   <div class="meta">
-    <label>项目 <select id="proj" onchange="switchProject(this.value)"></select></label>
     <span class="pill"><span class="dot" id="dev-dot"></span><span id="dev-label">检测中…</span></span>
     <span class="pill" id="engine-pill">engine: -</span>
   </div>
@@ -396,7 +402,7 @@ details.adv .form{margin-top:12px}
       <button class="btn danger" onclick="clearArtifacts()">清空所有</button>
       <span class="note" style="margin:0">点缩略图看大图；UI 树缩略图底部可打开 H5 对照或 JSON；右上角 × 直接删除。</span>
     </div>
-    <div class="artifacts" id="artifact-list"></div>
+    <div id="artifact-list"></div>
   </div>
 
 </main>
@@ -500,7 +506,7 @@ function buildRows() {
     out.push({
       kind: 'builtin', target: c.target, title: c.title, group: c.group,
       usage: c.usage, actual: c.command, aliases, runnable: !!c.runnable,
-      run: c.run || c.target, engine: c.engine, available: c.available
+      run: c.run || c.target, engine: c.engine, available: c.available, badge: c.badge || ''
     });
   });
   Object.keys(items).sort().forEach(n => {
@@ -509,6 +515,9 @@ function buildRows() {
     if (v.startsWith('shell:')) {
       out.push({kind:'custom', target:'', title:n, group:'其他',
         usage:'自定义', actual:v.slice(6), aliases:[n], runnable:false});
+    } else if (v === 'cd') {
+      out.push({kind:'dircd', target:v, title:'当前项目目录', group:'项目',
+        usage:'ak cd', actual:'ak cd', aliases:[n], runnable:false});
     } else {
       out.push({kind:'raw', target:v, title:n, group:'其他',
         usage:'ak ' + v, actual:'ak ' + v, aliases:[n], runnable:false});
@@ -526,10 +535,6 @@ function render() {
     : '无设备';
   $('#engine-pill').textContent = 'engine: ' + (S.runtime.android_cli ? 'android ' + S.runtime.android_cli_version : 'legacy');
   $('#run-banner').classList.toggle('on', !S.config.ui.allow_run_from_web);
-
-  $('#proj').innerHTML = (S.projects || []).map(p =>
-    `<option value="${esc(p.id)}" ${S.current && p.id === S.current.id ? 'selected' : ''}>${esc(p.name)}</option>`
-  ).join('') || '<option value="">（无项目）</option>';
 
   if (!activeTab) {
     const hashTab = location.hash.slice(1);
@@ -596,9 +601,11 @@ function rowHTML(r, i) {
   ].join('');
   const tag = r.kind === 'builtin'
     ? ''
-    : (r.kind === 'custom' ? `<span class="tag green">自定义</span>` : `<span class="tag warn">未识别</span>`);
+    : (r.kind === 'custom' ? `<span class="tag green">自定义</span>`
+      : (r.kind === 'dircd' ? '' : `<span class="tag warn">未识别</span>`));
+  const badge = r.badge ? `<span class="tag green">${esc(r.badge)}</span>` : '';
   return `<tr class="row">
-    <td class="c-name"><div class="nm">${esc(r.title)}</div></td>
+    <td class="c-name"><div class="nm">${esc(r.title)}${badge}</div></td>
     <td class="c-ak"><code class="ak">${esc(r.usage)}</code>${tag}</td>
     <td class="c-alias"><div class="aliaswrap">
       <input class="alias" value="${esc(aliasVal)}" placeholder="未设置" oninput="onAlias(${i}, this.value)">
@@ -722,14 +729,6 @@ async function enableRun() {
     toast('已开启网页执行');
     await load();
   } catch (e) { toast('失败: ' + e.message, true); }
-}
-
-async function switchProject(id) {
-  if (!id) return;
-  try {
-    await api('/api/project/default', {method:'POST', body: JSON.stringify({id})});
-    await load();
-  } catch (e) { toast('切换失败: ' + e.message, true); }
 }
 
 function renderProject() {
@@ -911,7 +910,7 @@ async function loadArtifacts() {
   try {
     const state = await api('/api/artifacts');
     S = S || {};
-    S.artifacts = state.artifacts || [];
+    S.groups = state.groups || [];
     S.display = state.display || S.display;
     renderArtifacts();
   } catch (e) { toast('刷新产物失败: ' + e.message, true); }
@@ -923,42 +922,54 @@ function artifactURL(url) {
 }
 
 function renderArtifacts() {
-  const list = (S && S.artifacts) || [];
-  if (!list.length) {
-    $('#artifact-list').innerHTML = '<div class="empty" style="grid-column:1/-1">还没有截图或 UI 树</div>';
+  const groups = ((S && S.groups) || []).filter(g => (g.artifacts || []).length);
+  if (!groups.length) {
+    $('#artifact-list').innerHTML = '<div class="empty">还没有截图或 UI 树</div>';
     return;
   }
-  $('#artifact-list').innerHTML = list.map((item, i) => {
-    const isUI = item.kind === 'ui';
-    const isJSON = isUI && /\.json$/i.test(item.name);
-    const isXML = isUI && /\.xml$/i.test(item.name);
-    const thumbURL = artifactURL(item.shot_url || item.url);
-    const openURL = isJSON
-      ? artifactURL(item.viewer_url || ('/viewer?ui=' + encodeURIComponent(item.path) + (item.project_id ? '&project=' + encodeURIComponent(item.project_id) : '')))
-      : artifactURL(item.url);
-    const bar = isJSON
-      ? `<div class="thumbbar">
-          <a class="btn xs primary" href="${esc(openURL)}" target="_blank" rel="noopener">UI 树</a>
-          <a class="btn xs" href="${esc(artifactURL(item.url + '&pretty=1'))}" target="_blank" rel="noopener">JSON</a>
-        </div>`
-      : (isXML
-        ? `<div class="thumbbar"><span class="btn xs">XML</span><a class="btn xs" href="${esc(openURL)}" target="_blank" rel="noopener">打开</a></div>`
-        : '');
-    return `<div class="artcard">
-      <button class="artdel" title="删除" onclick="deleteArtifact(${i})">×</button>
-      <div class="thumbwrap">
-        <a class="thumbimg" href="${esc(openURL)}" target="_blank" rel="noopener">
-          <img src="${esc(thumbURL)}" alt="${esc(item.name)}"
-            onerror="this.closest('.thumbwrap').classList.add('noimg');this.remove()">
-        </a>
-        ${bar}
+  $('#artifact-list').innerHTML = groups.map(g => `
+    <section class="artgroup">
+      <div class="artgroup-head">
+        <b>${esc(g.name)}</b>
+        ${g.current ? '<span class="tag green">当前</span>' : ''}
+        ${g.legacy ? '<span class="tag warn">历史</span>' : ''}
+        <span class="note">${esc(g.root || '')}</span>
+        <span class="cnt">${g.artifacts.length}</span>
       </div>
-      <div class="artmeta">
-        <div class="nm mono">${esc(item.name)}</div>
-        <div class="tm">${esc(fmtArtTime(item.mod_time))}</div>
-      </div>
-    </div>`;
-  }).join('');
+      <div class="artifacts">${g.artifacts.map(artCard).join('')}</div>
+    </section>`).join('');
+}
+
+function artCard(item) {
+  const isUI = item.kind === 'ui';
+  const isJSON = isUI && /\.json$/i.test(item.name);
+  const isXML = isUI && /\.xml$/i.test(item.name);
+  const thumbURL = artifactURL(item.shot_url || item.url);
+  const openURL = isJSON
+    ? artifactURL(item.viewer_url || ('/viewer?ui=' + encodeURIComponent(item.path) + (item.project_id ? '&project=' + encodeURIComponent(item.project_id) : '')))
+    : artifactURL(item.url);
+  const bar = isJSON
+    ? `<div class="thumbbar">
+        <a class="btn xs primary" href="${esc(openURL)}" target="_blank" rel="noopener">UI 树</a>
+        <a class="btn xs" href="${esc(artifactURL(item.url + '&pretty=1'))}" target="_blank" rel="noopener">JSON</a>
+      </div>`
+    : (isXML
+      ? `<div class="thumbbar"><span class="btn xs">XML</span><a class="btn xs" href="${esc(openURL)}" target="_blank" rel="noopener">打开</a></div>`
+      : '');
+  return `<div class="artcard">
+    <button class="artdel" title="删除" data-path="${esc(item.path)}" onclick="deleteArtifact(this.dataset.path)">×</button>
+    <div class="thumbwrap">
+      <a class="thumbimg" href="${esc(openURL)}" target="_blank" rel="noopener">
+        <img src="${esc(thumbURL)}" alt="${esc(item.name)}"
+          onerror="this.closest('.thumbwrap').classList.add('noimg');this.remove()">
+      </a>
+      ${bar}
+    </div>
+    <div class="artmeta">
+      <div class="nm mono">${esc(item.name)}</div>
+      <div class="tm">${esc(fmtArtTime(item.mod_time))}</div>
+    </div>
+  </div>`;
 }
 
 function fmtArtTime(value) {
@@ -969,22 +980,19 @@ function fmtArtTime(value) {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
-async function deleteArtifact(i) {
-  const item = (S && S.artifacts) || [];
-  const target = item[i];
-  if (!target) return;
+async function deleteArtifact(path) {
+  if (!path) return;
   try {
-    await api('/api/artifact?path=' + encodeURIComponent(target.path), {method: 'DELETE'});
+    await api('/api/artifact?path=' + encodeURIComponent(path), {method: 'DELETE'});
     toast('已删除');
     loadArtifacts();
   } catch (e) { toast('删除失败: ' + e.message, true); }
 }
 
 async function clearArtifacts() {
-  const pid = S && S.current ? S.current.id : '';
   if (!confirm('清空全部截图和 UI 树？此操作不可恢复。')) return;
   try {
-    const res = await api('/api/artifacts/clear', {method: 'POST', body: JSON.stringify({project: pid})});
+    const res = await api('/api/artifacts/clear', {method: 'POST', body: JSON.stringify({})});
     toast('已清理 ' + (res.removed || 0) + ' 个文件');
     loadArtifacts();
   } catch (e) { toast('清理失败: ' + e.message, true); }

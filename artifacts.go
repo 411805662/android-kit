@@ -36,6 +36,15 @@ func (a *App) artifactDirs(proj *Project) (hidden, visible string) {
 	return hidden, visible
 }
 
+// uiDir 是某个项目的 UI 树目录：~/.android-kit/artifacts/<项目>/ui，
+// 按项目分目录存放，网页上才能分项目查看。
+func (a *App) uiDir(proj *Project) string {
+	if proj == nil {
+		return ""
+	}
+	return filepath.Join(a.Paths.Artifacts, proj.ID, "ui")
+}
+
 func (a *App) webProject(projectID string) (*Project, error) {
 	if projectID != "" {
 		if proj := a.Store.Get(projectID); proj != nil {
@@ -50,9 +59,9 @@ func (a *App) projectArtifacts(projectID string) []ArtifactItem {
 	if err != nil || proj == nil {
 		return nil
 	}
-	hidden, visible := a.artifactDirs(proj)
+	_, visible := a.artifactDirs(proj)
 	shotDir := filepath.Join(visible, "screenshots")
-	uiDir := filepath.Join(hidden, "ui")
+	uiDir := a.uiDir(proj)
 	shots := listArtifactFiles(shotDir, "screenshot", func(name string) bool {
 		ext := strings.ToLower(filepath.Ext(name))
 		return ext == ".png" || ext == ".jpg" || ext == ".jpeg" || ext == ".webp"
@@ -61,7 +70,9 @@ func (a *App) projectArtifacts(projectID string) []ArtifactItem {
 		ext := strings.ToLower(filepath.Ext(name))
 		return ext == ".json" || ext == ".xml"
 	})
-	items := append(shots, uis...)
+	items := make([]ArtifactItem, 0, len(shots)+len(uis))
+	items = append(items, shots...)
+	items = append(items, uis...)
 	for i := range items {
 		items[i].URL = "/artifact?path=" + url.QueryEscape(items[i].Path)
 		items[i].ProjectID = proj.ID
@@ -96,6 +107,71 @@ func (a *App) projectArtifacts(projectID string) []ArtifactItem {
 			items[i].ShotURL = "/artifact?path=" + url.QueryEscape(shots[bestIndex].Path)
 		}
 		items[i].ViewerURL = viewer
+		sidecar := strings.TrimSuffix(items[i].Path, filepath.Ext(items[i].Path)) + ".activity"
+		if data, err := os.ReadFile(sidecar); err == nil {
+			items[i].Activity = strings.TrimSpace(string(data))
+		}
+	}
+	return items
+}
+
+// ArtifactGroup 是网页上的一组产物，一个项目一组。
+type ArtifactGroup struct {
+	ID        string         `json:"id"`
+	Name      string         `json:"name"`
+	Root      string         `json:"root"`
+	Current   bool           `json:"current"`
+	Legacy    bool           `json:"legacy,omitempty"`
+	Artifacts []ArtifactItem `json:"artifacts"`
+}
+
+// allArtifacts 按项目分组返回所有产物，当前项目排最前。
+func (a *App) allArtifacts() []ArtifactGroup {
+	current, _ := a.project(false)
+	groups := make([]ArtifactGroup, 0, len(a.Store.List())+1)
+	for _, p := range a.Store.List() {
+		if p == nil || p.Root == "" {
+			continue
+		}
+		groups = append(groups, ArtifactGroup{
+			ID:        p.ID,
+			Name:      p.Name,
+			Root:      p.Root,
+			Current:   current != nil && current.ID == p.ID,
+			Artifacts: a.projectArtifacts(p.ID),
+		})
+	}
+	// 早期版本把 UI 树存在共享目录里，这里兜底展示，避免历史产物直接消失
+	if legacy := a.legacyArtifacts(); len(legacy) > 0 {
+		groups = append(groups, ArtifactGroup{
+			ID: "_misc", Name: "未归属（历史）", Legacy: true, Artifacts: legacy,
+		})
+	}
+	sort.SliceStable(groups, func(i, j int) bool {
+		if groups[i].Current != groups[j].Current {
+			return groups[i].Current
+		}
+		if groups[i].Legacy != groups[j].Legacy {
+			return !groups[i].Legacy
+		}
+		return groups[i].Name < groups[j].Name
+	})
+	return groups
+}
+
+func (a *App) legacyArtifacts() []ArtifactItem {
+	dir := filepath.Join(a.Paths.Artifacts, "ui")
+	items := listArtifactFiles(dir, "ui", func(name string) bool {
+		ext := strings.ToLower(filepath.Ext(name))
+		return ext == ".json" || ext == ".xml"
+	})
+	for i := range items {
+		items[i].URL = "/artifact?path=" + url.QueryEscape(items[i].Path)
+		items[i].ProjectID = "_misc"
+		if strings.ToLower(filepath.Ext(items[i].Name)) != ".json" {
+			continue
+		}
+		items[i].ViewerURL = "/viewer?ui=" + url.QueryEscape(items[i].Path)
 		sidecar := strings.TrimSuffix(items[i].Path, filepath.Ext(items[i].Path)) + ".activity"
 		if data, err := os.ReadFile(sidecar); err == nil {
 			items[i].Activity = strings.TrimSpace(string(data))
@@ -234,14 +310,16 @@ func (a *App) clearArtifacts(w http.ResponseWriter, r *http.Request) {
 		Project string `json:"project"`
 	}
 	_ = json.NewDecoder(r.Body).Decode(&body)
-	proj, err := a.webProject(body.Project)
-	if err != nil || proj == nil {
-		http.Error(w, "没有可用项目", 400)
-		return
+	dirs := []string{filepath.Join(a.Paths.Artifacts, "ui")}
+	for _, proj := range a.Store.List() {
+		if proj == nil || proj.Root == "" {
+			continue
+		}
+		_, visible := a.artifactDirs(proj)
+		dirs = append(dirs, filepath.Join(visible, "screenshots"), a.uiDir(proj))
 	}
-	hidden, visible := a.artifactDirs(proj)
 	removed := 0
-	for _, dir := range []string{filepath.Join(visible, "screenshots"), filepath.Join(hidden, "ui")} {
+	for _, dir := range dirs {
 		entries, err := os.ReadDir(dir)
 		if err != nil {
 			continue

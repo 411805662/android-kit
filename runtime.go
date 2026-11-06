@@ -158,7 +158,7 @@ func (p Paths) EnsureProjectDirs(proj *Project) (hidden, visible string, err err
 	visible = filepath.Join(proj.Root, "android-kit")
 	for _, dir := range []string{
 		hidden, visible,
-		filepath.Join(hidden, "ui"),
+		filepath.Join(hidden, proj.ID, "ui"),
 		filepath.Join(hidden, "traces"),
 		filepath.Join(hidden, "heaps"),
 		filepath.Join(hidden, "reports"),

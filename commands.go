@@ -557,12 +557,12 @@ func (a *App) cmdLayout(args []string) error {
 	if err != nil {
 		return err
 	}
-	hidden, visible, err := a.Paths.EnsureProjectDirs(proj)
+	_, visible, err := a.Paths.EnsureProjectDirs(proj)
 	if err != nil {
 		return err
 	}
 	stamp := timestamp()
-	outPath := filepath.Join(hidden, "ui", stamp+".json")
+	outPath := filepath.Join(a.uiDir(proj), stamp+".json")
 	var content string
 	engine, err := a.engine()
 	if err != nil {

@@ -179,6 +179,8 @@ ak web
 
 - 只监听 `127.0.0.1` 随机端口，带一次性 token（写入 `~/.android-kit/web.token`，0600）。
 - 三个 tab：**项目**（项目命令、项目设置、全局设置、存储路径）、**命令**（构建 / 启动 / 清数据 / 其他分组）、**UI 截图**（产物画廊）。
+- **项目** tab 每个已登记项目一行「进入 <项目>」，当前项目带「当前」标记；在「快捷键」列填个名字就是目录快捷。
+- **UI 截图** tab 按项目分组展示，UI 树和截图配对预览；产物存在 `~/.android-kit/artifacts/<项目>/ui`，截图存在 `<项目>/android-kit/screenshots`。
 - **项目设置只填项目根目录**，名称取目录名，包名 / 模块 / 变体自动识别后回显；其余参数收在「高级」里，一般不用动。
 - 表格列顺序统一为：名称 / ak 命令 / 快捷键 / 操作 / 实际命令。内置命令的实际命令由项目配置生成，只读；自定义行可自由编辑。
 - 表格底部可以加行：从还没用过的 ak 命令里挑，或选「自定义（空白）」自己写一条。
@@ -230,7 +232,7 @@ ak unset --purge       # 连配置和项目列表一起删除
 
 ```bash
 go build -o bin/android-kit .
-./scripts/build-release.sh 0.2.21
+./scripts/build-release.sh 0.2.22
 ```
 
 推送 `v*` tag 会触发 GitHub Actions 构建 macOS / Linux / Windows 产物并上传 Release。

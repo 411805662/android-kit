@@ -83,6 +83,27 @@ ak -p appb run           # 也可以临时指定项目
 
 不需要手动登记项目：cd 到项目目录执行任意命令时会自动识别并登记。项目管理子命令（`ak project …`、`ak use`）暂时不在文档和网页里露出，功能仍然可用。
 
+### 多项目与目录快捷
+
+cd 到哪个项目，`ak` 就作用于哪个项目。想少打几个字就建目录快捷：
+
+```bash
+ak dev add pokekara2       # 自动起名 dev2（dev 已被占用时顺延）
+ak dev add cleaner pk      # 也可以自己指定名字
+ak dev list                # 列出现有快捷
+ak dev rm pk               # 删掉
+```
+
+每个快捷名都会生成一个 shell 函数，直接切目录：
+
+```bash
+dev     # 当前项目根目录（跟随所在目录）
+dev2    # → /Users/…/PokeKara2
+dev3    # → /Users/…/cleaner
+```
+
+网页里也能改：「项目」tab 每个已登记项目一行，在「快捷键」列填名字即可，自动保存、新终端生效。
+
 ### 构建 · 安装 · 卸载 · 部署
 
 | 快捷键 | 命令 | 作用 |
@@ -207,7 +228,7 @@ ak unset --purge       # 连配置和项目列表一起删除
 
 ```bash
 go build -o bin/android-kit .
-./scripts/build-release.sh 0.2.18
+./scripts/build-release.sh 0.2.19
 ```
 
 推送 `v*` tag 会触发 GitHub Actions 构建 macOS / Linux / Windows 产物并上传 Release。

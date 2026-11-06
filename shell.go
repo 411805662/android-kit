@@ -75,8 +75,13 @@ func (a *App) shellScript(full, quiet bool) string {
 			fmt.Fprintf(&b, "    unalias %s 2>/dev/null || true\n", name)
 			if kind == "shell" {
 				fmt.Fprintf(&b, "    function %s { sh -c %s ak \"$@\"; }\n", name, shellQuote(body))
-			} else if body == "cd" {
-				fmt.Fprintf(&b, "    function %s { builtin cd \"$(command \"$_AK_BIN\" where 2>/dev/null)\" || return 1; }\n", name)
+			} else if body == "cd" || strings.HasPrefix(body, "cd ") {
+				// cd 切到当前项目；cd <项目> 切到指定项目，用于 dev / dev2 这类目录快捷
+				target := ""
+				if body != "cd" {
+					target = " " + shellQuote(strings.TrimSpace(strings.TrimPrefix(body, "cd")))
+				}
+				fmt.Fprintf(&b, "    function %s { builtin cd \"$(command \"$_AK_BIN\" where%s 2>/dev/null)\" || return 1; }\n", name, target)
 			} else {
 				fmt.Fprintf(&b, "    function %s { command \"$_AK_BIN\" %s \"$@\"; }\n", name, quoteFields(body))
 			}

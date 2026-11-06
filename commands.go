@@ -1070,6 +1070,20 @@ func printable(s string) string {
 }
 
 func (a *App) cmdWhere(args []string) error {
+	fs := flag.NewFlagSet("where", flag.ContinueOnError)
+	if err := fs.Parse(args); err != nil {
+		return err
+	}
+	// ak where <项目> 用来给 shell 的目录快捷（cd <项目>）取路径，
+	// 不带参数时还是当前目录对应的项目。
+	if rest := fs.Args(); len(rest) > 0 {
+		proj := a.Store.Get(rest[0])
+		if proj == nil {
+			return fmt.Errorf("没有登记过项目 %q（ak dev list 查看已有的目录快捷）", rest[0])
+		}
+		fmt.Println(proj.Root)
+		return nil
+	}
 	proj, err := a.mustProject()
 	if err != nil {
 		return err

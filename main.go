@@ -158,6 +158,8 @@ func main() {
 		err = app.cmdDoctor(rest)
 	case "where", "cd":
 		err = app.cmdWhere(rest)
+	case "dev", "devs":
+		err = app.cmdDev(rest)
 	case "clean":
 		err = app.cmdClean(rest)
 	case "import":
@@ -234,6 +236,7 @@ func printHelp() {
   -       ak analyze <apk>            APK 分析
   -       ak docs search <关键字>     官方文档检索
   -       ak clean [--all]            清理生成物
+  -       ak dev list|add|rm          多项目目录快捷（dev / dev2 …一键切目录）
   -       ak alias list|set|rm        管理快捷命令
   -       ak import <文件|目录>        从旧 .bash_profile / android-toolkit 导入
   -       ak setup                    安装 Shell 集成

@@ -112,7 +112,8 @@ main{max-width:1500px;margin:0 auto;padding:18px 22px}
 .split2 .c-actual{width:38%;min-width:0}
 .split2 .c-ops{width:14%}
 .split2 .tablecard{overflow:auto}
-.tablecard{overflow:clip}
+.tablecard{overflow:auto}
+.tablecard>table{min-width:920px}
 table{width:100%;border-collapse:collapse}
 thead th{background:var(--surface);text-align:left;
   color:var(--muted);font-weight:600;font-size:11.5px;letter-spacing:.4px;
@@ -132,6 +133,7 @@ tr.row:hover td{background:var(--row-hover)}
 input.alias,input.cmd{background:var(--input-bg);border:1px solid var(--input-bd);border-radius:7px;
   padding:5px 8px;width:100%;outline:none;font-family:ui-monospace,Menlo,monospace;font-size:12px}
 input.alias{font-weight:700}
+input.alias{min-width:120px}
 input.alias:focus,input.cmd:focus{border-color:#4d6bd8;box-shadow:0 0 0 3px #4d6bd822}
 input.alias{border-color:transparent;background:transparent}
 .c-alias:hover input.alias,.aliaswrap:focus-within input.alias{border-color:var(--input-bd);background:var(--input-bg)}

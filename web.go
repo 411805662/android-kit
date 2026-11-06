@@ -240,7 +240,7 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 	}
 	items := []CommandInfo{
 		{ID: "web", Target: "web", Group: groupProject, Title: "网页配置台", Desc: "本地 127.0.0.1，token 保护", Command: "ak web", Engine: "-", Available: true, Runnable: false},
-		{ID: "cd", Target: "cd", Group: groupProject, Title: "进入项目目录", Desc: "shell 函数，直接 cd 到项目根目录", Command: "cd " + root, Engine: "-", Available: true, Runnable: false},
+		{ID: "cd", Target: "cd", Group: groupProject, Title: "进入当前项目目录", Desc: "跟随所在目录，cd 到当前项目根目录", Command: "cd " + root, Engine: "-", Available: true, Runnable: false},
 		{ID: "devices", Target: "devices", Group: groupProject, Title: "设备列表", Desc: "adb devices -l", Command: "adb devices -l", Engine: "adb", Available: true, Runnable: true, Run: "devices"},
 		{ID: "status", Target: "status", Group: groupProject, Title: "状态", Desc: "项目、设备、引擎、APK", Command: "ak status", Engine: "-", Available: true, Runnable: true, Run: "status"},
 		{ID: "doctor", Target: "doctor", Group: groupProject, Title: "环境诊断", Desc: "逐项检查 adb / CLI / Java / 项目", Command: "ak doctor", Engine: "-", Available: true, Runnable: true, Run: "doctor"},
@@ -278,11 +278,44 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 		{ID: "docs", Target: "docs", Group: groupOther, Title: "官方文档", Desc: "搜索 Android Knowledge Base", Command: "android docs search <query>", Engine: "android", Available: engine == "android", Runnable: false},
 		{ID: "clean", Target: "clean", Group: groupOther, Title: "清理生成物", Desc: "默认清 tmp/logs", Command: "ak clean", Engine: "-", Available: true, Runnable: true, Run: "clean"},
 	}
+	// 每个已登记项目补一行「进入 <项目>」，在网页上直接给目录快捷起名（dev / dev2 …）
+	if switches := a.projectSwitchCommands(); len(switches) > 0 {
+		at := len(items)
+		for i, item := range items {
+			if item.ID == "cd" {
+				at = i + 1
+				break
+			}
+		}
+		items = append(items[:at], append(switches, items[at:]...)...)
+	}
 	for i := range items {
 		items[i].Usage = "ak " + items[i].Target
 		items[i].Aliases = aliasMap[items[i].Target]
 	}
 	return items
+}
+
+// projectSwitchCommands 给每个已登记项目生成一条「切到该项目目录」的条目。
+// 它的 Target 是 `cd <项目>`，所以在网页快捷键列填个名字就等于定义了目录快捷。
+func (a *App) projectSwitchCommands() []CommandInfo {
+	projects := a.Store.List()
+	out := make([]CommandInfo, 0, len(projects))
+	for _, p := range projects {
+		if p == nil || p.Root == "" {
+			continue
+		}
+		name := p.Name
+		if name == "" {
+			name = p.ID
+		}
+		out = append(out, CommandInfo{
+			ID: "cd-" + p.ID, Target: "cd " + p.ID, Group: groupProject,
+			Title: "进入 " + name, Desc: p.Root,
+			Command: "cd " + p.Root, Engine: "-", Available: true, Runnable: false,
+		})
+	}
+	return out
 }
 
 func randomToken() string {

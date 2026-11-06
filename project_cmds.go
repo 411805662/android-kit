@@ -334,6 +334,108 @@ func (a *App) cmdAlias(args []string) error {
 	}
 }
 
+// devShortcut 是一条「切到某个项目目录」的快捷：值是 cd 或 cd <项目> 的别名。
+type devShortcut struct {
+	Name    string   `json:"name"`
+	Project *Project `json:"project,omitempty"`
+}
+
+// devShortcuts 扫出所有目录快捷（含裸 cd 的「当前项目」）。
+func (a *App) devShortcuts() []devShortcut {
+	var out []devShortcut
+	for name, value := range a.Config.Aliases.Items {
+		value = strings.TrimSpace(value)
+		if value != "cd" && !strings.HasPrefix(value, "cd ") {
+			continue
+		}
+		s := devShortcut{Name: name}
+		if value != "cd" {
+			s.Project = a.Store.Get(strings.TrimSpace(strings.TrimPrefix(value, "cd")))
+		}
+		out = append(out, s)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
+	return out
+}
+
+// nextDevName 依次挑一个没被占用的目录快捷名：dev、dev2、dev3……
+func (a *App) nextDevName() string {
+	used := map[string]bool{}
+	for _, s := range a.devShortcuts() {
+		used[s.Name] = true
+	}
+	if !used["dev"] {
+		return "dev"
+	}
+	for i := 2; ; i++ {
+		name := fmt.Sprintf("dev%d", i)
+		if !used[name] {
+			return name
+		}
+	}
+}
+
+func (a *App) cmdDev(args []string) error {
+	if len(args) == 0 || args[0] == "list" || args[0] == "ls" {
+		items := a.devShortcuts()
+		if a.Opts.JSON {
+			return printJSON(items)
+		}
+		if len(items) == 0 {
+			fmt.Println("还没有目录快捷。用 ak dev add <项目> [名字] 创建，例如 ak dev add pokekara2")
+			return nil
+		}
+		fmt.Printf("%-10s %-14s %s\n", "快捷名", "项目", "路径")
+		for _, s := range items {
+			if s.Project == nil {
+				fmt.Printf("%-10s %-14s %s\n", s.Name, "（当前项目）", "在哪就是哪")
+				continue
+			}
+			fmt.Printf("%-10s %-14s %s\n", s.Name, s.Project.Name, s.Project.Root)
+		}
+		return nil
+	}
+	switch args[0] {
+	case "add", "set":
+		if len(args) < 2 {
+			return fmt.Errorf("用法: ak dev add <项目> [快捷名]")
+		}
+		proj := a.Store.Get(args[1])
+		if proj == nil {
+			return fmt.Errorf("没有登记过项目 %q；先 cd 到那个项目目录跑一次 ak status 就会自动登记", args[1])
+		}
+		name := a.nextDevName()
+		if len(args) > 2 {
+			name = args[2]
+		}
+		a.Config.Aliases.Items[name] = "cd " + proj.ID
+		if a.Config.Aliases.Preset == "none" {
+			a.Config.Aliases.Preset = "custom"
+		}
+		if err := SaveConfig(a.Paths, a.Config); err != nil {
+			return err
+		}
+		fmt.Printf("%s → cd %s  (%s)\n", name, proj.ID, proj.Root)
+		fmt.Println("新终端或按一次回车后生效。")
+		return nil
+	case "rm", "remove", "delete":
+		if len(args) < 2 {
+			return fmt.Errorf("用法: ak dev rm <快捷名>")
+		}
+		if _, ok := a.Config.Aliases.Items[args[1]]; !ok {
+			return fmt.Errorf("没有这个快捷名: %s", args[1])
+		}
+		delete(a.Config.Aliases.Items, args[1])
+		if err := SaveConfig(a.Paths, a.Config); err != nil {
+			return err
+		}
+		fmt.Printf("removed %s\n", args[1])
+		return nil
+	default:
+		return fmt.Errorf("用法: ak dev list|add|rm")
+	}
+}
+
 func (a *App) cmdPaths(args []string) error {
 	if a.Opts.JSON {
 		return printJSON(a.Paths)

@@ -1,0 +1,43 @@
+artifacts.go
+  s_62becc3ae9a79b::t_ff5c838ed1d944 313-319,322
+  s_62becc3ae9a79b::t_ec3fa4d10b56a4 118-182
+  s_62becc3ae9a79b::t_7fdb92b8813fe4 73-75
+  s_62becc3ae9a79b::t_1e06de1bd2e165 39-47,64
+  s_62becc3ae9a79b::t_c332a7dd8394c5 62
+commands.go
+  s_62becc3ae9a79b::t_47a82205d99be4 560,565
+runtime.go
+  s_62becc3ae9a79b::t_6fd2a88314cd2a 161
+web.go
+  s_62becc3ae9a79b::t_ee62e0831f2d6a 283,286,302,313,317-321
+  s_62becc3ae9a79b::t_013c08ec10b880 444
+  s_62becc3ae9a79b::t_2bb292a15b8943 78-79
+web/index.html
+  s_62becc3ae9a79b::t_14bf9d02030163 509,518-520
+  s_62becc3ae9a79b::t_bd6f6206f879e6 216-222
+  s_62becc3ae9a79b::t_da449152878298 405
+  s_62becc3ae9a79b::t_759638969e0906 604-606,608
+  s_62becc3ae9a79b::t_0f8449eafcb40b 913,925-927,930-937,939-972
+  s_62becc3ae9a79b::t_79b8d69a91646e 983-984,986,995
+README.md
+  s_62becc3ae9a79b::t_ee6df122ed4207 182-183
+  s_62becc3ae9a79b::t_8638b226951741 235
+version.go
+  s_62becc3ae9a79b::t_97165042aa7143 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "89f01014db03ddc3a1abeb4e31e096a7d9dda733",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

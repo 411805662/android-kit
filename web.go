@@ -287,48 +287,11 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 		{ID: "docs", Target: "docs", Group: groupOther, Title: "官方文档", Desc: "搜索 Android Knowledge Base", Command: "android docs search <query>", Engine: "android", Available: engine == "android", Runnable: false},
 		{ID: "clean", Target: "clean", Group: groupOther, Title: "清理生成物", Desc: "默认清 tmp/logs", Command: "ak clean", Engine: "-", Available: true, Runnable: true, Run: "clean"},
 	}
-	// 每个已登记项目补一行「进入 <项目>」，在网页上直接给目录快捷起名（dev / dev2 …）
-	if switches := a.projectSwitchCommands(proj); len(switches) > 0 {
-		at := len(items)
-		for i, item := range items {
-			if item.ID == "web" {
-				at = i + 1
-				break
-			}
-		}
-		items = append(items[:at], append(switches, items[at:]...)...)
-	}
 	for i := range items {
 		items[i].Usage = "ak " + items[i].Target
 		items[i].Aliases = aliasMap[items[i].Target]
 	}
 	return items
-}
-
-// projectSwitchCommands 给每个已登记项目生成一条「切到该项目目录」的条目。
-// 它的 Target 是 `cd <项目>`，所以在网页快捷键列填个名字就等于定义了目录快捷。
-func (a *App) projectSwitchCommands(current *Project) []CommandInfo {
-	projects := a.Store.List()
-	out := make([]CommandInfo, 0, len(projects))
-	for _, p := range projects {
-		if p == nil || p.Root == "" {
-			continue
-		}
-		name := p.Name
-		if name == "" {
-			name = p.ID
-		}
-		item := CommandInfo{
-			ID: "cd-" + p.ID, Target: "cd " + p.ID, Group: groupProject,
-			Title: "进入 " + name, Desc: p.Root,
-			Command: "cd " + p.Root, Engine: "-", Available: true, Runnable: false,
-		}
-		if current != nil && current.ID == p.ID {
-			item.Badge = "当前"
-		}
-		out = append(out, item)
-	}
-	return out
 }
 
 func randomToken() string {

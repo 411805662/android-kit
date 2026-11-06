@@ -209,6 +209,10 @@ details.adv .form{margin-top:12px}
 .prow-acts{display:flex;gap:5px;opacity:0;transition:opacity .12s}
 .prow:hover .prow-acts,.prow:focus-within .prow-acts{opacity:1}
 @media (hover:none){.prow-acts{opacity:1}}
+.palias{width:132px;flex:none}
+.palias input.alias{border-color:var(--input-bd);background:var(--input-bg);font-weight:600}
+.palias input.alias::placeholder{font-weight:400}
+.palias:hover .x,.palias:focus-within .x{opacity:1;pointer-events:auto}
 .prow-acts .btn{font-size:10.5px;padding:3px 7px}
 .prow-acts .btn.solid{background:var(--btn-hover);border-color:var(--line-strong);color:var(--text-soft)}
 .padd{display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
@@ -321,7 +325,7 @@ details.adv .form{margin-top:12px}
             <input id="p-new-root" placeholder="/path/to/android/project" spellcheck="false" autocomplete="off">
             <button class="btn" onclick="addProjectByPath()">添加</button>
           </div>
-          <div class="note">只填项目根目录即可，名称、包名、模块自动识别。鼠标移到项目名后面可以设为全局默认。</div>
+          <div class="note">只填项目根目录即可，名称、包名、模块自动识别。每个项目的「快捷键」就是 <code>cd</code> 到该目录（如 <code>dev</code> → PokeKara），在行内直接填。鼠标移到项目名后面可设为全局默认。</div>
         </div>
       </section>
 
@@ -469,7 +473,7 @@ function toast(msg, err = false) {
 }
 
 let aliasTimer = null;
-function autosaveAliases() {
+function autosaveAliases(silent) {
   clearTimeout(aliasTimer);
   aliasTimer = setTimeout(async () => {
     try {
@@ -479,7 +483,7 @@ function autosaveAliases() {
       S.config.aliases.items = items;
       dirty = false;
       $('#dirty').classList.remove('on');
-      toast('快捷键已保存，新终端或按回车后生效');
+      if (!silent) toast('快捷键已保存，新终端或按回车后生效');
     } catch (e) {
       toast('快捷键保存失败: ' + e.message, true);
     }
@@ -500,6 +504,7 @@ async function load() {
 }
 
 function buildRows() {
+  loadAliasIndex();
   const items = (S.config.aliases && S.config.aliases.items) || {};
   const used = new Set();
   const out = [];
@@ -515,18 +520,72 @@ function buildRows() {
   Object.keys(items).sort().forEach(n => {
     if (used.has(n)) return;
     const v = String(items[n] || '');
+    // cd / cd <项目> 这类目录快捷在「项目列表」里管理，不再进表格
+    if (v === 'cd' || v.startsWith('cd ')) return;
     if (v.startsWith('shell:')) {
       out.push({kind:'custom', target:'', title:n, group:'其他',
         usage:'自定义', actual:v.slice(6), aliases:[n], runnable:false});
-    } else if (v === 'cd') {
-      out.push({kind:'dircd', target:v, title:'当前项目目录', group:'项目',
-        usage:'ak cd', actual:'ak cd', aliases:[n], runnable:false});
     } else {
       out.push({kind:'raw', target:v, title:n, group:'其他',
         usage:'ak ' + v, actual:'ak ' + v, aliases:[n], runnable:false});
     }
   });
   return out;
+}
+
+// 项目目录快捷（值为 cd <项目>）单独维护；裸 cd 的旧别名原样保留，不展示也不丢。
+let projAliases = {};
+let passthrough = {};
+
+function loadAliasIndex() {
+  projAliases = {};
+  passthrough = {};
+  const items = (S.config.aliases && S.config.aliases.items) || {};
+  Object.keys(items).forEach(n => {
+    const v = String(items[n] || '').trim();
+    if (v === 'cd') { passthrough[n] = 'cd'; return; }
+    if (v.startsWith('cd ')) {
+      const id = v.slice(3).trim();
+      (projAliases[id] = projAliases[id] || []).push(n);
+    }
+  });
+  Object.keys(projAliases).forEach(k => projAliases[k].sort());
+}
+
+function aliasTakenBy(name, selfId) {
+  for (const id in projAliases) {
+    if (id !== selfId && projAliases[id].includes(name)) return '项目 ' + id;
+  }
+  for (const r of rows) {
+    if (r.aliases.includes(name)) return (r.title || r.target || '命令');
+  }
+  if (Object.prototype.hasOwnProperty.call(passthrough, name)) return '其它命令';
+  return '';
+}
+
+function onProjectAlias(id, value, el) {
+  const wanted = value.split(/[,\s]+/).map(s => s.trim()).filter(Boolean);
+  const kept = [];
+  let dup = '';
+  wanted.forEach(n => {
+    const owner = aliasTakenBy(n, id);
+    if (owner) { dup = n + '（已被 ' + owner + ' 使用）'; return; }
+    kept.push(n);
+  });
+  projAliases[id] = kept;
+  if (dup) {
+    if (el) el.value = kept.join(', ');
+    autosaveAliases(true);
+    toast('快捷键 ' + dup + '，已忽略', true);
+    return;
+  }
+  autosaveAliases();
+}
+
+function clearProjectAlias(id) {
+  projAliases[id] = [];
+  renderProject();
+  autosaveAliases();
 }
 
 function render() {
@@ -605,7 +664,7 @@ function rowHTML(r, i) {
   const tag = r.kind === 'builtin'
     ? ''
     : (r.kind === 'custom' ? `<span class="tag green">自定义</span>`
-      : (r.kind === 'dircd' ? '' : `<span class="tag warn">未识别</span>`));
+      : `<span class="tag warn">未识别</span>`);
   const badge = r.badge ? `<span class="tag green">${esc(r.badge)}</span>` : '';
   return `<tr class="row">
     <td class="c-name"><div class="nm">${esc(r.title)}${badge}</div></td>
@@ -688,7 +747,7 @@ function addRow() {
 }
 
 function collectItems() {
-  const items = {};
+  const items = Object.assign({}, passthrough);
   rows.forEach(r => {
     const names = r.aliases.map(s => s.trim()).filter(Boolean);
     if (!names.length) return;
@@ -697,6 +756,9 @@ function collectItems() {
     } else {
       names.forEach(n => { items[n] = r.target; });
     }
+  });
+  Object.keys(projAliases).forEach(id => {
+    projAliases[id].forEach(n => { items[n] = 'cd ' + id; });
   });
   return items;
 }
@@ -748,13 +810,21 @@ function renderProject() {
     const tags = [];
     if (p.id === curId) tags.push('<span class="tag green">当前</span>');
     if (p.id === defId) tags.push('<span class="tag">全局默认</span>');
+    const names = (projAliases[p.id] || []).join(', ');
     const acts = [];
     if (p.id !== defId) acts.push(`<button class="btn xs solid" onclick="setGlobalDefault('${esc(p.id)}')">设为全局默认</button>`);
     acts.push(`<button class="btn xs" onclick="redetectProject('${esc(p.id)}')">重新识别</button>`);
     acts.push(`<button class="btn xs danger" onclick="removeProject('${esc(p.id)}')">移除</button>`);
     return `<div class="prow">
       <div class="prow-main">
-        <div class="prow-name">${esc(p.name || p.id)}${tags.join('')}<span class="prow-acts">${acts.join('')}</span></div>
+        <div class="prow-name">${esc(p.name || p.id)}${tags.join('')}
+          <span class="aliaswrap palias">
+            <input class="alias" value="${esc(names)}" placeholder="快捷键" title="填了就是 cd 到该目录"
+              oninput="onProjectAlias('${esc(p.id)}', this.value, this)">
+            ${names ? `<button class="x" title="清除快捷键" onclick="clearProjectAlias('${esc(p.id)}')">×</button>` : ''}
+          </span>
+          <span class="prow-acts">${acts.join('')}</span>
+        </div>
         <div class="prow-path">${esc(p.root)}</div>
       </div>
       <div class="prow-meta">${esc(p.package || '未识别包名')}<br>${esc(p.module || ':app')} · ${esc(p.variant || 'debug')}</div>

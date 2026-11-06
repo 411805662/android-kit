@@ -1,0 +1,40 @@
+main.go
+  s_eb1e2c85f62b50::t_1917fb27ff0c45 131-132
+web/viewer.html
+  s_eb1e2c85f62b50::t_f3105c8d34bd7f 454-458
+  s_eb1e2c85f62b50::t_0d6c029a5480aa 538-540,547
+web.go
+  s_eb1e2c85f62b50::t_541e7537e1e698 285
+  s_eb1e2c85f62b50::t_eb5a23e61bc725 633-635
+artifacts.go
+  s_eb1e2c85f62b50::t_0decaf20eb2752 141-142,144-155
+  s_eb1e2c85f62b50::t_b3e07ded4f2cb7 143,163-164
+config.go
+  s_eb1e2c85f62b50::t_c4960657187e04 58,63
+  s_eb1e2c85f62b50::t_f479066546da06 70
+  s_eb1e2c85f62b50::t_8f10b8a328f825 144-148
+  s_eb1e2c85f62b50::t_a84e74e57f7a95 149-150
+web/index.html
+  s_eb1e2c85f62b50::t_18e668a07e4e5a 207-209
+  s_eb1e2c85f62b50::t_2eda9272122c76 746,748
+commands.go
+  s_eb1e2c85f62b50::t_a8ed20c97de4de 455-468
+shell.go
+  s_eb1e2c85f62b50::t_cb3dffc2bea303 118,123
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "20a8081b30fdcede4eb21751b1f820e0e3edf76e",
+  "prompts": {},
+  "sessions": {
+    "s_eb1e2c85f62b50": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1abf3-1a5b-7553-8639-364a6dacd49b",
+        "model": "agne/agnes-3.0-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

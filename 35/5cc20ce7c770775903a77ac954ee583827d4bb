@@ -1,0 +1,74 @@
+shell.go
+  s_eb1e2c85f62b50::t_e4c608efc585a0 118,123
+commands.go
+  s_eb1e2c85f62b50::t_18b97dc365037a 463-541
+  s_eb1e2c85f62b50::t_8f3a5d19e09c81 354-357,360,362,365,370
+main.go
+  s_eb1e2c85f62b50::t_909777619570f4 133-134
+web.go
+  s_62becc3ae9a79b::t_fe81b1cb16479a 632
+  s_eb1e2c85f62b50::t_98ff013b4e293a 168
+  s_eb1e2c85f62b50::t_77a95467540ce5 119-122,134-135
+  s_eb1e2c85f62b50::t_e0c82ffedd3154 230,612
+  s_eb1e2c85f62b50::t_b551be0970db1f 285-287
+  s_eb1e2c85f62b50::t_c6f4b1d97f3c3e 105
+  s_eb1e2c85f62b50::t_04b66d2611c735 514-539
+paths.go
+  s_eb1e2c85f62b50::t_46bee5e2cff06b 27,113
+README.md
+  s_62becc3ae9a79b::t_66cfaa7626348f 28,90,226,228-229
+  s_62becc3ae9a79b::t_ec4c76fd0f28bc 136-145
+  s_62becc3ae9a79b::t_478b4b3e35b3d8 131
+  s_62becc3ae9a79b::t_46a8a80cf4d4ff 227,283
+artifacts.go
+  s_eb1e2c85f62b50::t_228b6ff9cd212f 54-56,60-88,352
+  s_eb1e2c85f62b50::t_df1c33575564ca 163
+  s_eb1e2c85f62b50::t_2c40923f80fb99 89,346-351,353-360
+web/index.html
+  s_eb1e2c85f62b50::t_7e5239352b2661 653,657-662
+  s_62becc3ae9a79b::t_6a21b0e73f7dfa 224
+  s_62becc3ae9a79b::t_a7d20576f158d3 693,966-970,972,975-980,983-1011,1023-1026
+  s_eb1e2c85f62b50::t_dda4e396dd9118 1045,1047-1052,1057-1060
+  s_62becc3ae9a79b::t_7241a15bc3f72c 1126
+  s_62becc3ae9a79b::t_7d118ce4018675 875-876,882
+  s_eb1e2c85f62b50::t_f6a584e5be3d22 179-206
+  s_eb1e2c85f62b50::t_ab33183ddcc45d 387-388,402
+  s_eb1e2c85f62b50::t_5ed12e5f1b0eb8 443
+  s_62becc3ae9a79b::t_854264062d8cc8 377-378,380
+  s_eb1e2c85f62b50::t_f0b6f19506bcf0 285-286,288-289
+  s_eb1e2c85f62b50::t_8943afe974fd61 112-117
+  s_62becc3ae9a79b::t_7f16f32d724712 319
+  s_62becc3ae9a79b::t_ebff4cfceafe5f 1012-1022
+  s_62becc3ae9a79b::t_7b47f99e2c0a6f 219-223,225
+  s_eb1e2c85f62b50::t_a5c67877be591c 602-603,611-630,635-648,754,760,804
+  s_eb1e2c85f62b50::t_e43a761e976db7 287
+  s_62becc3ae9a79b::t_9387b422071858 690-692
+  s_62becc3ae9a79b::t_6e49e76dc8d666 694
+  s_62becc3ae9a79b::t_1d27a00ca6d8d7 668-689
+version.go
+  s_eb1e2c85f62b50::t_90172e60697cde 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "355cc20ce7c770775903a77ac954ee583827d4bb",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    },
+    "s_eb1e2c85f62b50": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1abf3-1a5b-7553-8639-364a6dacd49b",
+        "model": "agne/agnes-3.0-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

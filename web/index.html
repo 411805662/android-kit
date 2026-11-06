@@ -188,9 +188,13 @@ details.adv[open] summary::before{content:"▾ ";}
 details.adv summary:hover{color:var(--text-soft)}
 details.adv .form{margin-top:12px}
 .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center}
-.artpick{background:var(--input-bg);border:1px solid var(--input-bd);border-radius:8px;
-  padding:6px 10px;font-size:12.5px;color:var(--text-soft);outline:none;min-width:190px;cursor:pointer}
-.artpick:focus{border-color:#4d6bd8}
+.artpick{-webkit-appearance:none;appearance:none;border:1px solid var(--line);border-radius:8px;
+  background-color:var(--btn-bg);color:var(--text);padding:7px 30px 7px 12px;font-size:12.5px;
+  line-height:1.25;outline:none;min-width:180px;cursor:pointer;
+  background-repeat:no-repeat;background-position:right 10px center;background-size:10px 6px;
+  background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238b8b93' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+.artpick:hover{border-color:var(--btn-bd-hi);background-color:var(--btn-hover)}
+.artpick:focus{border-color:#6f8fff}
 .artpick:disabled{opacity:.5;cursor:default}
 .note{color:var(--muted);font-size:11.5px;line-height:1.7;margin-top:10px}
 .note b{color:var(--text-soft)}
@@ -945,8 +949,9 @@ let artProject = localStorage.getItem(ART_PICK_KEY) || '';
 function renderArtProjectOptions() {
   const sel = $('#art-project');
   if (!sel) return;
-  const groups = (S && S.groups) || [];
-  if (!groups.length) { sel.innerHTML = '<option>无项目</option>'; sel.disabled = true; return; }
+  // 只列真正有产物的项目
+  const groups = ((S && S.groups) || []).filter(g => (g.artifacts || []).length);
+  if (!groups.length) { sel.innerHTML = '<option>暂无产物</option>'; sel.disabled = true; return; }
   sel.disabled = false;
   const ids = groups.map(g => g.id);
   if (!artProject || !ids.includes(artProject)) {

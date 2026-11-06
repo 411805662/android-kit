@@ -228,11 +228,19 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 		runCmd = gradleInstall + " && " + startCmd
 	}
 	runDesc := "install<Variant> + am start，日常部署一条命令"
+	installDesc := "gradlew install<Variant>：构建 + 安装一步到位，不会装错变体"
+	if engine == "android" && hasWrapper {
+		installDesc = "android build " + androidInstallTask(module, variant) + "：官方 CLI 跑安装任务，构建 + 安装一步到位"
+	}
 	layoutCmd := "adb shell uiautomator dump /sdcard/android-kit-ui.xml && adb exec-out cat /sdcard/android-kit-ui.xml"
 	shotCmd := "adb exec-out screencap -p > " + root + "/android-kit/screenshots/<time>.png"
 	if engine == "android" {
 		buildCmd = "android build " + task
 		cleanCmd = "android build " + mod + ":clean && android build " + task
+		if hasWrapper {
+			// 官方 CLI 直接跑 Gradle 的安装任务，等价于 ./gradlew :app:installDebug
+			installCmd = "android build " + androidInstallTask(module, variant)
+		}
 		if !hasWrapper {
 			installCmd = "android install " + apk + devFlag
 		}
@@ -258,7 +266,7 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 
 		{ID: "build", Target: "build", Group: groupDeploy, Title: "构建 Debug", Desc: "编译当前模块的 debug 变体", Command: buildCmd, Engine: engine, Available: true, Runnable: true, Run: "build"},
 		{ID: "build-clean", Target: "build --clean", Group: groupDeploy, Title: "清理后构建", Desc: "先 clean 再编译，解决缓存问题", Command: cleanCmd, Engine: engine, Available: true, Runnable: true, Run: "build --clean"},
-		{ID: "install", Target: "install", Group: groupDeploy, Title: "安装 APK", Desc: "gradlew install<Variant>：构建 + 安装一步到位", Command: installCmd, Engine: engine, Available: true, Runnable: true, Run: "install"},
+		{ID: "install", Target: "install", Group: groupDeploy, Title: "安装 APK", Desc: installDesc, Command: installCmd, Engine: engine, Available: true, Runnable: true, Run: "install"},
 		{ID: "uninstall", Target: "uninstall", Group: groupDeploy, Title: "卸载 App", Desc: "卸载手机上的应用；卸载本工具用 ak unset", Command: "adb uninstall " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "uninstall"},
 		{ID: "run", Target: "run", Group: groupDeploy, Title: "构建 + 安装 + 启动", Desc: runDesc, Command: runCmd, Engine: engine, Available: true, Runnable: true, Run: "run"},
 

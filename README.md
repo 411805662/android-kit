@@ -116,11 +116,11 @@ dev3    # → /Users/…/photoo/android
 |---|---|---|
 | `b` | `ak build` | 构建 Debug（`assembleDebug`） |
 | `cb` | `ak build --clean` | 清理后构建（`clean` + `assembleDebug`） |
-| `in` | `ak install` | 构建并安装（Gradle `install<Variant>`，如 `:app:installDebug`） |
+| `in` | `ak install` | 构建并安装（官方 CLI 优先：`android build app:installDebug`） |
 | `un` | `ak uninstall` | 卸载手机上的 App |
 | `bio` | `ak run` | 构建 + 安装 + 启动（官方 CLI `android run`，delta 安装只推差异） |
 
-安装优先走 Gradle 自带的 `install<Variant>` 任务：它会先 `assemble` 再安装，自动找对 APK（多 flavor / split 也不会装错），比「先 build 再 `adb install`」少一次 Gradle 配置。指定了 APK（`ak install --apk <文件>`）时只安装该文件，不再构建。
+安装走 Gradle 自带的 `install<Variant>` 任务（`:app:installDebug`）：它会先 `assemble` 再安装，自动找对 APK（多 flavor / split 也不会装错），比「先 build 再 `adb install`」少一次 Gradle 配置。官方 CLI 可用时用 `android build app:installDebug` 跑同一个任务，Gradle / JDK 交给官方 CLI 统一管理；没有官方 CLI 时回退 `./gradlew :app:installDebug`。指定了 APK（`ak install --apk <文件>`）时只安装该文件，不再构建。
 
 `ak run` 走官方 CLI 的 `android run <模块>`：一条命令完成构建 + delta 安装 + 启动，只传输差异部分（大项目通常从几百 MB 降到几 MB）。传模块引用而不是 APK 路径，多模块 / 动态特性 / ABI 分包的项目也不会装错或装到旧包。
 
@@ -214,8 +214,8 @@ ak web
 
 - 只监听 `127.0.0.1` 随机端口，带一次性 token（写入 `~/.android-kit/web.token`，0600）。
 - 三个 tab：**项目**（项目命令、项目列表、全局设置、存储路径）、**命令**（构建 · 安装 / 应用控制 / 调试 / 应用文件 / 设备输入 / 其他）、**UI 截图**（产物画廊）。
-- **项目** tab 上面是命令表格（不再有重复的 `ak cd` 行），下面是**项目列表**：每行一个项目，行内「快捷键」填名字就等于 `cd` 到该目录；当前项目带「当前」标记。
-- **项目列表**还能添加目录、移除（只删配置）、重新识别；鼠标移到项目名后可「设为全局默认」，非项目目录下执行 `ak` 会回退到它。
+- **项目** tab 上面是命令表格（不再有重复的 `ak cd` 行），下面是**项目列表**：同一套列宽，快捷键列和上面完全对齐。每行一个项目，行内「快捷键」填名字就等于 `cd` 到该目录；当前项目带「当前」标记，全局默认项目带「全局默认」标记。
+- **项目列表**每行可「设为默认 / 重识别 / 移除」（只删配置），底部输入目录即可添加。
 - **UI 截图** tab 顶部下拉选项目（初始是全局默认项目，记住上次选择，可切到「未归属（历史）」；「刷新产物」在最右侧），UI 树和截图配对预览；产物存在 `~/.android-kit/artifacts/<项目>/ui`，截图存在 `<项目>/android-kit/screenshots`。
 - **添加项目只填根目录**，名称取目录名，包名 / 模块 / 变体自动识别；需要纠正时点该行的「重新识别」。
 - 表格列顺序统一为：名称 / ak 命令 / 快捷键 / 操作 / 实际命令。内置命令的实际命令由项目配置生成，只读；自定义行可自由编辑。
@@ -268,7 +268,7 @@ ak unset --purge       # 连配置和项目列表一起删除
 
 ```bash
 go build -o bin/android-kit .
-./scripts/build-release.sh 0.2.26
+./scripts/build-release.sh 0.2.27
 ```
 
 推送 `v*` tag 会触发 GitHub Actions 构建 macOS / Linux / Windows 产物并上传 Release。

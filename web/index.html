@@ -97,23 +97,13 @@ main{max-width:1500px;margin:0 auto;padding:18px 22px}
 .card-head{display:flex;align-items:center;gap:8px;padding:11px 16px;border-bottom:1px solid var(--line);
   font-weight:650;font-size:13px;color:var(--text-soft)}
 .card-head .note{margin:0;font-weight:400}
-.split2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:14px;margin-top:14px;align-items:start}
-@media(max-width:1100px){.split2{grid-template-columns:1fr}}
-.pane-card .body{padding:14px 16px}
-.split2 .form{grid-template-columns:1fr 1fr}
-.split2 table{font-size:12.5px}
-.split2 table{table-layout:fixed}
-.split2 thead th{padding:8px 10px}
-.split2 tbody td{padding:7px 10px}
-.split2 .c-name{width:17%}
-.split2 .c-alias{width:12%}
-.split2 .c-ak{width:19%;white-space:normal}
-.split2 .c-ak .tag{display:none}
-.split2 .c-actual{width:38%;min-width:0}
-.split2 .c-ops{width:14%}
-.split2 .tablecard{overflow:auto}
 .tablecard{overflow:auto}
 .tablecard>table{min-width:920px}
+table.grid-table{table-layout:fixed}
+.w-name{width:200px}
+.w-ak{width:150px}
+.w-alias{width:160px}
+.w-ops{width:190px}
 table{width:100%;border-collapse:collapse}
 thead th{background:var(--surface);text-align:left;
   color:var(--muted);font-weight:600;font-size:11.5px;letter-spacing:.4px;
@@ -173,20 +163,6 @@ details .body{padding:0 16px 16px}
 .field input,.field select{background:var(--input-bg);border:1px solid var(--input-bd);border-radius:7px;padding:7px 9px;outline:none;width:100%}
 .field input:focus,.field select:focus{border-color:#4d6bd8}
 .field .hint{font-size:10.5px;color:var(--muted-2)}
-.detected{margin-top:12px;display:flex;flex-wrap:wrap;gap:6px 16px;font-size:11.5px;color:var(--muted);
-  min-height:20px;align-items:center}
-.detected .d{display:inline-flex;gap:6px;align-items:baseline;min-width:0}
-.detected .d b{font-weight:600;color:var(--text-soft);font-family:ui-monospace,Menlo,monospace;
-  word-break:break-all}
-.detected .bad{color:var(--danger)}
-.detected .ok{color:var(--green)}
-details.adv{margin-top:14px;border-top:1px solid var(--line-soft);padding-top:10px}
-details.adv summary{cursor:pointer;font-size:11.5px;color:var(--muted);list-style:none}
-details.adv summary::-webkit-details-marker{display:none}
-details.adv summary::before{content:"▸ ";}
-details.adv[open] summary::before{content:"▾ ";}
-details.adv summary:hover{color:var(--text-soft)}
-details.adv .form{margin-top:12px}
 .actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center}
 .artpick{-webkit-appearance:none;appearance:none;border:1px solid var(--line);border-radius:8px;
   background-color:var(--btn-bg);color:var(--text);padding:7px 30px 7px 12px;font-size:12.5px;
@@ -202,27 +178,12 @@ details.adv .form{margin-top:12px}
 .kv .k{color:var(--muted)}
 .kv .v{word-break:break-all}
 
-.plist{display:flex;flex-direction:column;gap:1px;margin:-4px -6px}
-.prow{display:flex;align-items:center;gap:14px;padding:9px 10px;border-radius:9px}
-.prow:hover{background:var(--row-hover)}
-.prow-main{flex:1;min-width:0}
-.prow-name{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:650}
-.prow-path{font-size:11px;color:var(--muted);word-break:break-all;margin-top:3px}
-.prow-meta{text-align:right;font-size:10.5px;color:var(--muted-2);line-height:1.65;
-  font-family:ui-monospace,Menlo,monospace;white-space:nowrap}
-.prow-acts{display:flex;gap:5px;opacity:0;transition:opacity .12s}
-.prow:hover .prow-acts,.prow:focus-within .prow-acts{opacity:1}
-@media (hover:none){.prow-acts{opacity:1}}
 .palias{width:132px;flex:none}
 .palias input.alias{border-color:var(--input-bd);background:var(--input-bg);font-weight:600}
 .palias input.alias::placeholder{font-weight:400}
 .palias:hover .x,.palias:focus-within .x{opacity:1;pointer-events:auto}
-.prow-acts .btn{font-size:10.5px;padding:3px 7px}
-.prow-acts .btn.solid{background:var(--btn-hover);border-color:var(--line-strong);color:var(--text-soft)}
-.padd{display:flex;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
-.padd input{flex:1;background:var(--input-bg);border:1px solid var(--input-bd);border-radius:7px;
-  padding:7px 9px;font-size:12px;outline:none;font-family:ui-monospace,Menlo,monospace}
-.padd input:focus{border-color:#4d6bd8}
+.pname-sub{font-size:11px;color:var(--muted);margin-top:3px;
+  font-family:ui-monospace,Menlo,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .drawer{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--panel);
   border-top:1px solid var(--line-strong);box-shadow:0 -12px 40px var(--shadow);transform:translateY(100%);
@@ -306,7 +267,8 @@ details.adv .form{margin-top:12px}
 
   <div class="tabpane" id="pane-project">
     <div class="card tablecard">
-      <table>
+      <table class="grid-table">
+        <colgroup><col class="w-name"><col class="w-ak"><col class="w-alias"><col class="w-ops"><col></colgroup>
         <thead>
           <tr>
             <th class="c-name">名称</th>
@@ -320,32 +282,27 @@ details.adv .form{margin-top:12px}
       </table>
     </div>
 
-    <div class="split2">
-      <section class="card pane-card">
-        <div class="card-head">项目列表 <span class="note">cd 到目录执行 ak 会自动登记，包名只解析一次</span></div>
-        <div class="body">
-          <div id="project-list" class="plist"></div>
-          <div class="padd">
-            <input id="p-new-root" placeholder="/path/to/android/project" spellcheck="false" autocomplete="off">
-            <button class="btn" onclick="addProjectByPath()">添加</button>
-          </div>
-          <div class="note">只填项目根目录即可，名称、包名、模块自动识别。每个项目的「快捷键」就是 <code>cd</code> 到该目录（如 <code>dev</code> → PokeKara），在行内直接填。鼠标移到项目名后面可设为全局默认。</div>
-        </div>
-      </section>
-
-      <section class="card pane-card">
-        <div class="card-head">工作方式</div>
-        <div class="body">
-          <div class="kv">
-            <div class="k">目录即项目</div><div class="v">cd 到项目目录执行 <code>ak</code> 命令，自动识别并登记</div>
-            <div class="k">命令作用域</div><div class="v">所有命令只针对当前目录的项目生效</div>
-            <div class="k">全局默认</div><div class="v">当前目录不是任何项目时，回退到全局默认项目</div>
-            <div class="k">切换项目</div><div class="v">cd 到另一个项目目录即可，无需切换命令</div>
-            <div class="k">识别规则</div><div class="v">目录名作名称，包名/模块/变体从 Gradle 与 Manifest 读取</div>
-          </div>
-          <div class="note">已经在项目目录里运行时，上方「实际命令」展示的就是该目录对应的命令。</div>
-        </div>
-      </section>
+    <div class="card tablecard" style="margin-top:14px">
+      <div class="card-head">项目列表 <span class="note">cd 到目录执行 ak 会自动登记，包名只解析一次</span></div>
+      <table class="grid-table">
+        <colgroup><col class="w-name"><col class="w-ak"><col class="w-alias"><col class="w-ops"><col></colgroup>
+        <thead>
+          <tr>
+            <th class="c-name">名称</th>
+            <th class="c-ak">ak 命令</th>
+            <th class="c-alias">快捷键</th>
+            <th class="c-ops">操作</th>
+            <th class="c-actual">实际命令（点击复制）</th>
+          </tr>
+        </thead>
+        <tbody id="project-list"></tbody>
+      </table>
+      <div class="addbar">
+        <span class="lbl">添加项目</span>
+        <input id="p-new-root" placeholder="/path/to/android/project" spellcheck="false" autocomplete="off">
+        <button class="btn" onclick="addProjectByPath()">添加</button>
+        <span class="lbl">只填根目录，名称 / 包名 / 模块自动识别；快捷键就是 cd 到该目录</span>
+      </div>
     </div>
 
     <details id="d-settings">
@@ -807,7 +764,7 @@ function renderProject() {
     rank(a) - rank(b) || String(a.name || a.id).localeCompare(String(b.name || b.id)));
   const box = $('#project-list');
   if (!list.length) {
-    box.innerHTML = '<div class="note" style="margin:14px 4px">还没有登记项目。cd 到项目目录执行一次 ak 会自动登记。</div>';
+    box.innerHTML = '<tr><td colspan="5" style="padding:26px;text-align:center;color:var(--muted)">还没有登记项目。cd 到项目目录执行一次 ak 会自动登记。</td></tr>';
     return;
   }
   box.innerHTML = list.map(p => {
@@ -816,23 +773,23 @@ function renderProject() {
     if (p.id === defId) tags.push('<span class="tag">全局默认</span>');
     const names = (projAliases[p.id] || []).join(', ');
     const acts = [];
-    if (p.id !== defId) acts.push(`<button class="btn xs solid" onclick="setGlobalDefault('${esc(p.id)}')">设为全局默认</button>`);
-    acts.push(`<button class="btn xs" onclick="redetectProject('${esc(p.id)}')">重新识别</button>`);
-    acts.push(`<button class="btn xs danger" onclick="removeProject('${esc(p.id)}')">移除</button>`);
-    return `<div class="prow">
-      <div class="prow-main">
-        <div class="prow-name">${esc(p.name || p.id)}${tags.join('')}
-          <span class="aliaswrap palias">
-            <input class="alias" value="${esc(names)}" placeholder="快捷键" title="填了就是 cd 到该目录"
-              oninput="onProjectAlias('${esc(p.id)}', this.value, this)">
-            ${names ? `<button class="x" title="清除快捷键" onclick="clearProjectAlias('${esc(p.id)}')">×</button>` : ''}
-          </span>
-          <span class="prow-acts">${acts.join('')}</span>
-        </div>
-        <div class="prow-path">${esc(p.root)}</div>
-      </div>
-      <div class="prow-meta">${esc(p.package || '未识别包名')}<br>${esc(p.module || ':app')} · ${esc(p.variant || 'debug')}</div>
-    </div>`;
+    acts.push(p.id === defId
+      ? `<button class="btn xs" disabled title="已经是全局默认">设为默认</button>`
+      : `<button class="btn xs" title="不在任何项目目录时回退到它" onclick="setGlobalDefault('${esc(p.id)}')">设为默认</button>`);
+    acts.push(`<button class="btn xs" title="重新识别包名 / 模块 / 变体" onclick="redetectProject('${esc(p.id)}')">重识别</button>`);
+    acts.push(`<button class="btn xs danger" title="只删配置，不动项目文件" onclick="removeProject('${esc(p.id)}')">移除</button>`);
+    return `<tr class="row">
+      <td class="c-name"><div class="nm">${esc(p.name || p.id)}${tags.join('')}</div>
+        <div class="pname-sub" title="${esc(p.root)}">${esc(p.package || '未识别包名')}</div></td>
+      <td class="c-ak"><code class="ak">cd</code></td>
+      <td class="c-alias"><div class="aliaswrap palias">
+        <input class="alias" value="${esc(names)}" placeholder="未设置" title="填了就是 cd 到该目录"
+          oninput="onProjectAlias('${esc(p.id)}', this.value, this)">
+        ${names ? `<button class="x" title="清除快捷键" onclick="clearProjectAlias('${esc(p.id)}')">×</button>` : ''}
+      </div></td>
+      <td class="c-ops">${acts.join('')}</td>
+      <td class="c-actual"><code class="actual" title="点击复制" onclick="copyText('cd ${esc(p.root)}')">cd ${esc(p.root)}</code></td>
+    </tr>`;
   }).join('');
 }
 

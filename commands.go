@@ -193,6 +193,19 @@ func gradleProjectRef(module string) string {
 	return module
 }
 
+// androidInstallTask 是官方 CLI 用的安装任务引用：app:installDebug。
+func androidInstallTask(module, variant string) string {
+	if variant == "" {
+		variant = "debug"
+	}
+	variant = strings.ToUpper(variant[:1]) + variant[1:]
+	mod := strings.TrimPrefix(strings.TrimSpace(module), ":")
+	if mod == "" || mod == "/" {
+		return "install" + variant
+	}
+	return mod + ":install" + variant
+}
+
 func (a *App) gradle(proj *Project, tasks ...string) error {
 	wrapper := a.Paths.GradleWrapper(proj)
 	if wrapper == "" {
@@ -215,6 +228,18 @@ func (a *App) gradleInstall(proj *Project) error {
 	task := gradleInstallTask(proj.Module, proj.Variant)
 	fmt.Fprintf(os.Stderr, "→ ./gradlew %s\n", task)
 	return runStream(proj.Root, env, wrapper, task)
+}
+
+// androidBuildTask 用官方 CLI 跑一个 Gradle 任务，例如
+// android build app:installDebug —— 官方 CLI 优先时的等价写法。
+func (a *App) androidBuildTask(proj *Project, tasks ...string) error {
+	env := proj.EnvList()
+	if serial := a.device(proj); serial != "" {
+		env = append(env, "ANDROID_SERIAL="+serial)
+	}
+	args := append([]string{"build"}, tasks...)
+	fmt.Fprintf(os.Stderr, "→ android %s\n", strings.Join(args, " "))
+	return runStream(proj.Root, env, a.androidPath(), args...)
 }
 
 func (a *App) build(proj *Project, clean bool, extra []string) error {
@@ -289,6 +314,11 @@ func (a *App) installAPK(proj *Project, apk string, allowBuild bool) error {
 	if apk == "" && allowBuild && a.Paths.GradleWrapper(proj) != "" {
 		if a.device(proj) == "" {
 			return fmt.Errorf("没有连接的设备，先插上手机或启动模拟器（ak devices 查看）")
+		}
+		// 官方 CLI 可用时走 android build <模块>:install<Variant>，等价于
+		// ./gradlew :app:installDebug，但由官方 CLI 统一管理 Gradle / JDK
+		if engine == "android" {
+			return a.androidBuildTask(proj, androidInstallTask(proj.Module, proj.Variant))
 		}
 		return a.gradleInstall(proj)
 	}

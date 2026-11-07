@@ -213,19 +213,13 @@ details .body{padding:0 16px 16px}
   .sec-row .c-ak code{font-size:11px}
   .c-ops .btn.xs{padding:4px 7px;font-size:11px}
 }
-.copybtn{position:relative}
-.copybtn[data-tip]:hover::before{
-  content:"";position:absolute;bottom:calc(100% + 4px);left:50%;transform:translateX(-50%) rotate(45deg);
-  width:10px;height:10px;background:var(--panel2);
-  border-left:1px solid var(--line-strong);border-bottom:1px solid var(--line-strong);
-  z-index:59;pointer-events:none}
-.copybtn[data-tip]:hover::after{
-  content:attr(data-tip);position:absolute;bottom:calc(100% + 9px);left:50%;transform:translateX(-50%);
-  background:var(--panel2);border:1px solid var(--line-strong);color:var(--text-soft);
-  padding:6px 12px;border-radius:8px;font-size:11.5px;white-space:nowrap;
-  max-width:min(640px,calc(100vw - 32px));overflow:hidden;text-overflow:ellipsis;
-  z-index:60;box-shadow:0 8px 30px var(--shadow);
-  font-family:ui-monospace,Menlo,monospace;pointer-events:none}
+.cmd-tip{position:fixed;z-index:60;display:none;background:var(--panel2);
+  border:1px solid var(--line-strong);color:var(--text-soft);border-radius:9px;
+  padding:8px 12px;font-size:11.5px;line-height:1.5;text-align:left;
+  white-space:pre-wrap;word-break:break-all;overflow-wrap:anywhere;
+  overflow:auto;overscroll-behavior:contain;box-shadow:0 8px 30px var(--shadow);
+  font-family:ui-monospace,Menlo,monospace}
+.cmd-tip.on{display:block}
 .note{color:var(--muted);font-size:11.5px;line-height:1.7;margin-top:10px}
 .note b{color:var(--text-soft)}
 .kv{display:grid;grid-template-columns:130px 1fr;gap:5px 12px;font-size:12px}
@@ -486,6 +480,7 @@ details .body{padding:0 16px 16px}
   <pre id="drawer-out"></pre>
 </div>
 <div class="toast" id="toast"></div>
+<div class="cmd-tip" id="cmd-tip" role="tooltip"></div>
 
 <script>
 const TOKEN = new URLSearchParams(location.search).get('token') || sessionStorage.getItem('ak_token') || '';
@@ -696,6 +691,7 @@ async function onProjPick(id) {
 }
 
 function renderCommands() {
+  hideCmdTip();
   const all = rows.map((r, i) => ({r, i}));
   const projectRows = all.filter(x => x.r.group === PROJECT_GROUP);
   const commandRows = all.filter(x => x.r.group !== PROJECT_GROUP);
@@ -741,13 +737,15 @@ function cmdRowHTML(r, i) {
   const tip = esc(r.actual || '（无实际命令）');
   const ops = [];
   if (r.runnable) ops.push(`<button class="btn xs primary" onclick="runRow(${i})">执行</button>`);
-  ops.push(`<button class="btn xs copybtn" data-tip="${tip}" onclick="copyRow(${i})" title="复制 ak 命令，悬停看实际命令">复制</button>`);
+  ops.push(`<button class="btn xs copybtn" data-tip="${tip}" data-row="${i}"
+    onmouseenter="showCmdTip(this)" onmouseleave="scheduleHideCmdTip()" onfocus="showCmdTip(this)" onblur="scheduleHideCmdTip()"
+    onclick="copyRowBtn(this)" title="悬停查看实际命令，点击复制">复制</button>`);
   if (r.kind === 'custom') ops.push(`<button class="btn xs danger" onclick="delRow(${i})">删除</button>`);
   const tag = r.kind === 'builtin' ? ''
     : (r.kind === 'custom' ? `<span class="tag green">自定义</span>` : `<span class="tag warn">未识别</span>`);
   const badge = r.badge ? `<span class="tag green">${esc(r.badge)}</span>` : '';
   const cmdInput = r.kind === 'custom'
-    ? `<div class="sec-cmd"><input class="cmd" value="${esc(r.actual)}" placeholder="adb shell ..." oninput="onCmd(${i}, this.value)"></div>` : '';
+    ? `<div class="sec-cmd"><input class="cmd" value="${esc(r.actual)}" placeholder="adb shell ..." oninput="onCmd(${i}, this.value, this)"></div>` : '';
   return `<div class="sec-row">
     <div class="c-name"><b>${esc(r.title)}</b>${badge}${tag}</div>
     <div class="c-ak"><code class="ak">${esc(r.usage)}</code></div>
@@ -763,6 +761,7 @@ function cmdRowHTML(r, i) {
 function showTab(tab) {
   activeTab = (tab === 'commands' || tab === 'artifacts') ? tab : 'project';
   closePeek();
+  hideCmdTip();
   $('#tab-project').classList.toggle('active', activeTab === 'project');
   $('#tab-commands').classList.toggle('active', activeTab === 'commands');
   $('#tab-artifacts').classList.toggle('active', activeTab === 'artifacts');
@@ -814,8 +813,15 @@ function onAlias(i, value) {
   autosaveAliases();
 }
 
-function onCmd(i, value) {
+function onCmd(i, value, input) {
   rows[i].actual = value;
+  if (input) {
+    const btn = input.closest('.sec-row')?.querySelector('.copybtn');
+    if (btn) {
+      btn.dataset.tip = value || '（无实际命令）';
+      if (document.activeElement === btn || btn.matches(':hover')) showCmdTip(btn);
+    }
+  }
   autosaveAliases();
 }
 
@@ -1355,6 +1361,66 @@ function copyRow(i) {
   copyText(r.kind === 'custom' ? r.actual : 'ak ' + r.target);
 }
 
+function copyRowBtn(btn) {
+  const text = (btn && btn.dataset ? btn.dataset.tip : '') || '';
+  if (!text || text === '（无实际命令）') {
+    toast('这条命令没有可复制的内容', true);
+    return;
+  }
+  copyText(text);
+}
+
+let cmdTipBtn = null;
+function showCmdTip(btn) {
+  const tip = $('#cmd-tip');
+  if (!tip || !btn || !btn.dataset.tip) return;
+  clearTimeout(cmdTipHideTimer);
+  cmdTipBtn = btn;
+  tip.textContent = btn.dataset.tip;
+  tip.style.left = '-10000px';
+  tip.style.top = '-10000px';
+  tip.style.maxWidth = 'min(640px, calc(100vw - 32px))';
+  tip.style.maxHeight = '40vh';
+  tip.classList.add('on');
+  const rect = btn.getBoundingClientRect();
+  const gap = 10;
+  const margin = 16;
+  const width = Math.min(640, Math.max(240, innerWidth - margin * 2));
+  tip.style.width = width + 'px';
+  const height = Math.min(tip.scrollHeight, Math.max(80, innerHeight - margin * 2));
+  let left = rect.right - width;
+  left = Math.max(margin, Math.min(left, innerWidth - width - margin));
+  let top = rect.top - height - gap;
+  if (top < margin) top = Math.min(rect.bottom + gap, innerHeight - height - margin);
+  tip.style.maxHeight = Math.max(80, height) + 'px';
+  tip.style.left = Math.round(left) + 'px';
+  tip.style.top = Math.round(Math.max(margin, top)) + 'px';
+}
+
+let cmdTipHideTimer = null;
+function scheduleHideCmdTip() {
+  clearTimeout(cmdTipHideTimer);
+  cmdTipHideTimer = setTimeout(() => {
+    if (!cmdTipBtn || !cmdTipBtn.matches(':hover')) hideCmdTip();
+  }, 120);
+}
+
+function hideCmdTip() {
+  cmdTipBtn = null;
+  const tip = $('#cmd-tip');
+  if (tip) {
+    tip.classList.remove('on');
+    tip.style.width = '';
+    tip.style.maxHeight = '';
+  }
+}
+
+const cmdTip = $('#cmd-tip');
+if (cmdTip) {
+  cmdTip.addEventListener('mouseenter', () => clearTimeout(cmdTipHideTimer));
+  cmdTip.addEventListener('mouseleave', scheduleHideCmdTip);
+}
+
 function copyActual(i) {
   copyText(rows[i].actual);
 }
@@ -1481,7 +1547,12 @@ function renderRunOutput(text) {
 load();
 
 $('#p-new-root').addEventListener('keydown', e => { if (e.key === 'Enter') addProjectByPath(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closePeek(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { closePeek(); hideCmdTip(); }
+});
+window.addEventListener('scroll', () => {
+  if (cmdTipBtn && document.activeElement !== cmdTipBtn) hideCmdTip();
+}, true);
 </script>
 </body>
 </html>

@@ -261,6 +261,16 @@ details .body{padding:0 16px 16px}
 .drawer pre a.runlink:hover{border-color:#4d6bd8;background:var(--chip-bg)}
 .drawer pre a.runlink.primary{border-color:#4d6bd8;background:linear-gradient(135deg,#2a3a6b,#22304f);
   color:#dbe4ff;font-weight:600}
+.drawer .run-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;
+  margin:10px 0 4px;padding:2px 0;white-space:normal}
+.drawer .run-actions a{display:flex;align-items:center;justify-content:center;min-height:42px;
+  border-radius:11px;border:1px solid var(--btn-bd-hi);background:var(--btn-bg);
+  color:var(--text);font:600 12.5px/1.2 inherit;
+  text-decoration:none !important;text-align:center;letter-spacing:.2px;transition:.15s}
+.drawer .run-actions a:hover{border-color:var(--accent);background:var(--btn-hover);transform:translateY(-1px)}
+.drawer .run-actions a.primary{border-color:var(--accent);background:linear-gradient(135deg,#7c9cff,#5b7cf0);color:#fff}
+.drawer .run-actions a.primary:hover{filter:brightness(1.06)}
+@media(max-width:560px){.drawer .run-actions{gap:7px}.drawer .run-actions a{min-height:40px;font-size:11.5px}}
 .artifacts{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;padding:12px}
 .artgroup{margin-bottom:16px;border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
 .artgroup-head{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--surface);
@@ -1486,30 +1496,49 @@ async function runRow(i) {
 function renderRunOutput(text) {
   const fragment = document.createDocumentFragment();
   const lines = String(text || '').split(/\r?\n/);
+  const actions = [];
+  const addAction = (label, href, primary) => {
+    if (!href) return;
+    const existing = actions.find(item => item.label === label);
+    if (existing) {
+      if (primary) {
+        existing.href = href;
+        existing.primary = true;
+      }
+      return;
+    }
+    actions.push({label, href, primary: !!primary});
+  };
+  const actionButton = ({label, href, primary}) => {
+    const link = document.createElement('a');
+    link.className = primary ? 'primary' : '';
+    link.href = href;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = label;
+    return link;
+  };
+  const flushActions = () => {
+    if (!actions.length) return;
+    const order = ['打开 JSON', '打开截图', '打开 UI 树'];
+    actions.sort((left, right) => order.indexOf(left.label) - order.indexOf(right.label));
+    const bar = document.createElement('span');
+    bar.className = 'run-actions';
+    actions.forEach(item => bar.appendChild(actionButton(item)));
+    fragment.appendChild(bar);
+    actions.length = 0;
+  };
   lines.forEach((line, idx) => {
     const trimmed = line.trim();
     const viewer = trimmed.match(/^# viewer:\s*(.+)$/i);
     if (viewer) {
-      const link = document.createElement('a');
-      link.className = 'runlink primary';
-      link.href = viewer[1].trim();
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.textContent = '▶ 打开 H5 UI 对照（截图 + 线框）';
-      fragment.appendChild(link);
-      if (idx < lines.length - 1) fragment.appendChild(document.createTextNode('\n'));
+      const url = viewer[1].trim();
+      addAction('打开 UI 树', /^https?:\/\//i.test(url) ? url : artifactURL(url), true);
       return;
     }
     const shot = trimmed.match(/^# shot:\s*(.+)$/i);
     if (shot) {
-      const link = document.createElement('a');
-      link.className = 'runlink';
-      link.href = artifactURL('/artifact?path=' + encodeURIComponent(shot[1].trim()));
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.textContent = '↗ 打开截图 ' + shot[1].trim();
-      fragment.appendChild(link);
-      if (idx < lines.length - 1) fragment.appendChild(document.createTextNode('\n'));
+      addAction('打开截图', artifactURL('/artifact?path=' + encodeURIComponent(shot[1].trim())));
       return;
     }
     const saved = trimmed.match(/^# saved:\s*(.+)$/i);
@@ -1518,29 +1547,19 @@ function renderRunOutput(text) {
     const isJSON = /\.json$/i.test(path) && !path.includes(' ') && !path.includes('→');
     const isXML = /\.xml$/i.test(path) && !path.includes(' ') && !path.includes('→');
     if (isImage || isJSON) {
-      const link = document.createElement('a');
-      link.className = 'runlink';
       const target = (isJSON && !saved)
         ? '/viewer?ui=' + encodeURIComponent(path) + (S && S.current ? '&project=' + encodeURIComponent(S.current.id) : '')
         : '/artifact?path=' + encodeURIComponent(path) + (isJSON ? '&pretty=1' : '');
-      link.href = artifactURL(target);
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.textContent = path + (isImage ? '  ↗ 打开图片' : (saved ? '  ↗ 原始 JSON' : '  ↗ 打开 H5 UI 对照'));
-      fragment.appendChild(link);
+      addAction(isImage ? '打开截图' : (saved ? '打开 JSON' : '打开 UI 树'), artifactURL(target), isJSON && !saved);
     } else if (isXML) {
-      const link = document.createElement('a');
-      link.className = 'runlink';
-      link.href = artifactURL('/artifact?path=' + encodeURIComponent(path));
-      link.target = '_blank';
-      link.rel = 'noopener';
-      link.textContent = path + '  ↗ 打开 UI XML';
-      fragment.appendChild(link);
+      addAction('打开 JSON', artifactURL('/artifact?path=' + encodeURIComponent(path)));
     } else {
+      flushActions();
       fragment.appendChild(document.createTextNode(line));
+      if (idx < lines.length - 1) fragment.appendChild(document.createTextNode('\n'));
     }
-    if (idx < lines.length - 1) fragment.appendChild(document.createTextNode('\n'));
   });
+  flushActions();
   return fragment;
 }
 

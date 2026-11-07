@@ -1,0 +1,22 @@
+README.md
+  s_62becc3ae9a79b::t_f3ef2335396d7a 97-98,106-108
+  s_62becc3ae9a79b::t_f672fc62471973 172
+project_cmds.go
+  s_62becc3ae9a79b::t_acd93b8218a04d 385
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d9f660b74e19ae1f73a6d74a69a12de156bea34d",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "mae/openrouter/deepseek/deepseek-v4.1-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

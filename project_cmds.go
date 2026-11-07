@@ -382,7 +382,7 @@ func (a *App) cmdDev(args []string) error {
 			return printJSON(items)
 		}
 		if len(items) == 0 {
-			fmt.Println("还没有目录快捷。用 ak dev add <项目> [名字] 创建，例如 ak dev add pokekara2")
+			fmt.Println("还没有目录快捷。用 ak dev add <项目目录> [名字] 创建，例如 ak dev add ~/dev/Android/app_name")
 			return nil
 		}
 		fmt.Printf("%-10s %-14s %s\n", "快捷名", "项目", "路径")

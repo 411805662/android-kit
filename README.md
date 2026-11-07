@@ -94,8 +94,8 @@ ak -p appb run           # 也可以临时指定项目
 cd 到哪个项目，`ak` 就作用于哪个项目。想少打几个字就建目录快捷：
 
 ```bash
-ak dev add pokekara2       # 自动起名 dev2（dev 已被占用时顺延）
-ak dev add cleaner pk      # 也可以自己指定名字
+ak dev add ~/dev/Android/app_name     # 自动起名 dev2（dev 已被占用时顺延）
+ak dev add ~/dev/Android/other_app pk # 也可以自己指定名字
 ak dev list                # 列出现有快捷
 ak dev rm pk               # 删掉
 ```
@@ -103,9 +103,9 @@ ak dev rm pk               # 删掉
 每个快捷名都会生成一个 shell 函数，直接切目录：
 
 ```bash
-dev     # → /Users/…/PokeKara2
-dev2    # → /Users/…/cleaner
-dev3    # → /Users/…/photoo/android
+dev     # → ~/dev/Android/app_name
+dev2    # → ~/dev/Android/other_app
+dev3    # → ~/dev/Android/third_app
 ```
 
 网页里也能改，而且更直接：「项目」tab 的**项目列表**每行都带一个「快捷键」输入框，填个名字就是 `cd` 到那个目录，自动保存、新终端生效。填了重复的名字会提示被谁占用。
@@ -169,7 +169,7 @@ ak ls                          # /data/data/<包名>，最新改动在前
 ak ls shared_prefs             # 相对路径
 ak cat shared_prefs/settings.xml
 ak sp settings                 # 自动补 .xml 后打印内容
-ak dump files/.poke_log        # 整个目录按 tar 流拉下来
+ak dump files/logs             # 整个目录按 tar 流拉下来
 ak push ./mock.json files/mock.json
 ak ls ext:                     # 外部目录 /sdcard/Android/data/<包名>/files
 ak dump ext:download -o ~/Desktop/dl

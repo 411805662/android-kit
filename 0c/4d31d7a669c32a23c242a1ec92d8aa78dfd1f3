@@ -1,0 +1,28 @@
+web/index.html
+  s_62becc3ae9a79b::t_2f91809bc0a7e3 216-218,220-222
+  s_62becc3ae9a79b::t_07bad2f4312261 694,764,1550-1554
+  s_62becc3ae9a79b::t_ce92b3d90f9eb2 219
+  s_62becc3ae9a79b::t_14f704fc2236f3 1376,1399-1406,1415-1420
+  s_62becc3ae9a79b::t_8beef79fde7839 1387-1389
+  s_62becc3ae9a79b::t_11b85bcf4106c1 740
+  s_62becc3ae9a79b::t_dbd430fb240f72 741
+  s_62becc3ae9a79b::t_8f9e31cd6a3e70 1364-1375,1377-1386,1390-1398,1407-1414,1421-1422
+  s_62becc3ae9a79b::t_cea283bc7c26de 818-823
+  s_62becc3ae9a79b::t_7a42de754a8013 483,742,748,816,824,1423,1555
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0c4d31d7a669c32a23c242a1ec92d8aa78dfd1f3",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "workbuddy/hy4std"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}

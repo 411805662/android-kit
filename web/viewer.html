@@ -451,6 +451,11 @@ function searchable(node) {
 // 只保留 :id/ 后面的名字：com.pkg:id/btn_login -> btn_login
 const ID_PREFIX = /^[^:]*:(?:id\/)?/;
 function shortId(v) { return String(v ?? '').replace(ID_PREFIX, ''); }
+// 下划线风格转驼峰：btn_login -> btnLogin
+function camelId(v) {
+  const s = shortId(v);
+  return s.replace(/_([a-z0-9])/g, (m, c) => c.toUpperCase());
+}
 
 function matches(node, query) {
   if (!query) return false;
@@ -530,14 +535,16 @@ function selectNode(index, event) {
   const px = value => Math.round(value);
   const dp = value => Math.round(value/scale);
   const rows = [
-    ['resource-id', shortId(node.id)], ['text', node.text], ['content-desc', node.desc],
+    ['resource-id', shortId(node.id)],
+    shortId(node.id) ? ['resource-id (camel)', camelId(node.id)] : null,
+    ['text', node.text], ['content-desc', node.desc],
     ['class', node.cls], ['bounds', node.raw.bounds], ['center', node.center],
     ['左上 (px)', `${px(b.x)}, ${px(b.y)}`], ['宽高 (px)', `${px(b.w)} × ${px(b.h)}`],
     ['左上 (dp)', `${dp(b.x)}, ${dp(b.y)}`], ['宽高 (dp)', `${dp(b.w)} × ${dp(b.h)}`],
     ['window', `${node.window.title || '(untitled)'} · layer ${node.window.layer ?? '-'}`],
     ['type / depth', `${node.window.type || '-'} / ${node.depth}`],
     ['children', node.childrenCount], ['node #', node.index]
-  ];
+  ].filter(Boolean);
   const chips = node.interactions.map(x => `<span class="chip">${esc(x)}</span>`).join('') || '<span class="chip">无</span>';
   const raw = Object.assign({}, node.raw);
   delete raw.children;

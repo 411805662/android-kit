@@ -7,9 +7,8 @@
 <script>
 (function () {
   var t = "__AK_THEME__";
-  if (t !== 'light' && t !== 'dark') {
-    t = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  }
+  // JSON 查看页固定深色底白字，不跟随系统外观；右上角按钮仍可手动切浅色
+  try { t = localStorage.getItem('ak.jsonTheme') || 'dark'; } catch (_) {}
   document.documentElement.setAttribute('data-theme', t);
 })();
 </script>
@@ -70,13 +69,11 @@ function applyTheme(t) {
 function toggleTheme() {
   const t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
   applyTheme(t);
-  fetch('/api/theme', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json', 'X-AK-Token': TOKEN},
-    body: JSON.stringify({theme: t})
-  }).catch(() => {});
+  // 只记忆本页，不影响主配置台主题
+  try { localStorage.setItem('ak.jsonTheme', t); } catch (_) {}
 }
-applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+applyTheme((function () { try { return localStorage.getItem('ak.jsonTheme'); } catch (_) { return ''; } })()
+  || document.documentElement.getAttribute('data-theme') || 'dark');
 
 const $ = s => document.querySelector(s);
 const QS = new URLSearchParams(location.search);

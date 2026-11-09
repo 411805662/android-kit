@@ -55,17 +55,19 @@ func classicAliases() map[string]string {
 		"o":   "open",
 		"ko":  "restart",
 		"c":   "clear",
+		"csp": "clear-sp",
 		"un":  "uninstall",
 		"ss":  "screenshot",
 		"ui":  "layout -p",
 		"lgc": "logcat",
+		"px":  "proxy",
 		"dev": "cd",
 	}
 }
 
 func DefaultConfig() Config {
 	return Config{
-		Version:        3,
+		Version:        4,
 		DefaultProject: "",
 		Prefer:         "auto",
 		Language:       "zh-CN",
@@ -137,6 +139,13 @@ func LoadConfig(p Paths) Config {
 	if raw.Version < 3 {
 		if _, ok := cfg.Aliases.Items["lgc"]; !ok {
 			cfg.Aliases.Items["lgc"] = "logcat"
+		}
+	}
+	if raw.Version < 4 {
+		for name, value := range map[string]string{"csp": "clear-sp", "px": "proxy"} {
+			if _, ok := cfg.Aliases.Items[name]; !ok {
+				cfg.Aliases.Items[name] = value
+			}
 		}
 	}
 	if cfg.Aliases.Preset == "classic" && len(cfg.Aliases.Items) == 0 {

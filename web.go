@@ -220,37 +220,20 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 	task := mod + ":assemble" + strings.ToUpper(variant[:1]) + variant[1:]
 	gradleBuild := "./gradlew " + gradleTask(module, variant)
 	gradleClean := "./gradlew clean " + gradleTask(module, variant)
-	gradleInstall := "./gradlew " + gradleInstallTask(module, variant)
-	hasWrapper := proj != nil && a.Paths.GradleWrapper(proj) != ""
 	buildCmd := gradleBuild
 	cleanCmd := gradleClean
-	// 有 gradlew 时用 Gradle 自带的安装任务，顺带构建且不会装错变体
-	installCmd := gradleInstall
-	if !hasWrapper {
-		installCmd = "adb install -r -t -d " + apk
-	}
+	// 安装只装最近一次构建出来的 APK，不再触发编译；要构建 + 安装 + 启动走 bio
+	installCmd := "adb install -r -t -d " + apk
 	startCmd := "adb shell monkey -p " + pkg + " 1"
 	runCmd := gradleBuild + " && " + installCmd + " && " + startCmd
-	if hasWrapper {
-		runCmd = gradleInstall + " && " + startCmd
-	}
-	runDesc := "install<Variant> + am start，日常部署一条命令"
-	installDesc := "gradlew install<Variant>：构建 + 安装一步到位，不会装错变体"
-	if engine == "android" && hasWrapper {
-		installDesc = "android build " + androidInstallTask(module, variant) + "：官方 CLI 跑安装任务，构建 + 安装一步到位"
-	}
+	runDesc := "build + install + am start，日常部署一条命令"
+	installDesc := "adb install 最近一次构建的 APK，不重新编译；要编译安装启动用 bio"
 	layoutCmd := "adb shell uiautomator dump /sdcard/android-kit-ui.xml && adb exec-out cat /sdcard/android-kit-ui.xml"
 	shotCmd := "adb exec-out screencap -p > " + root + "/android-kit/screenshots/<time>.png"
 	if engine == "android" {
 		buildCmd = "android build " + task
 		cleanCmd = "android build " + mod + ":clean && android build " + task
-		if hasWrapper {
-			// 官方 CLI 直接跑 Gradle 的安装任务，等价于 ./gradlew :app:installDebug
-			installCmd = "android build " + androidInstallTask(module, variant)
-		}
-		if !hasWrapper {
-			installCmd = "android install " + apk + devFlag
-		}
+		installCmd = "android install " + apk + devFlag
 		// 官方 CLI 收 Gradle 项目路径（:app），一步完成构建 + delta 安装 + 启动
 		runCmd = strings.TrimRight("android run "+gradleProjectRef(module), " ") + devFlag
 		runDesc = "android run：构建 + delta 安装 + 启动一步到位，只推差异，快很多"
@@ -282,6 +265,7 @@ func (a *App) commandCatalog(proj *Project, engine string) []CommandInfo {
 		{ID: "restart", Target: "restart", Group: groupApp, Title: "重启应用", Desc: "杀进程后立即启动", Command: "adb shell am force-stop " + pkg + " && " + startCmd, Engine: "adb", Available: true, Runnable: true, Run: "restart"},
 
 		{ID: "clear", Target: "clear", Group: groupApp, Title: "清除数据", Desc: "pm clear，登录态会丢失", Command: "adb shell pm clear " + pkg, Engine: "adb", Available: true, Runnable: true, Run: "clear"},
+		{ID: "clear-sp", Target: "clear-sp", Group: groupApp, Title: "清除 SP", Desc: "只删 shared_prefs + files/mmkv，保留其它数据；仅 debug 包可 run-as", Command: "adb shell run-as " + pkg + " rm -rf shared_prefs files/mmkv", Engine: "adb", Available: true, Runnable: true, Run: "clear-sp"},
 		{ID: "screenshot", Target: "screenshot", Group: groupDebug, Title: "截图", Desc: "保存到 android-kit/screenshots", Command: shotCmd, Engine: engine, Available: true, Runnable: true, Run: "screenshot"},
 		{ID: "layout", Target: "layout -p", Group: groupDebug, Title: "UI 树", Desc: "截图 + UI 树，输出 H5 对照链接", Command: layoutCmd, Engine: engine, Available: true, Runnable: true, Run: "layout -p"},
 		{ID: "proxy-on", Target: "proxy on", Group: groupProxy, Title: "开启代理", Desc: "手机 HTTP 代理指向电脑，默认 8888；等价于 px on", Command: "adb shell settings put global http_proxy <本机IP>:8888", Engine: "adb", Available: true, Runnable: true, Run: "proxy on"},
@@ -629,8 +613,9 @@ func (a *App) cmdWeb(args []string) error {
 			"build": true, "install": true, "run": true, "stop": true, "open": true,
 			"restart": true, "clear": true, "screenshot": true, "layout": true,
 			"uninstall": true, "logcat": true, "devices": true, "status": true,
-			"proxy":  true,
-			"doctor": true, "paths": true, "clean": true,
+			"clear-sp": true,
+			"proxy":    true,
+			"doctor":   true, "paths": true, "clean": true,
 		}
 		if !allowed[fields[0]] {
 			if fields[0] == "project" && len(fields) > 1 {

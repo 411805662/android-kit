@@ -115,12 +115,12 @@ fi
 if [ -n "${ZSH_VERSION:-}" ] && command -v compdef >/dev/null 2>&1; then
   function _ak_complete {
     local -a _ak_cmds
-    _ak_cmds=(web cd devices project use status doctor run build install stop open restart clear screenshot layout text paths logcat tap swipe key proxy preview analyze docs alias clean uninstall unset)
+    _ak_cmds=(web cd devices project use status doctor run build install stop open restart clear clear-sp screenshot layout text paths logcat tap swipe key proxy preview analyze docs alias clean uninstall unset)
     _describe 'ak command' _ak_cmds
   }
   compdef _ak_complete ak 2>/dev/null
 elif [ -n "${BASH_VERSION:-}" ]; then
-  complete -W "web cd devices project use status doctor run build install stop open restart clear screenshot layout text paths logcat tap swipe key proxy preview analyze docs alias clean uninstall unset" ak 2>/dev/null
+  complete -W "web cd devices project use status doctor run build install stop open restart clear clear-sp screenshot layout text paths logcat tap swipe key proxy preview analyze docs alias clean uninstall unset" ak 2>/dev/null
 fi
 `)
 	}

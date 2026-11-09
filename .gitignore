@@ -8,3 +8,4 @@ screenshots/
 logs/
 !install.sh
 !scripts/build-release.sh
+android-kit

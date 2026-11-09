@@ -204,6 +204,9 @@ details .body{padding:0 16px 16px}
 .sec-row .c-ak code{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sec-row .aliaswrap{width:100%}
 .sec-row input.alias{width:100%;min-width:0}
+.sec-row .c-ops{display:flex;gap:6px;align-items:center}
+.sec-row .c-ops .btn{min-width:56px;text-align:center;padding-inline:8px}
+.sec-row .c-ops .btn.runph{visibility:hidden}
 .sec-cmd{grid-column:1/-1}
 .sec-cmd input.cmd{width:100%}
 @media(max-width:1100px){.sec-row{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) 90px auto;gap:4px 8px}}
@@ -291,7 +294,7 @@ details .body{padding:0 16px 16px}
   background:#000000a8;border:1px solid #ffffff2b;color:#e8eaff;font-size:10.5px;letter-spacing:.4px;
   pointer-events:none}
 .artcard .artdel{position:absolute;top:8px;right:8px;z-index:3;width:24px;height:24px;border-radius:50%;
-  border:1px solid #ffffff26;background:#000000a8;color:var(--text);font-size:14px;line-height:1;
+  border:1px solid #ffffff4d;background:#000000c9;color:#fff;font-size:14px;line-height:1;
   display:grid;place-items:center;padding:0}
 .artcard .artdel:hover{background:var(--danger);border-color:var(--danger);color:#fff}
 
@@ -746,7 +749,9 @@ function cmdRowHTML(r, i) {
     `<button class="x" title="清除快捷键" onclick="clearAlias(${i})">×</button>`;
   const tip = esc(r.actual || '（无实际命令）');
   const ops = [];
+  // 执行位永远占一个等宽格子，不可执行时用隐藏占位，保证复制/删除列对齐
   if (r.runnable) ops.push(`<button class="btn xs primary" onclick="runRow(${i})">执行</button>`);
+  else ops.push(`<button class="btn xs runph" disabled>执行</button>`);
   ops.push(`<button class="btn xs copybtn" data-tip="${tip}" data-row="${i}"
     onmouseenter="showCmdTip(this)" onmouseleave="scheduleHideCmdTip()" onfocus="showCmdTip(this)" onblur="scheduleHideCmdTip()"
     onclick="copyRowBtn(this)" title="悬停查看实际命令，点击复制">复制</button>`);
@@ -1368,7 +1373,7 @@ async function clearArtifacts() {
 
 function copyRow(i) {
   const r = rows[i];
-  copyText(r.kind === 'custom' ? r.actual : 'ak ' + r.target);
+  copyText(r.actual);
 }
 
 function copyRowBtn(btn) {

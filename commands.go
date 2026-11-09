@@ -343,8 +343,9 @@ func (a *App) cmdInstall(args []string) error {
 			path = filepath.Join(proj.Root, path)
 		}
 	}
-	// 指定了 APK 就只装这个文件；没指定时让 Gradle 构建并安装当前变体
-	return a.installAPK(proj, path, path == "")
+	// 只安装已构建好的 APK，不触发编译；没有 APK 会提示先 ak build。
+	// 想连构建一起走 bio（ak run）或 ak build && in。
+	return a.installAPK(proj, path, false)
 }
 
 func (a *App) startApp(proj *Project) error {
@@ -450,6 +451,20 @@ func (a *App) cmdClear(args []string) error {
 		return err
 	}
 	return a.adb(proj, "shell", "pm", "clear", proj.Package)
+}
+
+// cmdClearSP 只清 SharedPreferences 和 MMKV，保留其它应用数据。
+// shared_prefs 和 files/mmkv（MMKV 默认落盘位置）在 run-as 工作目录下用相对路径删。
+func (a *App) cmdClearSP(args []string) error {
+	proj, err := a.mustProject()
+	if err != nil {
+		return err
+	}
+	if out, err := a.runOnDevice(proj, false, "rm", "-rf", "shared_prefs", "files/mmkv"); err != nil {
+		return fmt.Errorf("清除失败（仅 debug 包可 run-as）: %s %s", strings.TrimSpace(out), err)
+	}
+	fmt.Printf("已清除 shared_prefs + files/mmkv（%s），保留其它数据\n", proj.Package)
+	return nil
 }
 
 func (a *App) cmdAppUninstall(args []string) error {

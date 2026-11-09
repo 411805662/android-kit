@@ -128,6 +128,8 @@ func main() {
 		err = app.cmdRestart(rest)
 	case "clear", "c":
 		err = app.cmdClear(rest)
+	case "clear-sp", "clear_sp":
+		err = app.cmdClearSP(rest)
 	case "uninstall", "app-uninstall", "un":
 		err = app.cmdAppUninstall(rest)
 	case "proxy", "px":

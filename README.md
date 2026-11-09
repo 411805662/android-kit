@@ -116,11 +116,11 @@ dev3    # → ~/dev/Android/third_app
 |---|---|---|
 | `b` | `ak build` | 构建 Debug（`assembleDebug`） |
 | `cb` | `ak build --clean` | 清理后构建（`clean` + `assembleDebug`） |
-| `in` | `ak install` | 构建并安装（官方 CLI 优先：`android build app:installDebug`） |
+| `in` | `ak install` | 直接 `adb install` 最近一次构建的 APK，不重新编译 |
 | `un` | `ak uninstall` | 卸载手机上的 App |
 | `bio` | `ak run` | 构建 + 安装 + 启动（官方 CLI `android run`，delta 安装只推差异） |
 
-安装走 Gradle 自带的 `install<Variant>` 任务（`:app:installDebug`）：它会先 `assemble` 再安装，自动找对 APK（多 flavor / split 也不会装错），比「先 build 再 `adb install`」少一次 Gradle 配置。官方 CLI 可用时用 `android build app:installDebug` 跑同一个任务，Gradle / JDK 交给官方 CLI 统一管理；没有官方 CLI 时回退 `./gradlew :app:installDebug`。指定了 APK（`ak install --apk <文件>`）时只安装该文件，不再构建。
+安装（`in` / `ak install`）只安装最近一次构建出来的 APK，不会再触发编译：有官方 CLI 时走 `android install <apk>`，否则 `adb install -r -t -d <apk>`；找不到 APK 会提示先 `ak build`。想要「编译 + 安装 + 启动」一条龙用 `bio`（`ak run`），它会先构建再装再拉起。指定 APK（`ak install --apk <文件>`）时只安装该文件。
 
 `ak run` 走官方 CLI 的 `android run <模块>`：一条命令完成构建 + delta 安装 + 启动，只传输差异部分（大项目通常从几百 MB 降到几 MB）。传模块引用而不是 APK 路径，多模块 / 动态特性 / ABI 分包的项目也不会装错或装到旧包。
 

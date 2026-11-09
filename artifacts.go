@@ -138,6 +138,21 @@ func (a *App) projectArtifacts(projectID string) []ArtifactItem {
 		ext := strings.ToLower(filepath.Ext(name))
 		return ext == ".json" || ext == ".xml"
 	})
+	// ak layout 会为 UI 树自动生成一张同时间戳的截图（<stamp>.json + <stamp>.png）。
+	// 那张截图只在 UI 树卡片里作为预览图使用，不再单独出现在截图列表里。
+	allShots := shots
+	attached := map[string]bool{}
+	for _, item := range uis {
+		attached[strings.TrimSuffix(item.Name, filepath.Ext(item.Name))] = true
+	}
+	kept := make([]ArtifactItem, 0, len(shots))
+	for _, shot := range shots {
+		if attached[strings.TrimSuffix(shot.Name, filepath.Ext(shot.Name))] {
+			continue
+		}
+		kept = append(kept, shot)
+	}
+	shots = kept
 	items := make([]ArtifactItem, 0, len(shots)+len(uis))
 	items = append(items, shots...)
 	items = append(items, uis...)
@@ -145,6 +160,8 @@ func (a *App) projectArtifacts(projectID string) []ArtifactItem {
 		items[i].URL = "/artifact?path=" + url.QueryEscape(items[i].Path)
 		items[i].ProjectID = proj.ID
 	}
+	// 配对要用全量截图（含被滤掉的同时间戳预览图），否则 UI 树卡片会丢掉预览图
+	shots = allShots
 	for i := range items {
 		if items[i].Kind != "ui" || strings.ToLower(filepath.Ext(items[i].Name)) != ".json" {
 			continue

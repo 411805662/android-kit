@@ -1,0 +1,61 @@
+version.go
+  s_eb1e2c85f62b50::t_7cc065de40ffe4 5
+config.go
+  s_eb1e2c85f62b50::t_b548fc571665bb 149-150
+  s_eb1e2c85f62b50::t_8f10b8a328f825 144-148
+  s_eb1e2c85f62b50::t_f479066546da06 70
+  s_eb1e2c85f62b50::t_c4960657187e04 58,63
+README.md
+  s_62becc3ae9a79b::t_9bffb7ce128c78 119,123
+commands.go
+  s_62becc3ae9a79b::t_b3be885bc7d27c 456-469
+  s_62becc3ae9a79b::t_ad9a69e4447106 348
+  s_62becc3ae9a79b::t_eb364ad1880a5d 346-347
+web/index.html
+  s_62becc3ae9a79b::t_5145f466c66e3b 207-209,297,752,754
+  s_62becc3ae9a79b::t_8477c23e02c3a2 1376
+shell.go
+  s_eb1e2c85f62b50::t_cb3dffc2bea303 118,123
+web/viewer.html
+  s_eb1e2c85f62b50::t_0d6c029a5480aa 538-540,547
+  s_eb1e2c85f62b50::t_f3105c8d34bd7f 454-458
+main.go
+  s_eb1e2c85f62b50::t_1917fb27ff0c45 131-132
+web.go
+  s_62becc3ae9a79b::t_4543eeaa752511 268,616-618
+  s_62becc3ae9a79b::t_5327e64a731207 225
+  s_62becc3ae9a79b::t_bd48b09a8591d5 226,229-230,236
+web/json.html
+  s_eb1e2c85f62b50::t_af977ef5b6f73d 11
+  s_eb1e2c85f62b50::t_ab185c5d097dff 72-73,75-76
+  s_eb1e2c85f62b50::t_d7f8472e92c534 10
+artifacts.go
+  s_eb1e2c85f62b50::t_b3e07ded4f2cb7 143,163-164
+  s_eb1e2c85f62b50::t_0decaf20eb2752 141-142,144-155
+.gitignore
+  s_62becc3ae9a79b::t_54d7a8a7914e27 11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e3ef51a8cd9bba80d1e4514a32f37e494bfe5f5b",
+  "prompts": {},
+  "sessions": {
+    "s_62becc3ae9a79b": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1aac6-83b5-76c2-8e94-71aeb6d146e1",
+        "model": "agne/agnes-3.0-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    },
+    "s_eb1e2c85f62b50": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1abf3-1a5b-7553-8639-364a6dacd49b",
+        "model": "agne/agnes-3.0-flash"
+      },
+      "human_author": "luohj <luohongjian@maetimes.com>"
+    }
+  }
+}
